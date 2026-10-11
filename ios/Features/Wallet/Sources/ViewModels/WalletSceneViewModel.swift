@@ -7,6 +7,7 @@ import enum Gemstone.GemBannerDestination
 import struct Gemstone.GemBannerKey
 import enum Gemstone.GemHeaderButtonAction
 import enum Gemstone.GemInfoTopic
+import struct Gemstone.GemNftEntry
 import struct Gemstone.GemPerpetualCollateral
 import struct Gemstone.GemToast
 import protocol Gemstone.GemWalletHomeServiceProtocol
@@ -39,7 +40,7 @@ public final class WalletSceneViewModel: Sendable, AssetActions {
     public let perpetualBalanceQuery: ObservableQuery<PerpetualWalletBalanceQuery>
     public let assetsQuery: ObservableQuery<AssetsQuery>
     public let bannersQuery: ObservableQuery<BannersQuery>
-    public let nftQuery: ObservableQuery<NFTQuery>
+    public let collectionsQuery: ObservableQuery<MappedQuery<NFTQuery, [GemNftEntry]>>
 
     public var isPresentingSelectedAssetInput: Binding<SelectedAssetInput?>
     public var isPresentingScanner = false
@@ -75,7 +76,7 @@ public final class WalletSceneViewModel: Sendable, AssetActions {
             BannersQuery(walletId: wallet.id, assetId: .none, events: GemConstants.walletBannerEvents),
             initialValue: [],
         )
-        nftQuery = ObservableQuery(NFTQuery(walletId: wallet.id, filter: .all), initialValue: [])
+        collectionsQuery = ObservableQuery(MappedQuery(NFTQuery(walletId: wallet.id, filter: .all)) { [service] in service.collections(nfts: $0.map { $0.toGem() }) }, initialValue: [])
         self.isPresentingSelectedAssetInput = isPresentingSelectedAssetInput
         self.isPresentingWallets = isPresentingWallets
     }
@@ -120,7 +121,6 @@ public final class WalletSceneViewModel: Sendable, AssetActions {
             banners: bannersQuery.value.map { $0.toGem() },
             assetIds: assets.map(\.asset.id),
             pinnedAssetIds: assets.filter(\.metadata.isPinned).map(\.asset.id),
-            nfts: nftQuery.value.map { $0.toGem() },
         )
     }
 }

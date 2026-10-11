@@ -64,6 +64,8 @@ class WalletViewModel @Inject constructor(
 
     val homeState = getWalletHomeState.walletHomeState()
 
+    val collections = getWalletHomeState.walletCollections()
+
     val isBalanceHidden = preferences.isHideBalances()
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 

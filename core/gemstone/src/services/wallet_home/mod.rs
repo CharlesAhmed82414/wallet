@@ -31,7 +31,6 @@ pub struct GemWalletHomeViewState {
     pub wallet_row: GemWalletRow,
     pub header: GemValueHeader,
     pub show_collections: bool,
-    pub collections: Vec<GemNftEntry>,
     pub shows_perpetuals: bool,
     pub banner: Option<GemBannerRow>,
     pub pinned_asset_ids: Vec<AssetId>,
@@ -73,16 +72,7 @@ impl GemWalletHomeService {
         self.preferences.get_currency()
     }
 
-    pub fn view_state(
-        &self,
-        wallet: Wallet,
-        balances: Vec<AssetFiatValue>,
-        perpetual: Option<GemPerpetualCollateral>,
-        banners: Vec<Banner>,
-        asset_ids: Vec<AssetId>,
-        pinned_asset_ids: Vec<AssetId>,
-        nfts: Vec<NFTData>,
-    ) -> GemWalletHomeViewState {
+    pub fn view_state(&self, wallet: Wallet, balances: Vec<AssetFiatValue>, perpetual: Option<GemPerpetualCollateral>, banners: Vec<Banner>, asset_ids: Vec<AssetId>, pinned_asset_ids: Vec<AssetId>) -> GemWalletHomeViewState {
         let chains = wallet.chains();
         let wallet_type = wallet.wallet_type;
         let wallet_row = wallet_rules::row(&WalletListItem::from(&wallet));
@@ -92,8 +82,6 @@ impl GemWalletHomeService {
         let currency = self.preferences.get_currency();
         let header = balance_rules::total_header(&total_value, currency);
         let sections = asset_sections(asset_ids, pinned_asset_ids, false, Vec::new());
-        let show_collections = self.preferences.show_collections(wallet_type, chains.clone());
-        let collections = if show_collections { nft_rules::entries(nft_rules::list_items(nfts, GemNftList::Collections)) } else { Vec::new() };
         GemWalletHomeViewState {
             wallet_row,
             header: GemValueHeader {
@@ -103,13 +91,16 @@ impl GemWalletHomeService {
                 subtitle: header.pnl.map(|text| GemRowText { text, tone: header.pnl_tone }),
                 actions: Some(rules::header_actions(wallet_type, &chains, rules::header_buttons_enabled(&visible_banners))),
             },
-            show_collections,
-            collections,
+            show_collections: self.preferences.show_collections(wallet_type, chains.clone()),
             shows_perpetuals: self.preferences.show_perpetuals(wallet_type, chains),
             banner: visible_banners.into_iter().next(),
             pinned_asset_ids: sections.pinned,
             asset_ids: sections.assets,
         }
+    }
+
+    pub fn collections(&self, nfts: Vec<NFTData>) -> Vec<GemNftEntry> {
+        nft_rules::entries(nft_rules::list_items(nfts, GemNftList::Collections))
     }
 
     pub async fn update_balances(&self, asset_ids: Vec<AssetId>) -> Result<(), GemServiceError> {
@@ -172,7 +163,7 @@ mod tests {
     fn test_the_home_state_answers_whether_perpetuals_show() {
         let testkit = WalletHomeTestkit::with_status(200);
 
-        let state = testkit.service.view_state(Wallet::mock(), vec![], None, vec![], vec![], vec![], vec![]);
+        let state = testkit.service.view_state(Wallet::mock(), vec![], None, vec![], vec![], vec![]);
 
         assert_eq!(
             state.shows_perpetuals,
@@ -185,7 +176,7 @@ mod tests {
     fn test_the_header_buttons_follow_the_banners_the_screen_shows() {
         let testkit = WalletHomeTestkit::with_status(200);
         let warning = |state| Banner::mock(BannerEvent::AccountBlockedMultiSignature, state);
-        let buttons_enabled = |banners: Vec<Banner>| match testkit.service.view_state(Wallet::mock(), vec![], None, banners, vec![], vec![], vec![]).header.actions {
+        let buttons_enabled = |banners: Vec<Banner>| match testkit.service.view_state(Wallet::mock(), vec![], None, banners, vec![], vec![]).header.actions {
             Some(GemHeaderActions::Buttons { buttons }) => buttons.iter().all(|button| button.is_enabled),
             Some(GemHeaderActions::WatchOnly) | None => true,
         };
@@ -201,9 +192,7 @@ mod tests {
         let ethereum = AssetId::from_chain(Chain::Ethereum);
         let tron = AssetId::from_chain(Chain::Tron);
 
-        let state = testkit
-            .service
-            .view_state(Wallet::mock(), vec![], None, vec![], vec![bitcoin.clone(), tron.clone(), ethereum.clone()], vec![tron.clone()], vec![]);
+        let state = testkit.service.view_state(Wallet::mock(), vec![], None, vec![], vec![bitcoin.clone(), tron.clone(), ethereum.clone()], vec![tron.clone()]);
 
         assert_eq!(state.pinned_asset_ids, vec![tron]);
         assert_eq!(state.asset_ids, vec![bitcoin, ethereum], "popular assets stay in the wallet's own order");
@@ -221,7 +210,7 @@ mod tests {
             price: 1.0,
             price_change_percentage_24h: 0.0,
         };
-        let shown = |balances: Vec<AssetFiatValue>| testkit.service.view_state(Wallet::mock(), balances, None, vec![onboarding.clone()], vec![], vec![], vec![]).banner.is_some();
+        let shown = |balances: Vec<AssetFiatValue>| testkit.service.view_state(Wallet::mock(), balances, None, vec![onboarding.clone()], vec![], vec![]).banner.is_some();
 
         assert!(shown(vec![value(0.0)]));
         assert!(!shown(vec![value(0.0), value(2.0)]));
@@ -231,19 +220,12 @@ mod tests {
     fn test_the_home_previews_verified_collections_only_where_collections_show() {
         let testkit = WalletHomeTestkit::with_status(200);
         let nfts = vec![NFTData::mock_with("verified", VerificationStatus::Verified, 2), NFTData::mock_with("spam", VerificationStatus::Unverified, 2)];
-        let titles = |wallet: Wallet| {
-            testkit
-                .service
-                .view_state(wallet, vec![], None, vec![], vec![], vec![], nfts.clone())
-                .collections
-                .into_iter()
-                .map(|entry| entry.row.title)
-                .collect::<Vec<_>>()
-        };
+        let shows_collections = |wallet: Wallet| testkit.service.view_state(wallet, vec![], None, vec![], vec![], vec![]).show_collections;
 
-        assert_eq!(titles(Wallet::mock()), vec!["verified"]);
+        assert_eq!(testkit.service.collections(nfts).into_iter().map(|entry| entry.row.title).collect::<Vec<_>>(), vec!["verified"]);
+        assert!(shows_collections(Wallet::mock()));
         assert!(
-            titles(Wallet::mock_with_type(WalletType::Single, &[Chain::Bitcoin])).is_empty(),
+            !shows_collections(Wallet::mock_with_type(WalletType::Single, &[Chain::Bitcoin])),
             "a wallet whose chain has no NFTs shows no collections section"
         );
     }

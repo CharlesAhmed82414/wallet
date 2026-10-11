@@ -36,6 +36,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import uniffi.gemstone.GemNftEntry
 import uniffi.gemstone.GemServiceException
 import uniffi.gemstone.GemWalletHomeServiceInterface
 import uniffi.gemstone.GemWalletHomeViewState
@@ -67,6 +68,8 @@ class WalletViewModelTest {
     )
     private val getWalletHomeState = object : GetWalletHomeState {
         override fun walletHomeState(): StateFlow<GemWalletHomeViewState?> = homeState
+
+        override fun walletCollections(): StateFlow<List<GemNftEntry>> = MutableStateFlow(emptyList())
     }
     private val session = MutableStateFlow<Session?>(null)
     private val getSession = object : GetSession {

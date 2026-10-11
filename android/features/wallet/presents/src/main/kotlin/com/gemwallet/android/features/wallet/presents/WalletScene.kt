@@ -50,6 +50,7 @@ import com.wallet.core.primitives.AssetId
 import uniffi.gemstone.GemAssetSectionKind
 import uniffi.gemstone.GemBannerDestination
 import uniffi.gemstone.GemBannerKey
+import uniffi.gemstone.GemNftEntry
 import uniffi.gemstone.GemWalletHomeViewState
 
 private const val WalletHeaderItemKey = "assets_head"
@@ -65,6 +66,7 @@ private const val AssetsListTag = "assets_list"
 @Composable
 internal fun WalletScene(
     homeState: GemWalletHomeViewState?,
+    collections: List<GemNftEntry>,
     isBalanceHidden: Boolean,
     importing: Boolean,
     pinnedAssets: List<AssetInfoDataAggregate>,
@@ -191,7 +193,7 @@ internal fun WalletScene(
                 if (homeState?.showCollections == true) {
                     item(key = CollectionsSectionItemKey) {
                         CollectionsPreviewSection(
-                            collections = homeState.collections,
+                            collections = collections,
                             onAction = { action ->
                                 when (action) {
                                     CollectionsPreviewAction.OpenCollections -> onAction(WalletAction.OpenCollections)

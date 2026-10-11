@@ -23,6 +23,7 @@ fun WalletScreen(onAction: (WalletAction) -> Unit, onContentReady: () -> Unit = 
     val pinnedAssets by viewModel.pinnedAssets.collectAsStateWithLifecycle()
     val unpinnedAssets by viewModel.unpinnedAssets.collectAsStateWithLifecycle()
     val homeState by viewModel.homeState.collectAsStateWithLifecycle()
+    val collections by viewModel.collections.collectAsStateWithLifecycle()
     val isBalanceHidden by viewModel.isBalanceHidden.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
@@ -53,6 +54,7 @@ fun WalletScreen(onAction: (WalletAction) -> Unit, onContentReady: () -> Unit = 
 
     WalletScene(
         homeState = homeState,
+        collections = collections,
         isBalanceHidden = isBalanceHidden,
         importing = importing,
         pinnedAssets = pinnedAssets,

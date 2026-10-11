@@ -19,10 +19,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import uniffi.gemstone.GemNftEntry
 import uniffi.gemstone.GemPerpetualCollateral
 import uniffi.gemstone.GemWalletHomeServiceInterface
 import uniffi.gemstone.GemWalletHomeViewState
@@ -53,8 +55,7 @@ class GetWalletHomeStateImpl(
             perpetualCollateral,
             bannersQuery(wallet.id.id, GemConstants.walletBannerEvents),
             getActiveAssetsInfo.assetsInfo(),
-            nftQuery(wallet.id.id),
-        ) { balances, perpetualBalance, banners, assets, nfts ->
+        ) { balances, perpetualBalance, banners, assets ->
             walletHomeService.viewState(
                 wallet = wallet.toGem(),
                 balances = balances.map { it.toGem() },
@@ -62,10 +63,16 @@ class GetWalletHomeStateImpl(
                 banners = banners.map { it.toGem() },
                 assetIds = assets.map { it.asset.id.toIdentifier() },
                 pinnedAssetIds = assets.filter { it.pinned }.map { it.asset.id.toIdentifier() },
-                nfts = nfts.map { it.toGem() },
             )
         }
     }.stateIn(scope, SharingStarted.Eagerly, null)
 
+    private val walletCollections = getSession().map { it?.wallet?.id?.id }.distinctUntilChanged().flatMapLatest { walletId ->
+        walletId ?: return@flatMapLatest flowOf(emptyList())
+        nftQuery(walletId).map { nfts -> walletHomeService.collections(nfts.map { it.toGem() }) }
+    }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
     override fun walletHomeState(): StateFlow<GemWalletHomeViewState?> = walletHomeState
+
+    override fun walletCollections(): StateFlow<List<GemNftEntry>> = walletCollections
 }
