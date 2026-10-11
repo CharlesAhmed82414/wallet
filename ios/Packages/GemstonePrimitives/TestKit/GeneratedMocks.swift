@@ -1931,12 +1931,10 @@ public extension Gemstone.SwapData {
 public extension Gemstone.SwapProviderData {
     static func mock(
         provider: Gemstone.SwapProvider = .uniswapV3,
-        name: String = "",
         protocolName: String = "",
     ) -> Gemstone.SwapProviderData {
         Gemstone.SwapProviderData(
             provider: provider,
-            name: name,
             protocolName: protocolName,
         )
     }

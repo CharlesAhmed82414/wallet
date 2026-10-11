@@ -134,7 +134,7 @@ private extension SwapperQuote {
             minFromValue: minFromValue,
             toAddress: request.destinationAddress,
             toValue: toValue,
-            providerData: SwapProviderData(provider: data.provider.id, name: data.provider.name, protocolName: data.provider.protocol),
+            providerData: SwapProviderData(provider: data.provider.id, protocolName: data.provider.protocol),
             slippageBps: data.slippageBps,
             slippageMode: request.options.slippage.mode,
             etaInSeconds: etaInSeconds,

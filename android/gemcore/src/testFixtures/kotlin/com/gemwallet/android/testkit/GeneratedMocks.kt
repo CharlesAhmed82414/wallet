@@ -2409,11 +2409,9 @@ fun mockSwapData(
 
 fun mockSwapProviderData(
     provider: uniffi.gemstone.SwapProvider = uniffi.gemstone.SwapProvider.UNISWAP_V3,
-    name: String = "",
     protocolName: String = "",
 ) = uniffi.gemstone.SwapProviderData(
     provider = provider,
-    name = name,
     protocolName = protocolName,
 )
 

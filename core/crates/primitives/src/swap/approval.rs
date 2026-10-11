@@ -118,7 +118,6 @@ pub struct SwapQuote {
 #[serde(rename_all = "camelCase")]
 pub struct SwapProviderData {
     pub provider: SwapProvider,
-    pub name: String,
     pub protocol_name: String,
 }
 
@@ -164,7 +163,6 @@ mod tests {
             to_value: BigUint::from(2_500_000u32),
             provider_data: SwapProviderData {
                 provider: SwapProvider::Jupiter,
-                name: "Jupiter".to_string(),
                 protocol_name: "Jupiter".to_string(),
             },
             slippage_bps: 50,
