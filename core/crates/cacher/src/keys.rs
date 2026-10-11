@@ -99,7 +99,7 @@ impl CacheKey<'_> {
             Self::PerpetualObserverCheckpoint(chain, address) => format!("perpetual:last_seen:{}:{}", chain, address),
             Self::PendingTransactions(chain) => format!("transactions:pending:{}", chain),
             Self::TransactionCheckSchedule(queue) => format!("transactions:check_schedule:{}", queue),
-            Self::TransactionFeeEstimates(chain) => format!("transactions:fee_estimates:v2:{}", chain),
+            Self::TransactionFeeEstimates(chain) => format!("transactions:fee_estimates:{}", chain),
             Self::ScanSafe(scan_type, target, _) => format!("scan:safe:{}:{}", scan_type, target),
         }
     }
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_fee_estimates_schema_and_retention() {
-        assert_eq!(CacheKey::TransactionFeeEstimates("tron").key(), "transactions:fee_estimates:v2:tron");
+        assert_eq!(CacheKey::TransactionFeeEstimates("tron").key(), "transactions:fee_estimates:tron");
         assert_eq!(CacheKey::TransactionFeeEstimates("tron").ttl(), 5 * 365 * SECONDS_PER_DAY);
     }
 

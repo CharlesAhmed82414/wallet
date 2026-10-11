@@ -35,29 +35,6 @@
       }
     }
   },
-  "admin_chain_bad": {
-    "status": 422,
-    "content_type": "application/json",
-    "body": {
-      "error": {
-        "message": "Invalid chain: mars"
-      }
-    }
-  },
-  "admin_chain_fee": {
-    "status": 404,
-    "content_type": "application/json",
-    "body": "<volatile>"
-  },
-  "admin_chain_fee_no_auth": {
-    "status": 401,
-    "content_type": "application/json",
-    "body": {
-      "error": {
-        "message": "Missing Authorization header"
-      }
-    }
-  },
   "admin_device": {
     "status": 200,
     "content_type": "application/json",

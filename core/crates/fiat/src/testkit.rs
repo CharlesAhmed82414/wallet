@@ -31,7 +31,7 @@ use crate::providers::{banxa::client::BanxaClient, mercuryo::client::MercuryoCli
 #[cfg(all(test, feature = "fiat_integration_tests"))]
 use gem_client::ReqwestClient;
 #[cfg(all(test, feature = "fiat_integration_tests"))]
-use primitives::{AccessTokenCacher, AccessTokenFuture};
+use primitives::{AccessTokenCacher, CacheFuture};
 #[cfg(all(test, feature = "fiat_integration_tests"))]
 use settings::testkit::get_test_settings;
 #[cfg(all(test, feature = "fiat_integration_tests"))]
@@ -63,7 +63,7 @@ pub struct MemoryAccessTokenCacher {
 
 #[cfg(all(test, feature = "fiat_integration_tests"))]
 impl AccessTokenCacher for MemoryAccessTokenCacher {
-    fn get_or_refresh<'a>(&'a self, refresh: AccessTokenFuture<'a, (String, Duration)>) -> AccessTokenFuture<'a, String> {
+    fn get_or_refresh<'a>(&'a self, refresh: CacheFuture<'a, (String, Duration)>) -> CacheFuture<'a, String> {
         Box::pin(async move {
             let cached = self.access_token.lock().unwrap().clone();
             if let Some(access_token) = cached {

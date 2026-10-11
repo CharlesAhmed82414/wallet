@@ -1,12 +1,12 @@
 mod access_token_cacher;
-pub use self::access_token_cacher::{AccessTokenCacher, AccessTokenFuture};
+pub use self::access_token_cacher::AccessTokenCacher;
 
 #[macro_use]
 pub mod known_entries;
 pub mod string_serde;
 
 mod async_result;
-pub use self::async_result::try_in_order;
+pub use self::async_result::{CacheFuture, try_in_order};
 
 pub mod localize;
 pub use self::localize::Localize;

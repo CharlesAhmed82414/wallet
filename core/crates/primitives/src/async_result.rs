@@ -1,4 +1,6 @@
-use std::future::Future;
+use std::{error::Error, future::Future, pin::Pin};
+
+pub type CacheFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T, Box<dyn Error + Send + Sync>>> + Send + 'a>>;
 
 pub async fn try_in_order<I, F, T, E>(operations: I) -> Result<Option<T>, E>
 where

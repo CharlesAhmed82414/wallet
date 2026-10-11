@@ -1,7 +1,7 @@
-use std::{error::Error, future::Future, pin::Pin, time::Duration};
+use std::time::Duration;
 
-pub type AccessTokenFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T, Box<dyn Error + Send + Sync>>> + Send + 'a>>;
+use crate::CacheFuture;
 
 pub trait AccessTokenCacher: Send + Sync {
-    fn get_or_refresh<'a>(&'a self, refresh: AccessTokenFuture<'a, (String, Duration)>) -> AccessTokenFuture<'a, String>;
+    fn get_or_refresh<'a>(&'a self, refresh: CacheFuture<'a, (String, Duration)>) -> CacheFuture<'a, String>;
 }

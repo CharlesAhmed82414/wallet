@@ -1598,7 +1598,6 @@ version = "2.114.69"
 dependencies = [
  "async-trait",
  "config_keys",
- "futures",
  "gem_tracing",
  "primitives",
  "redis",

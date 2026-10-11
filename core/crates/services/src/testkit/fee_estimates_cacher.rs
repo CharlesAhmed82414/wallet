@@ -1,8 +1,8 @@
 use std::{collections::HashMap, error::Error, sync::Mutex, time::Duration};
 
 use async_trait::async_trait;
-use cacher::{CacheFuture, FeeEstimatesCacher};
-use primitives::{Chain, ChainFeeEstimates};
+use cacher::FeeEstimatesCacher;
+use primitives::{CacheFuture, Chain, ChainFeeEstimates};
 
 #[derive(Default)]
 pub(crate) struct MemoryFeeEstimatesCacher {

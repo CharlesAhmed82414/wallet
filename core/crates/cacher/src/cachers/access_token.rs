@@ -1,7 +1,7 @@
 use std::{error::Error, time::Duration};
 
 use gem_tracing::warn_with_fields;
-use primitives::{AccessTokenCacher, AccessTokenFuture};
+use primitives::{AccessTokenCacher, CacheFuture};
 use tokio::sync::Semaphore;
 
 use crate::{CacheKey, CacherClient};
@@ -48,7 +48,7 @@ impl AccessTokenCacherClient {
 }
 
 impl AccessTokenCacher for AccessTokenCacherClient {
-    fn get_or_refresh<'a>(&'a self, refresh: AccessTokenFuture<'a, (String, Duration)>) -> AccessTokenFuture<'a, String> {
+    fn get_or_refresh<'a>(&'a self, refresh: CacheFuture<'a, (String, Duration)>) -> CacheFuture<'a, String> {
         Box::pin(async move {
             if let Some(access_token) = self.cached_access_token().await {
                 return Ok(access_token);

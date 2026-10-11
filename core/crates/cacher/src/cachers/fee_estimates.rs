@@ -2,11 +2,10 @@ use std::error::Error;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use primitives::{Chain, ChainFeeEstimates};
+use primitives::{CacheFuture, Chain, ChainFeeEstimates};
 use strum::IntoEnumIterator;
 
-use crate::cache::Cached;
-use crate::{CacheFuture, CacheKey, CacherClient};
+use crate::{CacheKey, CacherClient};
 
 #[async_trait]
 pub trait FeeEstimatesCacher: Send + Sync {
@@ -23,6 +22,6 @@ impl FeeEstimatesCacher for CacherClient {
     async fn all_estimates(&self) -> Result<Vec<ChainFeeEstimates>, Box<dyn Error + Send + Sync>> {
         let chains = Chain::iter().collect::<Vec<_>>();
         let keys = chains.iter().map(|chain| CacheKey::TransactionFeeEstimates(chain.as_ref())).collect::<Vec<_>>();
-        Ok(self.get_many::<Cached<ChainFeeEstimates>>(&keys).await?.into_iter().map(|cached| cached.value).collect())
+        self.get_many_cached(&keys).await
     }
 }

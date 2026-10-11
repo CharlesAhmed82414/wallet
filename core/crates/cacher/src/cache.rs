@@ -4,19 +4,24 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use futures::future::BoxFuture;
 use gem_tracing::warn_with_fields;
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::de::{DeserializeOwned, IgnoredAny};
+use serde::{Deserialize, Serialize};
 
 use crate::{CacheKey, CacherClient};
 
-pub type CacheFuture<'a, T> = BoxFuture<'a, Result<T, Box<dyn Error + Send + Sync>>>;
-
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Cached<T> {
-    pub(crate) value: T,
+struct Cached<T> {
+    value: T,
     updated_at: SystemTime,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum StoredValue<T> {
+    Current(Cached<T>),
+    Outdated(IgnoredAny),
 }
 
 impl<T> Cached<T> {
@@ -25,25 +30,18 @@ impl<T> Cached<T> {
     }
 }
 
+impl<T> StoredValue<T> {
+    fn cached(self) -> Option<Cached<T>> {
+        match self {
+            Self::Current(cached) => Some(cached),
+            Self::Outdated(_) => None,
+        }
+    }
+}
+
 impl CacherClient {
-    pub(crate) async fn get_or_fetch<T, F>(&self, key: CacheKey<'_>, duration: Duration, fetch: F) -> Result<T, Box<dyn Error + Send + Sync>>
-    where
-        T: DeserializeOwned + Serialize,
-        F: Future<Output = Result<T, Box<dyn Error + Send + Sync>>>,
-    {
-        if let Some(cached) = self.get::<Cached<T>>(key).await?
-            && cached.is_fresh(duration)
-        {
-            return Ok(cached.value);
-        }
-        let cached = Cached {
-            value: fetch.await?,
-            updated_at: SystemTime::now(),
-        };
-        if let Err(error) = self.set(key, &cached).await {
-            warn_with_fields!("cache write failed", error = error.as_ref());
-        }
-        Ok(cached.value)
+    pub(crate) async fn get_many_cached<T: DeserializeOwned>(&self, keys: &[CacheKey<'_>]) -> Result<Vec<T>, Box<dyn Error + Send + Sync>> {
+        Ok(self.get_many::<StoredValue<T>>(keys).await?.into_iter().filter_map(StoredValue::cached).map(|cached| cached.value).collect())
     }
 
     pub(crate) async fn get_or_fetch_with_fallback<T, F>(&self, key: CacheKey<'_>, duration: Duration, fetch: F) -> Result<T, Box<dyn Error + Send + Sync>>
@@ -51,15 +49,40 @@ impl CacherClient {
         T: DeserializeOwned + Serialize,
         F: Future<Output = Result<T, Box<dyn Error + Send + Sync>>>,
     {
-        match self.get_or_fetch(key, duration, fetch).await {
-            Ok(value) => Ok(value),
-            Err(error) => {
-                if let Some(cached) = self.get::<Cached<T>>(key).await? {
-                    warn_with_fields!("cache refresh failed, serving previous value", error = error.as_ref());
-                    return Ok(cached.value);
+        let previous = match self.get::<StoredValue<T>>(key).await?.and_then(StoredValue::cached) {
+            Some(cached) if cached.is_fresh(duration) => return Ok(cached.value),
+            previous => previous,
+        };
+        match fetch.await {
+            Ok(value) => {
+                let cached = Cached { value, updated_at: SystemTime::now() };
+                if let Err(error) = self.set(key, &cached).await {
+                    warn_with_fields!("cache write failed", error = error.as_ref());
                 }
-                Err(error)
+                Ok(cached.value)
             }
+            Err(error) => match previous {
+                Some(previous) => {
+                    warn_with_fields!("cache refresh failed, serving previous value", error = error.as_ref());
+                    Ok(previous.value)
+                }
+                None => Err(error),
+            },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::UNIX_EPOCH;
+
+    use super::*;
+
+    #[test]
+    fn test_stored_value_in_an_older_shape_reads_as_missing() {
+        let current = serde_json::to_string(&Cached { value: 5u32, updated_at: UNIX_EPOCH }).unwrap();
+
+        assert_eq!(serde_json::from_str::<StoredValue<u32>>(&current).unwrap().cached().map(|cached| cached.value), Some(5));
+        assert!(serde_json::from_str::<StoredValue<u32>>("5").unwrap().cached().is_none());
     }
 }

@@ -1,7 +1,6 @@
 mod address;
 mod block;
 mod defi;
-mod fee;
 mod nft;
 mod node;
 mod staking;
@@ -19,7 +18,6 @@ pub fn router() -> Router<AppState> {
         .route("/blocks/{chain}/latest", get(block::get_latest_block_number))
         .route("/blocks/{chain}/{block_number}", get(block::get_block_transactions))
         .route("/blocks/{chain}/{block_number}/finalize", get(block::get_block_transactions_finalize))
-        .route("/fee-estimates/{chain}", get(fee::get_chain_fee_estimates))
         .route("/nodes/{chain}/status", get(node::get_nodes_status))
         .route("/swaps/quote", get(swap::get_swap_quote))
         .route("/swaps/{provider}/transaction/{hash}", get(swap::get_swap_result))

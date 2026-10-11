@@ -526,7 +526,6 @@ fn admin_cases(harness: &Harness) -> Vec<Case> {
         Case::new("admin_device_basic_auth", Method::GET, &format!("/v1/admin/devices/{device_id}")).auth(Auth::Header("Basic abc".to_string())),
         Case::new("admin_device_bad_secret", Method::GET, &format!("/v1/admin/devices/{device_id}")).auth(Auth::Bearer("not-a-secret".to_string())),
         Case::new("admin_asset_add_no_auth", Method::POST, "/v1/admin/assets/add").json(json!("ethereum")),
-        Case::new("admin_chain_fee_no_auth", Method::GET, "/v1/admin/chain/fee-estimates/ethereum"),
         Case::new("admin_block_latest_no_auth", Method::GET, "/v1/admin/chain/blocks/ethereum/latest"),
         Case::new("admin_swap_quote_no_auth", Method::GET, "/v1/admin/chain/swaps/quote"),
         Case::new("admin_fiat_quotes_no_auth", Method::GET, "/v1/admin/fiat/quotes/buy?asset_id=ethereum&amount=100"),
@@ -542,8 +541,6 @@ fn admin_cases(harness: &Harness) -> Vec<Case> {
             Case::new("admin_device_transactions", Method::GET, &format!("/v1/admin/devices/{device_id}/transactions")).auth(bearer.clone()),
             Case::new("admin_device_fiat_transactions", Method::GET, &format!("/v1/admin/devices/{device_id}/fiat/transactions")).auth(bearer.clone()),
             Case::new("admin_transactions_hash", Method::GET, "/v1/admin/transactions/0x01").auth(bearer.clone()),
-            Case::new("admin_chain_fee", Method::GET, "/v1/admin/chain/fee-estimates/ethereum").auth(bearer.clone()).volatile(),
-            Case::new("admin_chain_bad", Method::GET, "/v1/admin/chain/fee-estimates/mars").auth(bearer.clone()),
             Case::new("admin_asset_status_native", Method::POST, "/v1/admin/assets/status").auth(bearer.clone()).json(json!("ethereum")),
             Case::new("admin_asset_add_no_content_type", Method::POST, "/v1/admin/assets/add").auth(bearer.clone()).raw(br#""ethereum""#.to_vec(), None),
         ]);
