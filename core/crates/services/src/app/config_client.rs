@@ -4,6 +4,7 @@ use std::sync::Arc;
 use fiat::IpAddressProvider;
 use primitives::{ConfigResponse, ConfigVersions, Features, Release, SwapConfig, SwapProvider};
 
+use super::client_country;
 use super::repository::Repository;
 use crate::assets::AssetCatalogClient;
 
@@ -23,8 +24,8 @@ impl ConfigClient {
         }
     }
 
-    pub async fn get_config(&self, ip_address: &str) -> Result<ConfigResponse, Box<dyn Error + Send + Sync>> {
-        let (features, releases, catalog) = tokio::try_join!(self.get_features(ip_address), self.get_releases(), self.asset_catalog.get())?;
+    pub async fn get_config(&self, ip_address: &str, country: Option<&str>) -> Result<ConfigResponse, Box<dyn Error + Send + Sync>> {
+        let (features, releases, catalog) = tokio::try_join!(self.get_features(ip_address, country), self.get_releases(), self.asset_catalog.get())?;
 
         let response = ConfigResponse {
             features,
@@ -41,10 +42,10 @@ impl ConfigClient {
         Ok(response)
     }
 
-    async fn get_features(&self, ip_address: &str) -> Result<Features, Box<dyn Error + Send + Sync>> {
-        let country = self.ip_address_provider.get_ip_address(ip_address).await?;
+    async fn get_features(&self, ip_address: &str, country: Option<&str>) -> Result<Features, Box<dyn Error + Send + Sync>> {
+        let country = client_country(self.ip_address_provider.as_ref(), ip_address, country).await?;
         let policies = self.repository.get_features().await?;
-        Ok(Features::for_country(&policies, &country.alpha2))
+        Ok(Features::for_country(&policies, &country))
     }
 
     async fn get_releases(&self) -> Result<Vec<Release>, Box<dyn Error + Send + Sync>> {

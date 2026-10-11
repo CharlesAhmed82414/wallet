@@ -7,7 +7,7 @@ use services::fiat::FiatClient;
 
 use crate::auth::device::{AuthenticatedDevice, AuthenticatedDeviceWallet};
 use crate::error::{ApiError, fiat_error};
-use crate::request::{AssetIdParam, ClientIp, CurrencyParam, FiatProviderIdParam, FiatQuoteTypeParam, Path, Query, lenient};
+use crate::request::{AssetIdParam, ClientCountry, ClientIp, CurrencyParam, FiatProviderIdParam, FiatQuoteTypeParam, Path, Query, lenient};
 use crate::response::ApiResponse;
 
 #[derive(Deserialize)]
@@ -32,6 +32,7 @@ pub async fn get_fiat_quotes(
     Path((quote_type, asset_id)): Path<(FiatQuoteTypeParam, AssetIdParam)>,
     Query(query): Query<QuotesQuery>,
     ClientIp(ip): ClientIp,
+    ClientCountry(country): ClientCountry,
     State(client): State<Arc<FiatClient>>,
 ) -> Result<ApiResponse<FiatQuotes>, ApiError> {
     let ip_address = ip.to_string();
@@ -43,14 +44,20 @@ pub async fn get_fiat_quotes(
         provider_id: query.provider.map(|provider| provider.0.id().to_string()),
         ip_address: ip_address.clone(),
     };
-    let context = fiat::FiatDeviceContext::new(device.record.id, device.wallet_id, device.wallet_type, ip_address);
+    let context = fiat::FiatDeviceContext::new(device.record.id, device.wallet_id, device.wallet_type, ip_address, country);
     let quotes = client.get_device_quotes(quote_request, &context).await.map_err(|error| fiat_error(error, device.record.device.locale.as_ref()))?;
     Ok(quotes.into())
 }
 
-pub async fn get_fiat_quote_url(device: AuthenticatedDeviceWallet, Path(quote_id): Path<String>, ClientIp(ip): ClientIp, State(client): State<Arc<FiatClient>>) -> Result<ApiResponse<FiatQuoteUrl>, ApiError> {
+pub async fn get_fiat_quote_url(
+    device: AuthenticatedDeviceWallet,
+    Path(quote_id): Path<String>,
+    ClientIp(ip): ClientIp,
+    ClientCountry(country): ClientCountry,
+    State(client): State<Arc<FiatClient>>,
+) -> Result<ApiResponse<FiatQuoteUrl>, ApiError> {
     let locale = device.record.device.locale.as_ref();
-    let context = fiat::FiatDeviceContext::new(device.record.id, device.wallet_id, device.wallet_type, ip.to_string());
+    let context = fiat::FiatDeviceContext::new(device.record.id, device.wallet_id, device.wallet_type, ip.to_string(), country);
     let url = client.get_quote_url(&quote_id, &context, locale).await.map_err(|error| fiat_error(error, locale))?;
     Ok(url.into())
 }

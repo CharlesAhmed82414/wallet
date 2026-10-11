@@ -20,7 +20,7 @@ impl FiatDeviceContext {
     }
 
     pub fn mock_with_wallet_type(wallet_type: WalletType) -> Self {
-        Self::new(1, 2, wallet_type, "192.0.2.1".to_string())
+        Self::new(1, 2, wallet_type, "192.0.2.1".to_string(), None)
     }
 }
 

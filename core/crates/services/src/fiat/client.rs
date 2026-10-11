@@ -21,6 +21,7 @@ use uuid::Uuid;
 use super::error::FiatServiceError;
 use super::repository::{QuoteContext, Repository};
 use crate::ConfigCacher;
+use crate::app::client_country;
 use crate::assets::AssetCatalogClient;
 
 pub struct FiatClient {
@@ -121,7 +122,8 @@ impl FiatClient {
 
     pub async fn get_quotes(&self, request: FiatQuoteRequest) -> Result<FiatQuotes, FiatServiceError> {
         let asset = self.get_asset(&request.asset_id).await?;
-        let (quotes, errors) = self.get_provider_quotes(&request, &asset, &request.ip_address).await?;
+        let country = self.country(&request.ip_address, None).await?;
+        let (quotes, errors) = self.get_provider_quotes(&request, &asset, &country).await?;
         Ok(FiatQuotes {
             quotes: quotes.into_iter().map(|quote| quote.quote).collect(),
             errors,
@@ -135,7 +137,8 @@ impl FiatClient {
         if self.config.get_bool(ConfigKey::FiatValidateSubscription).await? {
             self.subscription_address(context, asset.chain()).await?;
         }
-        let (quotes, errors) = self.get_provider_quotes(&request, &asset, &context.ip_address).await?;
+        let country = self.country(&context.ip_address, context.country.as_deref()).await?;
+        let (quotes, errors) = self.get_provider_quotes(&request, &asset, &country).await?;
         Ok(FiatQuotes {
             quotes: self.add_quotes(context, quotes).await?,
             errors,
@@ -160,19 +163,19 @@ impl FiatClient {
             .ok_or_else(|| FiatServiceError::Internal(format!("Provider {provider_name} not found").into()))
     }
 
-    async fn get_provider_quotes(&self, request: &FiatQuoteRequest, asset: &Asset, ip_address: &str) -> Result<(Vec<CachedFiatQuote>, Vec<ProviderQuoteError>), FiatServiceError> {
+    async fn country(&self, ip_address: &str, country: Option<&str>) -> Result<String, FiatServiceError> {
+        client_country(self.ip_address_provider.as_ref(), ip_address, country)
+            .await
+            .map_err(|error| FiatServiceError::Internal(format!("IP address validation failed: {error}").into()))
+    }
+
+    async fn get_provider_quotes(&self, request: &FiatQuoteRequest, asset: &Asset, country_code: &str) -> Result<(Vec<CachedFiatQuote>, Vec<ProviderQuoteError>), FiatServiceError> {
         let QuoteContext {
             countries: providers_countries,
             fiat_assets,
             providers: db_providers,
         } = self.repository.get_quote_context(asset.id.clone()).await?;
-        let ip_address_info = self
-            .ip_address_provider
-            .get_ip_address(ip_address)
-            .await
-            .map_err(|error| FiatServiceError::Internal(format!("IP address validation failed: {error}").into()))?;
         let fiat_mapping_map = fiat_mapping(asset, request.quote_type, fiat_assets);
-        let country_code = &ip_address_info.alpha2;
         if !is_country_allowed(&providers_countries, country_code, request.provider_id.as_deref()) {
             return Err(FiatQuoteError::RegionUnavailable.into());
         }
@@ -196,7 +199,7 @@ impl FiatClient {
                     .map(|quote| CachedFiatQuote {
                         quote,
                         asset_symbol: mapping.asset_symbol.clone(),
-                        country_code: Some(country_code.clone()),
+                        country_code: Some(country_code.to_string()),
                         url: None,
                     })
                     .map_err(|error| ProviderQuoteError::new(Some(provider_name.id().to_string()), error.to_string()))
@@ -234,7 +237,7 @@ impl FiatClient {
         })?;
         let country = match country_code {
             Some(country_code) => country_code,
-            None => self.ip_address_provider.get_ip_address(&context.ip_address).await?.alpha2,
+            None => self.country(&context.ip_address, context.country.as_deref()).await?,
         };
         let pending_transaction = FiatTransaction::new_pending(&data, Some(country), url.provider_transaction_id.clone());
         self.repository.add_fiat_transaction(pending_transaction, context.device_id, context.wallet_id, wallet_address.id).await?;

@@ -58,15 +58,17 @@ pub struct FiatDeviceContext {
     pub wallet_id: i32,
     pub wallet_type: WalletType,
     pub ip_address: String,
+    pub country: Option<String>,
 }
 
 impl FiatDeviceContext {
-    pub fn new(device_id: i32, wallet_id: i32, wallet_type: WalletType, ip_address: String) -> Self {
+    pub fn new(device_id: i32, wallet_id: i32, wallet_type: WalletType, ip_address: String, country: Option<String>) -> Self {
         Self {
             device_id,
             wallet_id,
             wallet_type,
             ip_address,
+            country,
         }
     }
 

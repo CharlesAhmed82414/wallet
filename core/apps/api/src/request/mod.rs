@@ -1,3 +1,4 @@
+mod client_country;
 mod client_ip;
 mod json;
 mod params;
@@ -6,6 +7,7 @@ mod queries;
 mod query;
 mod user_agent;
 
+pub use client_country::ClientCountry;
 pub use client_ip::ClientIp;
 pub use json::Json;
 pub use params::{
