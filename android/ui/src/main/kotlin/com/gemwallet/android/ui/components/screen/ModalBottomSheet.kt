@@ -18,7 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,7 +98,13 @@ fun ModalBottomSheet(
 
     if (!isPresented) return
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = expansion == SheetExpansion.Full)
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = when (expansion) {
+            SheetExpansion.Partial -> setOf(SheetValue.Hidden, SheetValue.PartiallyExpanded, SheetValue.Expanded)
+            SheetExpansion.Full -> setOf(SheetValue.Hidden, SheetValue.Expanded)
+        },
+    )
     var ownsKeyboard by remember { mutableStateOf(false) }
     LaunchedEffect(isVisible) {
         if (isVisible) {
@@ -119,7 +125,7 @@ fun ModalBottomSheet(
         dragHandle = if (title != null) null else dragHandle,
         contentWindowInsets = {
             when {
-                sheetState.targetValue == sheetState.currentValue -> BottomSheetDefaults.windowInsets
+                sheetState.targetValue == sheetState.currentValue -> BottomSheetDefaults.modalWindowInsets
                 sheetState.targetValue == SheetValue.Hidden -> sheetWindowInsets(WindowInsets.imeAnimationSource)
                 ownsKeyboard -> sheetWindowInsets(WindowInsets.imeAnimationTarget)
                 else -> sheetWindowInsets(WindowInsets())
