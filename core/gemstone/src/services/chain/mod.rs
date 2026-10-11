@@ -2,9 +2,8 @@ pub mod rules;
 
 use primitives::{Chain, ChainAsset, WalletConnectCAIP2};
 
-use crate::config::chain::icon_chain;
 use crate::models::state::GemListPhase;
-use crate::services::assets::icon::{GemAssetIcon, GemAssetIconImage};
+use crate::services::assets::icon::{GemAssetIcon, chain_icon};
 use crate::services::empty_state::{GemEmptyStateKind, empty_state};
 use crate::services::localization::GemLocalizedText;
 
@@ -39,11 +38,7 @@ pub fn chain_row_with_standard(chain: Chain, standard: Option<GemLocalizedText>)
         chain,
         title: ChainAsset::from_chain(chain).network_name,
         standard,
-        icon: GemAssetIcon {
-            image: GemAssetIconImage::Local { chain: icon_chain(chain) },
-            badge: None,
-            placeholder: None,
-        },
+        icon: chain_icon(chain),
     }
 }
 
@@ -90,6 +85,8 @@ impl GemChainService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::chain::icon_chain;
+    use crate::services::assets::icon::GemAssetIconImage;
 
     #[test]
     fn test_the_import_types_lead_with_multicoin_and_list_the_matching_chains() {
