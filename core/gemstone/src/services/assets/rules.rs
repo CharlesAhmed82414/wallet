@@ -271,7 +271,10 @@ pub fn asset_list_row(data: &AssetData, currency: &Currency, scope: GemAssetBala
         GemAssetSubtitleStyle::Network => (text.network.map(|network| GemRowText::neutral(GemLocalizedText::Text { text: network })), None),
     };
     GemAssetItemRow {
-        icon: super::icon::asset_icon(&asset.id),
+        icon: match style.title {
+            GemAssetTitleStyle::Network => super::icon::chain_icon(asset.chain()),
+            GemAssetTitleStyle::Asset | GemAssetTitleStyle::CanonicalAsset => super::icon::asset_icon(&asset.id),
+        },
         title: text.title,
         title_extra: text.symbol,
         subtitle,
@@ -942,6 +945,19 @@ mod tests {
         assert_eq!(asset_row_text(&ton, style(GemAssetTitleStyle::Network)).title, "TON");
         assert_eq!(asset_row_text(&ton, style(GemAssetTitleStyle::Asset)).title, "Gram");
         assert_eq!(asset_row_text(&ton, style(GemAssetTitleStyle::CanonicalAsset)).title, "Gram");
+    }
+
+    #[test]
+    fn test_a_row_titled_by_its_network_draws_the_network_logo_not_the_coin() {
+        use crate::services::assets::icon::{GemAssetIconImage, asset_icon, chain_icon};
+        let icon = |chain: Chain, title| {
+            let data = AssetData::mock(Asset::from_chain(chain), Balance::coin_balance(0u32.into()));
+            asset_list_row(&data, &Currency::USD, GemAssetBalanceScope::Total, GemAssetRowStyle { title, ..wallet_asset_row_style() }).icon
+        };
+
+        assert_eq!(icon(Chain::Arc, GemAssetTitleStyle::Network), chain_icon(Chain::Arc), "Arc pays fees in USDC but its network row shows Arc");
+        assert_eq!(icon(Chain::Base, GemAssetTitleStyle::Network).image, GemAssetIconImage::Local { chain: Chain::Base }, "an Ethereum layer 2 shows its own logo");
+        assert_eq!(icon(Chain::Arc, GemAssetTitleStyle::CanonicalAsset), asset_icon(&AssetId::from_chain(Chain::Arc)), "an asset row keeps the coin");
     }
 
     #[test]

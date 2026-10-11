@@ -67,6 +67,14 @@ pub fn asset_icon(asset_id: &AssetId) -> GemAssetIcon {
     }
 }
 
+pub fn chain_icon(chain: Chain) -> GemAssetIcon {
+    GemAssetIcon {
+        image: GemAssetIconImage::Local { chain: icon_chain(chain) },
+        badge: None,
+        placeholder: None,
+    }
+}
+
 fn icon_asset_id(asset_id: &AssetId) -> AssetId {
     if let Some(coin) = perpetual_coin(asset_id) {
         return Chain::all().into_iter().find(|chain| Asset::from_chain(*chain).symbol == coin).map(AssetId::from_chain).unwrap_or_else(|| asset_id.clone());

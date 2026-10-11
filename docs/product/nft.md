@@ -17,7 +17,7 @@ flowchart LR
 | When | Expected | Why |
 |---|---|---|
 | A collection is not verified | it is gathered under the "Unverified" row | spam never mixes with the wallet's real NFTs |
-| The user opens Receive for an NFT | it asks which network first | |
+| The user opens Receive for an NFT | it asks which network first; each network shows its own logo, never the coin it pays fees in | Arc pays fees in USDC, but the user is choosing a network, as on Import Wallet |
 | A refresh fails | the list stays on screen, an Unverified row alone included, and a toast says so | |
 | A refresh fails and there is nothing to show | the error takes the list's place | |
 | The wallet has no NFTs | "Your NFTs will appear here. Receive your first NFT" | |
