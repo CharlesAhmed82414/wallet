@@ -69,7 +69,6 @@ impl PriceHandler {
         if !old_channels.is_empty() {
             redis_connection.unsubscribe(old_channels).await?;
         }
-        self.observe_assets().await;
         let event = self.price_event(self.assets.iter().cloned().collect(), true).await?;
         redis_connection.subscribe(self.get_channel_ids()).await?;
         Ok(event)
@@ -79,7 +78,6 @@ impl PriceHandler {
         let new_assets: Vec<AssetId> = message.assets.iter().filter(|asset| !self.assets.contains(*asset)).cloned().collect();
         let new_channels: Vec<String> = new_assets.iter().map(price_channel).collect();
         self.assets.extend(new_assets);
-        self.observe_assets().await;
         let event = self.price_event(self.assets.iter().cloned().collect(), false).await?;
         if !new_channels.is_empty() {
             redis_connection.subscribe(new_channels).await?;
@@ -97,11 +95,6 @@ impl PriceHandler {
         let event = self.price_event(self.assets.iter().cloned().collect(), false).await?;
         redis_connection.unsubscribe(removed_channels).await?;
         Ok(event)
-    }
-
-    async fn observe_assets(&self) {
-        let observed: Vec<AssetId> = self.assets.iter().cloned().collect();
-        let _ = self.price_client.track_observed_assets(&observed).await;
     }
 
     async fn price_event(&self, asset_ids: Vec<AssetId>, include_rates: bool) -> Result<StreamEvent, Box<dyn Error + Send + Sync>> {

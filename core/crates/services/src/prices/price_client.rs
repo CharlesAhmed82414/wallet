@@ -3,7 +3,7 @@ use std::error::Error;
 use std::sync::Arc;
 use std::time::Duration;
 
-use cacher::{CacheError, ObservedAssetsCacher, PriceCacher};
+use cacher::{CacheError, PriceCacher};
 use chrono::{Duration as ChronoDuration, NaiveDateTime, Utc};
 use config_keys::ConfigKey;
 use gem_tracing::{error_with_fields, warn_with_fields};
@@ -22,12 +22,11 @@ pub struct PriceClient {
     repository: Arc<dyn Repository>,
     config: Arc<ConfigCacher>,
     cache: Arc<dyn PriceCacher>,
-    observed: Arc<dyn ObservedAssetsCacher>,
 }
 
 impl PriceClient {
-    pub(crate) fn new(repository: Arc<dyn Repository>, config: Arc<ConfigCacher>, cache: Arc<dyn PriceCacher>, observed: Arc<dyn ObservedAssetsCacher>) -> Self {
-        Self { repository, config, cache, observed }
+    pub(crate) fn new(repository: Arc<dyn Repository>, config: Arc<ConfigCacher>, cache: Arc<dyn PriceCacher>) -> Self {
+        Self { repository, config, cache }
     }
 
     pub async fn set_fiat_rates(&self, provider: FiatRateProvider, rates: Vec<FiatRate>) -> Result<usize, Box<dyn Error + Send + Sync>> {
@@ -140,10 +139,6 @@ impl PriceClient {
         Ok(self.repository.delete_charts(timeframe, before).await?)
     }
 
-    pub async fn track_observed_assets(&self, asset_ids: &[AssetId]) -> Result<(), Box<dyn Error + Send + Sync>> {
-        self.observed.track_observed_assets(asset_ids).await
-    }
-
     pub async fn add_prices(&self, provider: &dyn PriceAssetsProvider, mappings: Vec<AssetPriceMapping>) -> Result<Vec<PriceData>, Box<dyn Error + Send + Sync>> {
         let mappings = self.filter_existing_assets(mappings).await?;
         if mappings.is_empty() {
@@ -235,7 +230,7 @@ mod tests {
     use primitives::{AssetMarket, Chain, HOUR, Price};
 
     use super::*;
-    use crate::testkit::{MemoryConfigRepository, MemoryPriceCacher, MemoryPricesRepository, UnusedObservedCacher};
+    use crate::testkit::{MemoryConfigRepository, MemoryPriceCacher, MemoryPricesRepository};
 
     #[tokio::test]
     async fn test_price_providers() {
@@ -253,7 +248,7 @@ mod tests {
         ];
         let repository = Arc::new(MemoryPricesRepository::default().with_providers(providers.clone()));
         let cache = Arc::new(MemoryPriceCacher::new(vec![]));
-        let client = PriceClient::new(repository.clone(), Arc::new(ConfigCacher::new(Arc::new(MemoryConfigRepository::new()))), cache.clone(), Arc::new(UnusedObservedCacher));
+        let client = PriceClient::new(repository.clone(), Arc::new(ConfigCacher::new(Arc::new(MemoryConfigRepository::new()))), cache.clone());
 
         assert_eq!(client.price_providers().await.unwrap(), providers);
         assert_eq!(client.price_providers().await.unwrap(), providers);
@@ -268,7 +263,7 @@ mod tests {
         assert_eq!(repository.provider_reads(), 2);
 
         let unavailable_cache = Arc::new(MemoryPriceCacher::new(vec![]).with_unavailable_price_providers());
-        let client = PriceClient::new(repository.clone(), client.config.clone(), unavailable_cache, Arc::new(UnusedObservedCacher));
+        let client = PriceClient::new(repository.clone(), client.config.clone(), unavailable_cache);
         assert_eq!(client.price_providers().await.unwrap(), providers);
         assert_eq!(repository.provider_reads(), 3);
     }
@@ -313,7 +308,7 @@ mod tests {
             ])
             .await
             .unwrap();
-        let client = PriceClient::new(repository.clone(), Arc::new(ConfigCacher::new(Arc::new(MemoryConfigRepository::new()))), cache, Arc::new(UnusedObservedCacher));
+        let client = PriceClient::new(repository.clone(), Arc::new(ConfigCacher::new(Arc::new(MemoryConfigRepository::new()))), cache);
         let incoming = PriceData {
             id: PriceId::new(PriceProvider::Jupiter, "So11111111111111111111111111111111111111112".to_string()),
             provider: PriceProvider::Jupiter,
@@ -346,12 +341,7 @@ mod tests {
             ..PriceData::mock_with(2000.0, 3.0)
         };
         let repository = Arc::new(MemoryPricesRepository::default().with_chart_prices(HashMap::from([(missing.id.to_string(), 100.0), (sent.id.to_string(), 1000.0)])));
-        let client = PriceClient::new(
-            repository.clone(),
-            Arc::new(ConfigCacher::new(Arc::new(MemoryConfigRepository::new()))),
-            Arc::new(MemoryPriceCacher::new(vec![])),
-            Arc::new(UnusedObservedCacher),
-        );
+        let client = PriceClient::new(repository.clone(), Arc::new(ConfigCacher::new(Arc::new(MemoryConfigRepository::new()))), Arc::new(MemoryPriceCacher::new(vec![])));
 
         client.store_prices(vec![missing, sent], HOUR).await.unwrap();
 

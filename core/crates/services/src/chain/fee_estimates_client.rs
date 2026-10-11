@@ -111,7 +111,7 @@ mod tests {
     use crate::assets::AssetsClient;
     use crate::chain::ChainClient;
     use crate::prices::PriceClient;
-    use crate::testkit::{MemoryAssetRepository, MemoryConfigRepository, MemoryFeeEstimatesCacher, MemoryPriceCacher, MemoryPricesRepository, UnusedObservedCacher};
+    use crate::testkit::{MemoryAssetRepository, MemoryConfigRepository, MemoryFeeEstimatesCacher, MemoryPriceCacher, MemoryPricesRepository};
 
     fn client(cacher: Arc<MemoryFeeEstimatesCacher>) -> FeeEstimatesClient {
         let settings = Settings::new_setting_path(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../Settings.yaml")).unwrap();
@@ -127,7 +127,7 @@ mod tests {
         FeeEstimatesClient::new(
             ChainClient::new(ChainProviders::for_chain(Chain::Tron, &settings, "test")),
             AssetsClient::new(Arc::new(MemoryAssetRepository::new(vec![asset.as_basic_primitive()])), config.clone()),
-            PriceClient::new(Arc::new(MemoryPricesRepository::default()), config.clone(), Arc::new(MemoryPriceCacher::new(vec![price])), Arc::new(UnusedObservedCacher)),
+            PriceClient::new(Arc::new(MemoryPricesRepository::default()), config.clone(), Arc::new(MemoryPriceCacher::new(vec![price]))),
             cacher,
             config,
         )

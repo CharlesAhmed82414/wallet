@@ -39,7 +39,6 @@ pub(crate) enum CacheKey<'a> {
     JobStatus(&'a str),
 
     Markets,
-    ObservedAssets,
 
     SwapDepositAddresses(&'a str),
     SwapSendAddresses(&'a str),
@@ -90,7 +89,6 @@ impl CacheKey<'_> {
             Self::AddressStatus(chain, address) => format!("address:status:{}:{}", chain, address),
             Self::JobStatus(name) => format!("jobs:status:{}", name),
             Self::Markets => "markets:markets".to_string(),
-            Self::ObservedAssets => "pricer:observed_assets".to_string(),
             Self::SwapDepositAddresses(provider) => format!("swap:deposit_addresses:{}", provider),
             Self::SwapSendAddresses(provider) => format!("swap:send_addresses:{}", provider),
             Self::ChartsHistory(provider) => format!("charts:history:{}", provider),
@@ -133,7 +131,6 @@ impl CacheKey<'_> {
             Self::AddressStatus(_, _) => SECONDS_PER_YEAR,
             Self::JobStatus(_) => 7 * SECONDS_PER_DAY,
             Self::Markets => SECONDS_PER_DAY,
-            Self::ObservedAssets => 2 * SECONDS_PER_MINUTE,
             Self::SwapDepositAddresses(_) => 7 * SECONDS_PER_DAY,
             Self::SwapSendAddresses(_) => 7 * SECONDS_PER_DAY,
             Self::ChartsHistory(_) => 10 * 365 * SECONDS_PER_DAY,

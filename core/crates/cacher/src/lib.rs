@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 
 use redis::{AsyncCommands, Client, aio::ConnectionManager};
@@ -160,20 +161,6 @@ impl CacherClient {
         Ok(redis::cmd("ZREMRANGEBYSCORE").arg(key.key()).arg("-inf").arg(max_score).query_async(&mut self.connection.clone()).await?)
     }
 
-    pub(crate) async fn increment_in_sorted_set(&self, key: CacheKey<'_>, members: &[String]) -> Result<(), Box<dyn Error + Send + Sync>> {
-        if members.is_empty() {
-            return Ok(());
-        }
-        let name = key.key();
-        let mut pipe = redis::pipe();
-        for member in members {
-            pipe.cmd("ZINCRBY").arg(&name).arg(1).arg(member).ignore();
-        }
-        pipe.cmd("EXPIRE").arg(&name).arg(key.ttl()).ignore();
-        pipe.query_async::<()>(&mut self.connection.clone()).await?;
-        Ok(())
-    }
-
     pub(crate) async fn sorted_set(&self, key: CacheKey<'_>) -> Result<Vec<(String, f64)>, Box<dyn Error + Send + Sync>> {
         Ok(redis::cmd("ZRANGE").arg(key.key()).arg(0).arg(-1).arg("WITHSCORES").query_async(&mut self.connection.clone()).await?)
     }
@@ -183,10 +170,6 @@ impl CacherClient {
             return Ok(vec![]);
         }
         Ok(redis::cmd("ZMSCORE").arg(key.key()).arg(members).query_async(&mut self.connection.clone()).await?)
-    }
-
-    pub(crate) async fn sorted_set_range_by_score(&self, key: CacheKey<'_>, min: f64, max: f64, limit: usize) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
-        Ok(redis::cmd("ZRANGEBYSCORE").arg(key.key()).arg(min).arg(max).arg("LIMIT").arg(0).arg(limit).query_async(&mut self.connection.clone()).await?)
     }
 
     pub(crate) async fn sorted_set_count(&self, key: CacheKey<'_>) -> Result<usize, Box<dyn Error + Send + Sync>> {
@@ -200,6 +183,14 @@ impl CacherClient {
             return Ok(vec![]);
         }
         Ok(redis::cmd("ZPOPMIN").arg(&name).arg(count).query_async(&mut self.connection.clone()).await?)
+    }
+
+    pub(crate) async fn channel_subscribers(&self, pattern: &str) -> Result<HashMap<String, usize>, Box<dyn Error + Send + Sync>> {
+        let channels: Vec<String> = redis::cmd("PUBSUB").arg("CHANNELS").arg(pattern).query_async(&mut self.connection.clone()).await?;
+        if channels.is_empty() {
+            return Ok(HashMap::new());
+        }
+        Ok(redis::cmd("PUBSUB").arg("NUMSUB").arg(channels).query_async(&mut self.connection.clone()).await?)
     }
 
     pub(crate) async fn publish<T: Serialize>(&self, channel: &str, value: &T) -> Result<usize, Box<dyn Error + Send + Sync>> {
