@@ -50,7 +50,7 @@ class ReceiveViewModel @AssistedInject constructor(
     private val service: GemReceiveServiceInterface,
     getSession: GetSession,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val selectedAssetId = MutableStateFlow(sourceAssetId)

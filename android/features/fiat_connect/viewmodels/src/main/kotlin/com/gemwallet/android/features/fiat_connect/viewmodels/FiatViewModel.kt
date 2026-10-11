@@ -67,7 +67,7 @@ class FiatViewModel @Inject constructor(
     assetQuery: AssetQueryOptional,
     priceUsdQuery: PriceUsdQuery,
     private val service: GemFiatQuoteServiceInterface,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {

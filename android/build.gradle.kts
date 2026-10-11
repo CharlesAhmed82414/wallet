@@ -19,7 +19,8 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
 }
 
-val gemstoneHostLibrary by extra(File(rootDir, "../core/target/debug/${System.mapLibraryName("gemstone")}"))
+val gemstoneHostLibrary = File(rootDir, "../core/target/debug/${System.mapLibraryName("gemstone")}")
+extra["gemstoneHostLibrary"] = gemstoneHostLibrary
 
 allprojects {
     repositories {

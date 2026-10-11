@@ -131,7 +131,7 @@ sealed interface ListItemImage {
 
     data class Symbol(val symbol: ListItemSymbol, val tint: ListItemTextStyle = ListItemTextStyle.Body, override val style: ListItemImageStyle = ListItemImageStyle.Glyph) : ListItemImage
 
-    data class Drawable(@DrawableRes val id: Int, override val style: ListItemImageStyle = ListItemImageStyle.Settings) : ListItemImage
+    data class Drawable(@param:DrawableRes val id: Int, override val style: ListItemImageStyle = ListItemImageStyle.Settings) : ListItemImage
 }
 
 enum class ListItemImageStyle(val size: Dp, val isRounded: Boolean = false) {

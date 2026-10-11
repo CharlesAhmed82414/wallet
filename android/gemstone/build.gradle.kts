@@ -9,7 +9,7 @@ val jniLibsDir = layout.buildDirectory.dir("jniLibs").get().asFile
 val generatedKotlinDir = gemstoneSrc.resolve("main/java")
 val isRelease = System.getenv("BUILD_MODE") == "release"
 val cargoBuildFlag = if (isRelease) "--release" else ""
-val gemstoneHostLibrary: File by rootProject.extra
+val gemstoneHostLibrary = rootProject.extra["gemstoneHostLibrary"] as File
 val defaultCargoNdkAbis = when {
     System.getenv("UNIT_TESTS") == "true" -> "x86_64"
     isRelease -> "arm64-v8a,armeabi-v7a"

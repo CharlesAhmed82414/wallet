@@ -13,8 +13,8 @@ plugins {
 apply(from = "$rootDir/gradle/channels.gradle.kts")
 
 @Suppress("UNCHECKED_CAST")
-val gemChannels: Map<String, Map<String, Any?>> by extra
-val gemChannel: String by extra
+val gemChannels = extra["gemChannels"] as Map<String, Map<String, Any?>>
+val gemChannel = extra["gemChannel"] as String
 
 gradle.startParameter.projectProperties["channel"]?.takeIf { it.isNotBlank() }?.let { explicit ->
     val requestedChannels = gradle.startParameter.taskNames
@@ -51,7 +51,7 @@ android {
     compileSdk = 37
     ndkVersion = libs.versions.androidNdk.get()
 
-    val channelDimension by extra("channel")
+    val channelDimension = "channel"
     flavorDimensions.add(channelDimension)
 
     defaultConfig {

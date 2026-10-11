@@ -183,9 +183,9 @@ data class ImportWalletUIState(
         get() = importType.chain != null
 }
 
-data class ImportTabUIModel(val type: ImportType, @StringRes val title: Int, val isSelected: Boolean)
+data class ImportTabUIModel(val type: ImportType, @param:StringRes val title: Int, val isSelected: Boolean)
 
-data class ImportInputUIModel(@StringRes val placeholder: Int, val protectsInput: Boolean, val supportsPhraseSuggestions: Boolean, val showsViewOnlyWarning: Boolean)
+data class ImportInputUIModel(@param:StringRes val placeholder: Int, val protectsInput: Boolean, val supportsPhraseSuggestions: Boolean, val showsViewOnlyWarning: Boolean)
 
 internal fun GemWalletImportKind.inputUiModel() = ImportInputUIModel(
     placeholder = fieldStringRes(),

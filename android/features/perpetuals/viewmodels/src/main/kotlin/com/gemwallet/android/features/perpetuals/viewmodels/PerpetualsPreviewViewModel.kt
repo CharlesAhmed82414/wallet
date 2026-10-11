@@ -36,7 +36,7 @@ class PerpetualsPreviewViewModel @Inject constructor(
     getSession: GetSession,
     perpetualPositionsQuery: PerpetualPositionsQuery,
     perpetualWalletBalanceQuery: PerpetualWalletBalanceQuery,
-    @param:IoDispatcher ioDispatcher: CoroutineDispatcher,
+    @IoDispatcher ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val balance = getSession()
