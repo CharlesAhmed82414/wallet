@@ -9,6 +9,7 @@ use super::observation::NodeStatusObservation;
 use super::switch_reason::NodeMonitorError;
 use super::telemetry::NodeTelemetry;
 use crate::config::Url;
+use crate::proxy::transport;
 
 pub(super) async fn observe_node(chain: Chain, request: &NodeCheckRequest, url: Url) -> NodeStatusObservation {
     NodeTelemetry::log_check_started(chain, &url);
@@ -19,7 +20,7 @@ pub(super) async fn observe_node(chain: Chain, request: &NodeCheckRequest, url: 
         Ok(headers) => headers,
         Err(error) => return observation(NodeStatusState::error(error)).with_monitor_error(NodeMonitorError::Request),
     };
-    let client = match gem_client::builder().default_headers(headers).build() {
+    let client = match transport::client_builder().default_headers(headers).build() {
         Ok(client) => client,
         Err(error) => return observation(NodeStatusState::error(error.to_string())).with_monitor_error(NodeMonitorError::Request),
     };

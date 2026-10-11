@@ -24,7 +24,7 @@ use crate::config::{ChainConfig, Config, ServerConfig};
 use crate::gateway::Gateway;
 use crate::metrics::Metrics;
 use crate::node_service::NodeService;
-use crate::proxy::{ProxyRequest, ProxyResponse};
+use crate::proxy::{ProxyRequest, ProxyResponse, transport};
 use crate::webhook::DynodeBroadcastWebhookClient;
 
 struct Routes {
@@ -76,7 +76,7 @@ impl Server {
         let nodes = if !chains.is_empty() {
             let settings = config.chains.ok_or("chain configuration is required")?;
             node_limit = settings.request.limit;
-            let client = gem_client::builder().timeout(settings.request.timeout).build()?;
+            let client = transport::client_builder().timeout(settings.request.timeout).build()?;
             let cache = RequestCache::for_chains(&settings.cache, &settings.chain_types, chains.values());
             Some(NodeService::new(
                 chains,

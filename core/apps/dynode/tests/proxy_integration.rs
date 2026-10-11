@@ -310,8 +310,7 @@ async fn test_proxy_routing() -> Result<(), BoxError> {
     let echo: Echo = serde_json::from_slice(&response.body)?;
     assert_eq!((echo.authorization.as_deref(), echo.body.as_str(), echo.dropped), (Some("Bearer endpoint-key"), r#"{"hello":"world"}"#, None));
     assert_eq!(echo.query, BTreeMap::from([("apikey".into(), "configured-key".into()), ("query".into(), "kept".into())]));
-    let redirected: Echo = serde_json::from_slice(&harness.call(&provider("echo", "/redirect"), 200, None, &[]).await?.body)?;
-    assert_eq!((redirected.path.as_str(), redirected.query), ("/echo/inspect", BTreeMap::from([("redirected".into(), "true".into())])));
+    assert!(harness.call(&provider("echo", "/redirect"), 302, None, &[]).await?.body.is_empty());
     assert_eq!(response.headers.get("x-provider").unwrap(), "fixture");
     assert_eq!(response.headers.get("x-do-not-forward"), None);
     assert_eq!(harness.call(&provider("echo", "/status"), 418, None, &[]).await?.body, RAW_BODY);
