@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.assets.viewmodels.asset.models
 
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.domains.confirm.ConfirmTransferInput
 import com.gemwallet.android.ext.requireChain
 import com.gemwallet.android.ext.toPrimitives
@@ -11,6 +12,7 @@ import uniffi.gemstone.GemAssetNetworkDestination
 import uniffi.gemstone.GemBannerKey
 import uniffi.gemstone.GemRowAction
 
+@Immutable
 sealed interface AssetAction {
     sealed interface Navigation : AssetAction
 

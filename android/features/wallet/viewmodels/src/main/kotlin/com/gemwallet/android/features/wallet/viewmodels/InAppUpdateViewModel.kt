@@ -1,6 +1,7 @@
 package com.gemwallet.android.features.wallet.viewmodels
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gemwallet.android.application.update.cases.ObserveAppUpdateOffer
@@ -115,6 +116,7 @@ class InAppUpdateViewModel @Inject constructor(observeAppUpdateOffer: ObserveApp
     }
 }
 
+@Immutable
 sealed interface DownloadState {
     object Idle : DownloadState
     object Preparing : DownloadState

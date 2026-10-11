@@ -1,10 +1,12 @@
 package com.gemwallet.android.domains.confirm
 
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.serializer.packRoutePayload
 import com.gemwallet.android.serializer.unpackRoutePayload
 import com.wallet.core.primitives.Wallet
 import uniffi.gemstone.GemTransferData
 
+@Immutable
 data class ConfirmTransferInput(val data: GemTransferData, val wallet: Wallet? = null)
 
 fun GemTransferData.pack(): String? = packRoutePayload()

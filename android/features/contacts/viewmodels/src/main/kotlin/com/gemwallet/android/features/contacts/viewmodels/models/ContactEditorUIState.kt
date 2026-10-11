@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.contacts.viewmodels.models
 
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.wallet.core.primitives.Chain
 import uniffi.gemstone.GemContactAddressRow
@@ -12,6 +13,7 @@ enum class ContactEditorPage {
     Avatar,
 }
 
+@Immutable
 data class ContactEditorUIState(
     val isEdit: Boolean = false,
     val name: String = "",
@@ -27,6 +29,7 @@ data class ContactEditorUIState(
     val isSaveEnabled: Boolean = false,
 )
 
+@Immutable
 data class ContactAddressInput(
     val chain: Chain,
     val address: String = "",

@@ -1,5 +1,7 @@
 package com.gemwallet.android.features.settings.viewmodels.security.models
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 
+@Immutable
 data class LockPeriodOption(val minutes: Int, @param:StringRes val title: Int)

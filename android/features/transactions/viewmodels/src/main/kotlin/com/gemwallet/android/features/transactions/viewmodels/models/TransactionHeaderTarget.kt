@@ -1,9 +1,11 @@
 package com.gemwallet.android.features.transactions.viewmodels.models
 
+import androidx.compose.runtime.Immutable
 import com.wallet.core.primitives.AssetId
 import com.wallet.core.primitives.NFTAssetId
 import uniffi.gemstone.GemTransactionHeaderAction
 
+@Immutable
 sealed interface TransactionHeaderTarget {
     data class Asset(val assetId: AssetId) : TransactionHeaderTarget
     data class Nft(val assetId: NFTAssetId) : TransactionHeaderTarget

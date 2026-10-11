@@ -1,12 +1,14 @@
 package com.gemwallet.android.features.transfer.viewmodels.recipient.models
 
 import android.content.Context
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.ui.components.list_item.ListItemModel
 import com.gemwallet.android.ui.localization.stringRes
 import com.gemwallet.android.ui.models.ListSection
 import uniffi.gemstone.GemRecipient
 import uniffi.gemstone.GemRecipientSection
 
+@Immutable
 data class RecipientRowUIModel(val recipient: GemRecipient, val model: ListItemModel)
 
 internal fun GemRecipientSection.uiSection(id: String, context: Context): ListSection<RecipientRowUIModel> = ListSection(

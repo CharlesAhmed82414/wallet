@@ -1,5 +1,6 @@
 package com.gemwallet.android.application.wallet_connect
 
+import androidx.compose.runtime.Immutable
 import com.wallet.core.primitives.ApplicationMetadata
 import kotlinx.coroutines.flow.Flow
 import uniffi.gemstone.GemWalletConnectRejection
@@ -42,6 +43,7 @@ data class WalletConnectSessionNamespace(val chains: List<String>?, val methods:
 
 data class WalletConnectProposalNamespace(val chains: List<String>?)
 
+@Immutable
 data class WalletConnectSessionProposal(
     val name: String,
     val description: String,
@@ -56,8 +58,10 @@ data class WalletConnectSessionProposal(
 
 data class WalletConnectJsonRpcRequest(val id: Long, val method: String, val params: String)
 
+@Immutable
 data class WalletConnectSessionRequest(val topic: String, val chainId: String?, val request: WalletConnectJsonRpcRequest)
 
+@Immutable
 data class WalletConnectAuthenticationRequest(val id: Long, val metadata: ApplicationMetadata?, val payloadParams: WalletConnectAuthPayloadParams)
 
 data class WalletConnectAuthPayloadParams(
@@ -77,6 +81,7 @@ data class WalletConnectAuthPayloadParams(
 
 interface WalletConnectAuthObject
 
+@Immutable
 data class WalletConnectVerifyContext(val origin: String, val validation: WalletConnectValidation, val isScam: Boolean?)
 
 enum class WalletConnectValidation {

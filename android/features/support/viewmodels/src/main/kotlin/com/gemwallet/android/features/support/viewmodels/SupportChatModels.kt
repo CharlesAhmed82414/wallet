@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.support.viewmodels
 
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ui.format.gemDay
 import com.gemwallet.android.ui.format.localDate
@@ -10,6 +11,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
+@Immutable
 data class SupportChatDay(val id: String, val date: LocalDate, val groups: List<GemSupportChatGroup>)
 
 fun buildSupportChatDays(messages: List<SupportMessage>, zone: ZoneId = ZoneId.systemDefault()): List<SupportChatDay> =

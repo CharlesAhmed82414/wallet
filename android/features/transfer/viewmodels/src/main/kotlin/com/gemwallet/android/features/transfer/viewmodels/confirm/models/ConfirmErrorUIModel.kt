@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.transfer.viewmodels.confirm.models
 
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.ext.toAssetId
 import com.gemwallet.android.ui.components.InfoSheetEntity
 import com.wallet.core.primitives.Asset
@@ -8,8 +9,10 @@ import uniffi.gemstone.GemAcquireAsset
 import uniffi.gemstone.GemAcquireAssetFlow
 import uniffi.gemstone.GemAcquireOption
 
+@Immutable
 data class ConfirmErrorUIModel(val text: String, val info: InfoSheetEntity?)
 
+@Immutable
 data class AcquireAssetRequest(val asset: Asset, val acquire: GemAcquireAsset) {
     val offersOptions: Boolean get() = acquire.flow == GemAcquireAssetFlow.OPTIONS
     val buyAmount: Int? get() = acquire.buyAmount

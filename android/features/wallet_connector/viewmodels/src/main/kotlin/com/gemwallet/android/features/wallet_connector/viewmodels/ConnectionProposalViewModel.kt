@@ -2,6 +2,7 @@ package com.gemwallet.android.features.wallet_connector.viewmodels
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gemwallet.android.application.IoDispatcher
@@ -187,6 +188,7 @@ class ConnectionProposalViewModel @AssistedInject constructor(
     }
 }
 
+@Immutable
 sealed interface ConnectionProposalUIState {
     val verificationStatus: WalletConnectionVerificationStatus
 

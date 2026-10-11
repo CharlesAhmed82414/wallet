@@ -2,6 +2,7 @@ package com.gemwallet.android.features.onboarding.viewmodels.import_wallet
 
 import android.content.Context
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gemwallet.android.application.IoDispatcher
@@ -183,8 +184,10 @@ data class ImportWalletUIState(
         get() = importType.chain != null
 }
 
+@Immutable
 data class ImportTabUIModel(val type: ImportType, @param:StringRes val title: Int, val isSelected: Boolean)
 
+@Immutable
 data class ImportInputUIModel(@param:StringRes val placeholder: Int, val protectsInput: Boolean, val supportsPhraseSuggestions: Boolean, val showsViewOnlyWarning: Boolean)
 
 internal fun GemWalletImportKind.inputUiModel() = ImportInputUIModel(

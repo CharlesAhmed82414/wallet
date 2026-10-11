@@ -1,10 +1,12 @@
 package com.gemwallet.android.ui.components.screen
 
+import androidx.compose.runtime.Immutable
 import uniffi.gemstone.GemSecretPhraseRow
 import uniffi.gemstone.secretPhraseRows
 
 data class PhraseWord(val index: Int, val word: String)
 
+@Immutable
 sealed interface PhraseRow {
     data class Pair(val left: PhraseWord, val right: PhraseWord) : PhraseRow
     data class Single(val word: PhraseWord) : PhraseRow

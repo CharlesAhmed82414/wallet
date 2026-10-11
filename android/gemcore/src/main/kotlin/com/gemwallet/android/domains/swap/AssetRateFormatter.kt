@@ -1,10 +1,12 @@
 package com.gemwallet.android.domains.swap
 
+import androidx.compose.runtime.Immutable
 import com.gemwallet.android.model.text
 import uniffi.gemstone.GemAssetRate
 import uniffi.gemstone.GemSwapRate
 import java.util.Locale
 
+@Immutable
 data class AssetRatePair(val forward: String, val reverse: String)
 
 class AssetRateFormatter(private val locale: Locale = Locale.getDefault()) {

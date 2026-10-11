@@ -17,6 +17,7 @@ android {
 dependencies {
     api(project(":gemcore"))
     api(libs.lifecycle.viewmodel.savedstate)
+    compileOnly(libs.compose.runtime.annotation)
     testImplementation(testFixtures(project(":gemcore")))
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
