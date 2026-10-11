@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use axum::extract::FromRequestParts;
+use axum::extract::{FromRequestParts, OriginalUri};
 use gem_auth::{AUTHORIZATION_HEADER, BEARER_PREFIX};
 use http::StatusCode;
 use http::request::Parts;
@@ -28,12 +28,39 @@ pub struct WebhookRequest {
 impl<S: Send + Sync> FromRequestParts<S> for WebhookRequest {
     type Rejection = ApiError;
 
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Ok(OriginalUri(uri)) = OriginalUri::from_request_parts(parts, state).await;
         let headers = parts
             .headers
             .iter()
             .filter_map(|(name, value)| value.to_str().ok().map(|value| (name.as_str().to_ascii_lowercase(), value.to_string())))
             .collect();
-        Ok(Self { headers, path: parts.uri.path().to_string() })
+        Ok(Self { headers, path: uri.path().to_string() })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::Router;
+    use axum::body::Body;
+    use axum::routing::post;
+    use http::Request;
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+
+    use super::WebhookRequest;
+
+    #[tokio::test]
+    async fn test_webhook_request() {
+        let webhooks = Router::new()
+            .route("/webhooks/{kind}/{sender}/{secret}", post(|request: WebhookRequest| async move { request.path }))
+            .route("/webhooks/{kind}/{sender}", post(|request: WebhookRequest| async move { request.path }));
+        let router = Router::new().nest("/v1", webhooks);
+
+        for path in ["/v1/webhooks/fiat/banxa/secret", "/v1/webhooks/fiat/banxa"] {
+            let response = router.clone().oneshot(Request::post(format!("{path}?query=ignored")).body(Body::empty()).unwrap()).await.unwrap();
+
+            assert_eq!(response.into_body().collect().await.unwrap().to_bytes(), path);
+        }
     }
 }

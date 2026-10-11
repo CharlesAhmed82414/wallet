@@ -1,13 +1,14 @@
-use crate::providers::moonpay::models::{Asset, FiatCurrencyType, Transaction, WebhookPayload};
-use primitives::{Chain, FiatQuoteType, FiatTransactionStatus, FiatTransactionUpdate};
+use crate::providers::moonpay::models::{Asset, FiatCurrencyType, Transaction, WebhookEvent, WebhookPayload};
+use primitives::{Chain, FiatQuoteType, FiatTransactionStatus, FiatTransactionUpdate, FiatWebhook};
 
 #[cfg(test)]
 use primitives::PaymentType;
 
-pub fn map_webhook_data(data: serde_json::Value) -> Result<Transaction, serde_json::Error> {
+pub fn map_webhook(data: serde_json::Value) -> Result<FiatWebhook, serde_json::Error> {
     Ok(match serde_json::from_value::<WebhookPayload>(data)? {
-        WebhookPayload::Wrapped(payload) => payload.data,
-        WebhookPayload::Bare(payload) => payload,
+        WebhookPayload::Wrapped(payload) => FiatWebhook::Transaction(map_order(payload.data)),
+        WebhookPayload::Bare(payload) => FiatWebhook::Transaction(map_order(payload)),
+        WebhookPayload::Event(WebhookEvent::TransactionAbandoned) => FiatWebhook::None,
     })
 }
 
@@ -133,57 +134,43 @@ mod tests {
     }
 
     #[test]
-    fn test_map_order_buy_failed() {
-        let webhook_data = map_webhook_data(serde_json::from_str(include_str!("../../../testdata/moonpay/webhook_buy_complete.json")).unwrap()).unwrap();
-        let result = map_order(webhook_data);
-
+    fn test_map_webhook() {
         assert_eq!(
-            result,
-            FiatTransactionUpdate {
+            map_webhook(serde_json::from_str(include_str!("../../../testdata/moonpay/webhook_buy_complete.json")).unwrap()).unwrap(),
+            FiatWebhook::Transaction(FiatTransactionUpdate {
                 transaction_id: "1b6cdb1e-9299-45b1-9670-54db1ea5a21f".to_string(),
                 provider_transaction_id: None,
                 status: FiatTransactionStatus::Failed,
                 transaction_hash: None,
                 fiat_amount: Some(20.0),
                 fiat_currency: Some("USD".to_string()),
-            }
+            })
         );
-    }
-
-    #[test]
-    fn test_map_order_sell_pending() {
-        let webhook_data = map_webhook_data(serde_json::from_str(include_str!("../../../testdata/moonpay/webhook_sell_complete_.json")).unwrap()).unwrap();
-        let result = map_order(webhook_data);
-
         assert_eq!(
-            result,
-            FiatTransactionUpdate {
+            map_webhook(serde_json::from_str(include_str!("../../../testdata/moonpay/webhook_sell_complete_.json")).unwrap()).unwrap(),
+            FiatWebhook::Transaction(FiatTransactionUpdate {
                 transaction_id: "557d8fc1-0657-4505-8702-6bd9e1cd6241".to_string(),
                 provider_transaction_id: None,
                 status: FiatTransactionStatus::Pending,
                 transaction_hash: None,
                 fiat_amount: Some(3123.07),
                 fiat_currency: Some("USD".to_string()),
-            }
+            })
         );
-    }
-
-    #[test]
-    fn test_map_order_v3_sell_complete() {
-        let webhook_data: Transaction = serde_json::from_str(include_str!("../../../testdata/moonpay/sell_transaction_complete.json")).unwrap();
-
-        let result = map_order(webhook_data);
-
         assert_eq!(
-            result,
-            FiatTransactionUpdate {
+            map_webhook(serde_json::from_str(include_str!("../../../testdata/moonpay/sell_transaction_complete.json")).unwrap()).unwrap(),
+            FiatWebhook::Transaction(FiatTransactionUpdate {
                 transaction_id: "bcd0315e-4264-48bb-8c10-1a5207297341".to_string(),
                 provider_transaction_id: None,
                 status: FiatTransactionStatus::Complete,
                 transaction_hash: Some("0xabc123456789".to_string()),
                 fiat_amount: Some(3123.07),
                 fiat_currency: Some("USD".to_string()),
-            }
+            })
+        );
+        assert_eq!(
+            map_webhook(serde_json::from_str(include_str!("../../../testdata/moonpay/webhook_transaction_abandoned.json")).unwrap()).unwrap(),
+            FiatWebhook::None
         );
     }
 
@@ -282,25 +269,5 @@ mod tests {
     fn test_skip_token_without_contract() {
         assert!(MoonPayClient::map_asset(Asset::mock("sweat_near", "near", None, false)).is_none());
         assert!(MoonPayClient::map_asset(Asset::mock("near", "near", None, true)).is_some());
-    }
-
-    #[test]
-    fn test_map_webhook_data_accepts_wrapped_transaction() {
-        let raw_body = include_str!("../../../testdata/moonpay/webhook_buy_complete.json");
-        let payload = map_webhook_data(serde_json::from_str(raw_body).unwrap()).unwrap();
-
-        assert_eq!(payload.id, "1b6cdb1e-9299-45b1-9670-54db1ea5a21f");
-        assert_eq!(payload.status, "failed");
-        assert_eq!(payload.base_currency.code, "usd");
-    }
-
-    #[test]
-    fn test_map_webhook_data_accepts_bare_transaction() {
-        let raw_body = include_str!("../../../testdata/moonpay/sell_transaction_complete.json");
-        let payload = map_webhook_data(serde_json::from_str(raw_body).unwrap()).unwrap();
-
-        assert_eq!(payload.id, "bcd0315e-4264-48bb-8c10-1a5207297341");
-        assert_eq!(payload.status, "completed");
-        assert_eq!(payload.crypto_transaction_id.as_deref(), Some("0xabc123456789"));
     }
 }

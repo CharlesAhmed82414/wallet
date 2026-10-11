@@ -20,8 +20,15 @@ pub struct Transaction {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum WebhookEvent {
+    TransactionAbandoned,
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum WebhookPayload {
     Wrapped(Data<Transaction>),
     Bare(Transaction),
+    Event(WebhookEvent),
 }

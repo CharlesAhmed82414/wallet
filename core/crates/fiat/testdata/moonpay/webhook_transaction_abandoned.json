@@ -1,0 +1,8 @@
+{
+  "type": "transaction_abandoned",
+  "body": {
+    "transactionId": "6f2c1d4e-8a3b-4c5d-9e6f-7a8b9c0d1e2f",
+    "customerId": "3e4f5a6b-7c8d-4e9f-a0b1-c2d3e4f5a6b7",
+    "reason": "expired"
+  }
+}

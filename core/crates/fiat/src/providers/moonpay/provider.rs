@@ -8,11 +8,7 @@ use async_trait::async_trait;
 use primitives::FiatWebhook;
 use std::error::Error;
 
-use super::{
-    client::MoonPayClient,
-    mapper::{map_order, map_webhook_data},
-    models::MoonPayBuyQuote,
-};
+use super::{client::MoonPayClient, mapper::map_webhook, models::MoonPayBuyQuote};
 use primitives::{FiatProviderCountry, FiatProviderName, FiatQuoteRequest, FiatQuoteResponse, FiatQuoteType, FiatQuoteUrl, FiatQuoteUrlData};
 
 impl MoonPayClient {
@@ -51,8 +47,7 @@ impl FiatProvider for MoonPayClient {
 
     async fn parse_webhook(&self, request: FiatWebhookRequest) -> Result<FiatWebhook, Box<dyn std::error::Error + Send + Sync>> {
         self.verify_webhook(&request)?;
-        let payload = map_webhook_data(request.data).map_err(|_| FiatQuoteError::InvalidWebhook)?;
-        Ok(FiatWebhook::Transaction(map_order(payload)))
+        map_webhook(request.data).map_err(|_| FiatQuoteError::InvalidWebhook.into())
     }
 
     async fn get_quote_buy(&self, request: FiatQuoteRequest, request_map: FiatMapping) -> Result<FiatQuoteResponse, Box<dyn Error + Send + Sync>> {
