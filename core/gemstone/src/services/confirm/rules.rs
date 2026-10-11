@@ -1903,14 +1903,12 @@ mod tests {
         });
         assert_eq!(recipient_row(&unstake, None).map(|row| row.text), Some(text("ValiDAO")), "a validator reads as its name alone");
 
-        let swap_data = SwapData::mock_with_provider(SwapProvider::PancakeswapV3);
-        let provider_name = swap_data.quote.provider_data.name.clone();
         let swap = GemTransferData::mock(TransactionInputType::Swap {
             from_asset: Asset::mock_eth(),
             to_asset: Asset::mock_ethereum_usdc(),
-            swap_data,
+            swap_data: SwapData::mock_with_provider(SwapProvider::PancakeswapV3),
         });
-        assert_eq!(recipient_row(&swap, None).map(|row| row.text), Some(text(&provider_name)), "a swap provider reads as its name alone");
+        assert_eq!(recipient_row(&swap, None), None, "a swap names its provider in Swap Details, not on the confirmation screen");
     }
 
     #[test]

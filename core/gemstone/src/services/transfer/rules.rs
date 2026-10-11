@@ -397,14 +397,7 @@ impl GemTransferData {
                     address: self.recipient.address.clone(),
                 })
             }
-            TransactionInputType::Swap { swap_data, .. } => match swap_data.data.data_type {
-                SwapQuoteDataType::Contract => Some(GemConfirmDestination::Provider {
-                    name: swap_data.quote.provider_data.name.clone(),
-                    address: swap_data.data.to.clone(),
-                }),
-                SwapQuoteDataType::Transfer => None,
-            },
-            TransactionInputType::Account { .. } | TransactionInputType::Perpetual { .. } => None,
+            TransactionInputType::Swap { .. } | TransactionInputType::Account { .. } | TransactionInputType::Perpetual { .. } => None,
         }
     }
 }
@@ -1019,15 +1012,7 @@ mod tests {
             })
             .destination()
         };
-        let contract = SwapData::mock();
-        assert_eq!(
-            swap(contract.clone()),
-            Some(GemConfirmDestination::Provider {
-                name: contract.quote.provider_data.name.clone(),
-                address: contract.data.to
-            }),
-            "a contract quote shows the router it calls"
-        );
+        assert_eq!(swap(SwapData::mock()), None, "a contract quote names its provider in Swap Details only");
         assert_eq!(swap(SwapData::mock_transfer(SwapProvider::NearIntents, "1", "1", "deposit")), None, "a deposit address stays plain");
 
         let provider = DelegationValidator::mock();

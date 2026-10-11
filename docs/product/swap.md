@@ -87,8 +87,7 @@ flowchart LR
 | The chosen provider no longer answers | the error row with Retry; the provider is never switched behind the user | |
 | The user taps Confirm | the trade the screen loaded is signed with one authentication | the amounts signed are the amounts shown |
 | The provider needs a Permit2 signature | it is signed at Confirm together with the swap, under that same authentication | nothing is signed before the confirmation screen |
-| The quote calls a contract | the confirmation screen shows the Provider with that contract, which opens its address details on the paying network; Swap Details names the provider only | |
-| The quote pays a deposit address | no Provider row on the confirmation screen | |
+| The confirmation screen opens | no Provider row; the provider is named in Swap Details, opened from Details | the screen keeps to what is signed: wallet, network, amounts and fee |
 | A provider's minimum is then above that amount | the user is told the minimum, not "insufficient balance" | |
 | The user taps 25%, 50% or 100%, or "Use minimum amount" | quotes are asked at once | typing waits a short pause for the amount to settle; a button's amount is already final |
 
