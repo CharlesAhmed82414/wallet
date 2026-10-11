@@ -86,6 +86,11 @@ subprojects {
             }
         }
     }
+    plugins.withId("org.jetbrains.kotlin.plugin.compose") {
+        extensions.configure<org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension> {
+            stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("compose_stability.conf"))
+        }
+    }
     listOf("com.android.library", "com.android.application").forEach { pluginId ->
         plugins.withId(pluginId) {
             dependencies.add("testImplementation", "net.java.dev.jna:jna:5.18.1")

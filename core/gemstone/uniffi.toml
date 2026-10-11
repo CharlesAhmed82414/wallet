@@ -1,5 +1,6 @@
 [bindings.kotlin]
 cdylib_name = "gemstone"
+generate_immutable_records = true
 
 [bindings.swift]
 ffi_module_name = "GemstoneFFI"
