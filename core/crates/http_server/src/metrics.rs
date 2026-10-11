@@ -17,7 +17,7 @@ const UNMATCHED_ROUTE: &str = "unmatched";
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct RequestLabels {
-    method: String,
+    method: &'static str,
     route: String,
     status: u16,
 }
@@ -25,19 +25,19 @@ struct RequestLabels {
 impl EncodeLabelSet for RequestLabels {
     fn encode(&self, encoder: &mut LabelSetEncoder) -> Result<(), fmt::Error> {
         let status = self.status.to_string();
-        [("method", self.method.as_str()), ("route", self.route.as_str()), ("status", status.as_str())].encode(encoder)
+        [("method", self.method), ("route", self.route.as_str()), ("status", status.as_str())].encode(encoder)
     }
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct RouteLabels {
-    method: String,
+    method: &'static str,
     route: String,
 }
 
 impl EncodeLabelSet for RouteLabels {
     fn encode(&self, encoder: &mut LabelSetEncoder) -> Result<(), fmt::Error> {
-        [("method", self.method.as_str()), ("route", self.route.as_str())].encode(encoder)
+        [("method", self.method), ("route", self.route.as_str())].encode(encoder)
     }
 }
 
@@ -71,15 +71,24 @@ impl HttpMetrics {
     }
 
     fn record(&self, method: &Method, route: &str, status: u16, started: Instant) {
-        let method = method.as_str().to_string();
-        self.requests
-            .get_or_create(&RequestLabels {
-                method: method.clone(),
-                route: route.to_string(),
-                status,
-            })
-            .inc();
+        let method = method_label(method);
+        self.requests.get_or_create(&RequestLabels { method, route: route.to_string(), status }).inc();
         self.duration.get_or_create(&RouteLabels { method, route: route.to_string() }).observe(started.elapsed().as_secs_f64());
+    }
+}
+
+fn method_label(method: &Method) -> &'static str {
+    match *method {
+        Method::GET => "GET",
+        Method::HEAD => "HEAD",
+        Method::POST => "POST",
+        Method::PUT => "PUT",
+        Method::DELETE => "DELETE",
+        Method::PATCH => "PATCH",
+        Method::OPTIONS => "OPTIONS",
+        Method::CONNECT => "CONNECT",
+        Method::TRACE => "TRACE",
+        _ => "OTHER",
     }
 }
 
@@ -128,5 +137,35 @@ where
             metrics.record(&method, &route, response.status().as_u16(), started);
             Ok(response)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::Router;
+    use axum::body::Body;
+    use axum::routing::get;
+    use prometheus_client::encoding::text::encode;
+    use tower::ServiceExt;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_unknown_methods_share_one_label() {
+        let metrics = HttpMetrics::new();
+        let mut registry = Registry::default();
+        metrics.register(&mut registry);
+        let router = Router::new().route("/", get(|| async {})).layer(metrics.layer());
+
+        for method in ["GET", "FOO", "BAR"] {
+            let request = Request::builder().method(method).uri("/").body(Body::empty()).unwrap();
+            router.clone().oneshot(request).await.unwrap();
+        }
+
+        let mut output = String::new();
+        encode(&mut output, &registry).unwrap();
+        assert!(output.contains(r#"method="GET""#));
+        assert!(output.contains(r#"http_requests_total{method="OTHER",route="/",status="405"} 2"#));
+        assert!(!output.contains("FOO") && !output.contains("BAR"));
     }
 }

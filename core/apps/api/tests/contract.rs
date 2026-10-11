@@ -342,7 +342,7 @@ fn public_cases() -> Vec<Case> {
         Case::new("v1_assets_no_content_type", Method::POST, "/v1/assets").raw(br#"["ethereum"]"#.to_vec(), None),
         Case::new("v1_assets_invalid_json", Method::POST, "/v1/assets").raw(b"{".to_vec(), Some(JSON)),
         Case::new("v1_assets_wrong_shape", Method::POST, "/v1/assets").json(json!({"ids": []})),
-        Case::new("v1_assets_oversize", Method::POST, "/v1/assets").raw(vec![b'['; 17 * 1024 * 1024], Some(JSON)).rejection(),
+        Case::new("v1_assets_oversize", Method::POST, "/v1/assets").raw(vec![b'['; 1024 * 1024 + 1], Some(JSON)).rejection(),
         Case::new("v1_assets_search", Method::GET, "/v1/assets/search?query=eth&chains=ethereum&limit=3"),
         Case::new("v1_assets_search_no_query", Method::GET, "/v1/assets/search"),
         Case::new("v1_assets_search_long_query", Method::GET, &format!("/v1/assets/search?query={}", "a".repeat(129))),

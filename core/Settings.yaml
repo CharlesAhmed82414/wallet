@@ -22,6 +22,7 @@ server:
     timeout: 10s
   request:
     timeout: 30s
+    limit: 1048576
 api:
   service: ""
   bind: "127.0.0.1:8000"

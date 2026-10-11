@@ -22,9 +22,6 @@ use axum::routing::{get, post};
 use crate::auth::device::{DeviceAuth, SignedPath, device_auth};
 use crate::state::AppState;
 
-const DEVICE_JSON_LIMIT: usize = 1024 * 1024;
-const WALLET_SIGNED_LIMIT: usize = 32 * 1024 * 1024;
-
 fn authenticated(router: Router<AppState>, state: &AppState, limit: usize, scheme: SignedPath) -> Router<AppState> {
     let auth = DeviceAuth {
         config: state.0.auth_config.clone(),
@@ -35,7 +32,7 @@ fn authenticated(router: Router<AppState>, state: &AppState, limit: usize, schem
     router.layer(from_fn_with_state(auth, device_auth))
 }
 
-pub fn v3_router(state: &AppState) -> Router<AppState> {
+pub fn v3_router(state: &AppState, limit: usize) -> Router<AppState> {
     let routes = Router::new()
         .route("/", post(device::register).get(device::get_device).put(device::update))
         .route("/is-registered", get(device::is_registered))
@@ -51,6 +48,9 @@ pub fn v3_router(state: &AppState) -> Router<AppState> {
         .route("/nft-assets/{asset_id}", get(nft::get_nft_asset))
         .route("/nft-assets/{asset_id}/refresh", post(nft::refresh_nft_asset))
         .route("/rewards", get(rewards::get_rewards))
+        .route("/rewards/referrals", post(rewards::create_referral))
+        .route("/rewards/referrals/use", post(rewards::use_referral_code))
+        .route("/rewards/redemptions", post(rewards::redeem))
         .route("/names/{name}", get(names::get_name))
         .route("/wallet-configuration", get(wallet_configuration::get_wallet_configuration))
         .route("/notifications", get(notifications::get_notifications))
@@ -63,16 +63,10 @@ pub fn v3_router(state: &AppState) -> Router<AppState> {
         .route("/portfolio/assets", post(portfolio::get_portfolio_assets))
         .route("/support/messages", get(support::get_messages).post(support::post_message));
     let images = Router::new().route("/support/messages/images", post(support::post_image));
-    let wallet_signed = Router::new()
-        .route("/rewards/referrals", post(rewards::create_referral))
-        .route("/rewards/referrals/use", post(rewards::use_referral_code))
-        .route("/rewards/redemptions", post(rewards::redeem));
-    authenticated(routes, state, DEVICE_JSON_LIMIT, SignedPath::PathAndQuery)
-        .merge(authenticated(images, state, support::MAX_SUPPORT_IMAGE_BYTES, SignedPath::PathAndQuery))
-        .merge(authenticated(wallet_signed, state, WALLET_SIGNED_LIMIT, SignedPath::PathAndQuery))
+    authenticated(routes, state, limit, SignedPath::PathAndQuery).merge(authenticated(images, state, support::MAX_SUPPORT_IMAGE_BYTES, SignedPath::PathAndQuery))
 }
 
-pub fn v2_router(state: &AppState) -> Router<AppState> {
+pub fn v2_router(state: &AppState, limit: usize) -> Router<AppState> {
     let routes = Router::new()
         .route("/", post(device::register).get(device::get_device).put(device::update))
         .route("/is_registered", get(device::is_registered))
@@ -93,6 +87,9 @@ pub fn v2_router(state: &AppState) -> Router<AppState> {
         .route("/rewards", get(rewards::get_rewards))
         .route("/rewards/events", get(rewards::get_rewards_events))
         .route("/rewards/redemptions/{code}", get(rewards::get_redemption_option))
+        .route("/rewards/referrals/create", post(rewards::create_referral))
+        .route("/rewards/referrals/use", post(rewards::use_referral_code))
+        .route("/rewards/redeem", post(rewards::redeem))
         .route("/name/resolve/{name}", get(names::get_name))
         .route("/scan/transaction", post(scan::scan_transaction))
         .route("/wallet_configuration", get(wallet_configuration::get_wallet_configuration))
@@ -108,11 +105,5 @@ pub fn v2_router(state: &AppState) -> Router<AppState> {
         .route("/support/messages", get(support::get_messages).post(support::post_message))
         .route("/support/action", post(support::post_action));
     let images = Router::new().route("/support/messages/images", post(support::post_image));
-    let wallet_signed = Router::new()
-        .route("/rewards/referrals/create", post(rewards::create_referral))
-        .route("/rewards/referrals/use", post(rewards::use_referral_code))
-        .route("/rewards/redeem", post(rewards::redeem));
-    authenticated(routes, state, DEVICE_JSON_LIMIT, SignedPath::PathOnly)
-        .merge(authenticated(images, state, support::MAX_SUPPORT_IMAGE_BYTES, SignedPath::PathOnly))
-        .merge(authenticated(wallet_signed, state, WALLET_SIGNED_LIMIT, SignedPath::PathOnly))
+    authenticated(routes, state, limit, SignedPath::PathOnly).merge(authenticated(images, state, support::MAX_SUPPORT_IMAGE_BYTES, SignedPath::PathOnly))
 }

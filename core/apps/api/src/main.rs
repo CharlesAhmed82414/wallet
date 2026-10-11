@@ -153,7 +153,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         APIService::Api => {
             let clients = api_clients(&settings).await?;
             let http_metrics = clients.metrics.http().clone();
-            let router = routes::router(AppState(Arc::new(clients)), settings.api.admin.enabled, settings.server.request.timeout, &http_metrics);
+            let router = routes::router(AppState(Arc::new(clients)), settings.api.admin.enabled, &settings.server.request, &http_metrics);
             serve(NormalizePathLayer::trim_trailing_slash().layer(router), address, config, shutdown).await
         }
         APIService::WebsocketStream => {

@@ -316,7 +316,14 @@ pub struct Chain {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Server {
     pub header: Timeout,
-    pub request: Timeout,
+    pub request: ServerRequest,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ServerRequest {
+    #[serde(deserialize_with = "duration::deserialize")]
+    pub timeout: Duration,
+    pub limit: usize,
 }
 
 #[derive(Debug, Deserialize, Clone)]

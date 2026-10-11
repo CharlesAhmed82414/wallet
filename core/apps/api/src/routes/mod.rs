@@ -4,8 +4,6 @@ pub mod fiat_rates;
 pub mod public;
 mod root;
 
-use std::time::Duration;
-
 use axum::extract::{DefaultBodyLimit, Request};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
@@ -15,20 +13,20 @@ use gem_tracing::{error_fields, info_with_fields};
 use http::header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT};
 use http::{HeaderValue, Method, StatusCode};
 use http_server::{ErrorBody, HttpMetrics, catch_panic_layer, status_message, timeout_layer, with_security_headers};
+use settings::ServerRequest;
 
 use crate::error::ApiError;
 use crate::state::AppState;
 
-const DEFAULT_BODY_LIMIT: usize = 16 * 1024 * 1024;
 const WEBHOOK_PATH_PREFIX: &str = "/v1/webhooks/";
 const WEBHOOK_SECRET_SEGMENT: usize = 5;
 
-pub fn router(state: AppState, admin_enabled: bool, request_timeout: Duration, http_metrics: &HttpMetrics) -> Router {
+pub fn router(state: AppState, admin_enabled: bool, request: &ServerRequest, http_metrics: &HttpMetrics) -> Router {
     let mut router = Router::new()
         .merge(root::router())
         .nest("/v1", public::router())
-        .nest("/v2/devices", devices::v2_router(&state))
-        .nest("/v3/devices", devices::v3_router(&state));
+        .nest("/v2/devices", devices::v2_router(&state, request.limit))
+        .nest("/v3/devices", devices::v3_router(&state, request.limit));
     if admin_enabled {
         router = router.nest("/v1/admin", admin::router());
     }
@@ -36,8 +34,8 @@ pub fn router(state: AppState, admin_enabled: bool, request_timeout: Duration, h
         .fallback(not_found)
         .method_not_allowed_fallback(not_found)
         .with_state(state)
-        .layer(timeout_layer(request_timeout))
-        .layer(DefaultBodyLimit::max(DEFAULT_BODY_LIMIT))
+        .layer(timeout_layer(request.timeout))
+        .layer(DefaultBodyLimit::max(request.limit))
         .layer(catch_panic_layer())
         .layer(middleware::map_response(json_error_net))
         .layer(middleware::from_fn(log_failed_requests))
