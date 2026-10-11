@@ -11,7 +11,7 @@ use super::{GemChart, GemChartCurrent};
 use crate::config::social::social_links;
 use crate::formatted_number::GemFormattedNumber;
 use crate::models::copy::address_copy;
-use crate::models::list::{GemInfoTopic, GemListRow, GemListRowIcon, GemListRowTitle, GemListSection, GemListSectionFooter, GemListSectionTitle, GemRowAction};
+use crate::models::list::{GemInfoTopic, GemListRow, GemListRowIcon, GemListRowTitle, GemListSection, GemListSectionTitle, GemRowAction};
 use crate::percentage::GemPercentageStyle;
 use crate::precision::{GemCurrencyStyle, GemValueStyle};
 use crate::services::price::rules::has_price;
@@ -79,24 +79,16 @@ pub fn chart_sections(asset: &Asset, currency: Currency, price: Option<f64>, mar
     ]
     .into_iter()
     .filter(|rows| !rows.is_empty())
-    .map(|rows| section(GemListSectionTitle::None, rows));
+    .map(GemListSection::untitled);
     price_alert_section(price, price_alerts)
         .into_iter()
         .chain(market_sections)
         .chain(
             Some(social_links(links))
                 .filter(|links| !links.is_empty())
-                .map(|links| section(GemListSectionTitle::SocialLinks, vec![GemListRow::Social { links }])),
+                .map(|links| GemListSection::new(GemListSectionTitle::SocialLinks, vec![GemListRow::Social { links }])),
         )
         .collect()
-}
-
-fn section(title: GemListSectionTitle, rows: Vec<GemListRow>) -> GemListSection {
-    GemListSection {
-        title,
-        footer: GemListSectionFooter::None,
-        rows,
-    }
 }
 
 fn price_alert_section(price: Option<f64>, price_alerts: Option<Vec<PriceAlert>>) -> Option<GemListSection> {
@@ -116,7 +108,7 @@ fn price_alert_section(price: Option<f64>, price_alerts: Option<Vec<PriceAlert>>
             action: GemRowAction::PriceAlerts,
         },
     };
-    Some(section(GemListSectionTitle::None, vec![row]))
+    Some(GemListSection::untitled(vec![row]))
 }
 
 fn market_section(market: &AssetMarket, currency: Currency) -> Vec<GemListRow> {
@@ -333,15 +325,12 @@ mod tests {
     }
 
     fn set_price_alert() -> GemListSection {
-        section(
-            GemListSectionTitle::None,
-            vec![GemListRow::Link {
-                title: GemListRowTitle::SetPriceAlert,
-                value: None,
-                icon: GemListRowIcon::None,
-                action: GemRowAction::SetPriceAlert,
-            }],
-        )
+        GemListSection::untitled(vec![GemListRow::Link {
+            title: GemListRowTitle::SetPriceAlert,
+            value: None,
+            icon: GemListRowIcon::None,
+            action: GemRowAction::SetPriceAlert,
+        }])
     }
     use crate::formatted_number::GemValueTone;
     use primitives::{AssetId, ChartValuePercentage, LinkType, PriceAlertDirection, currency::Currency};
@@ -601,32 +590,26 @@ mod tests {
             chart_sections(&token, Currency::USD, Some(1.0), Some(&market), Some(vec![]), links.clone(), Some(BlockExplorerLink::mock())),
             vec![
                 set_price_alert(),
-                section(
-                    GemListSectionTitle::None,
-                    vec![
-                        GemListRow::Ranked {
-                            title: GemListRowTitle::MarketCap,
-                            amount: usd(100.0),
-                            tag: "#1".to_string()
-                        },
-                        amount(GemListRowTitle::FullyDilutedValuation, usd(120.0), Some(GemInfoTopic::FullyDilutedValuation)),
-                        amount(GemListRowTitle::TradingVolume, usd(10.0), None),
-                    ],
-                ),
-                section(GemListSectionTitle::None, vec![contract(&token, Some(BlockExplorerLink::mock()))]),
-                section(
-                    GemListSectionTitle::None,
-                    vec![
-                        amount(GemListRowTitle::CirculatingSupply, supply(50.0, &token.symbol), Some(GemInfoTopic::CirculatingSupply)),
-                        amount(GemListRowTitle::TotalSupply, supply(60.0, &token.symbol), Some(GemInfoTopic::TotalSupply)),
-                        amount(GemListRowTitle::MaxSupply, supply(21.0, &token.symbol), Some(GemInfoTopic::MaxSupply)),
-                    ],
-                ),
-                section(
-                    GemListSectionTitle::None,
-                    vec![all_time(GemListRowTitle::AllTimeHigh, ChartValuePercentage::mock()), all_time(GemListRowTitle::AllTimeLow, ChartValuePercentage::mock_low())],
-                ),
-                section(GemListSectionTitle::SocialLinks, vec![GemListRow::Social { links: social_links(links) }]),
+                GemListSection::untitled(vec![
+                    GemListRow::Ranked {
+                        title: GemListRowTitle::MarketCap,
+                        amount: usd(100.0),
+                        tag: "#1".to_string()
+                    },
+                    amount(GemListRowTitle::FullyDilutedValuation, usd(120.0), Some(GemInfoTopic::FullyDilutedValuation)),
+                    amount(GemListRowTitle::TradingVolume, usd(10.0), None),
+                ]),
+                GemListSection::untitled(vec![contract(&token, Some(BlockExplorerLink::mock()))]),
+                GemListSection::untitled(vec![
+                    amount(GemListRowTitle::CirculatingSupply, supply(50.0, &token.symbol), Some(GemInfoTopic::CirculatingSupply)),
+                    amount(GemListRowTitle::TotalSupply, supply(60.0, &token.symbol), Some(GemInfoTopic::TotalSupply)),
+                    amount(GemListRowTitle::MaxSupply, supply(21.0, &token.symbol), Some(GemInfoTopic::MaxSupply)),
+                ]),
+                GemListSection::untitled(vec![
+                    all_time(GemListRowTitle::AllTimeHigh, ChartValuePercentage::mock()),
+                    all_time(GemListRowTitle::AllTimeLow, ChartValuePercentage::mock_low())
+                ]),
+                GemListSection::new(GemListSectionTitle::SocialLinks, vec![GemListRow::Social { links: social_links(links) }]),
             ]
         );
     }
@@ -638,15 +621,12 @@ mod tests {
         assert_eq!(
             sections,
             vec![
-                section(GemListSectionTitle::None, vec![amount(GemListRowTitle::FullyDilutedValuation, usd(120.0), Some(GemInfoTopic::FullyDilutedValuation))],),
-                section(
-                    GemListSectionTitle::None,
-                    vec![
-                        amount(GemListRowTitle::CirculatingSupply, supply(50.0, &Asset::mock().symbol), Some(GemInfoTopic::CirculatingSupply)),
-                        amount(GemListRowTitle::MaxSupply, supply(21.0, &Asset::mock().symbol), Some(GemInfoTopic::MaxSupply)),
-                    ],
-                ),
-                section(GemListSectionTitle::None, vec![all_time(GemListRowTitle::AllTimeHigh, ChartValuePercentage::mock())]),
+                GemListSection::untitled(vec![amount(GemListRowTitle::FullyDilutedValuation, usd(120.0), Some(GemInfoTopic::FullyDilutedValuation))]),
+                GemListSection::untitled(vec![
+                    amount(GemListRowTitle::CirculatingSupply, supply(50.0, &Asset::mock().symbol), Some(GemInfoTopic::CirculatingSupply)),
+                    amount(GemListRowTitle::MaxSupply, supply(21.0, &Asset::mock().symbol), Some(GemInfoTopic::MaxSupply)),
+                ]),
+                GemListSection::untitled(vec![all_time(GemListRowTitle::AllTimeHigh, ChartValuePercentage::mock())]),
             ]
         );
     }
@@ -676,10 +656,7 @@ mod tests {
     fn test_chart_sections_without_market_keep_contract() {
         let token = Asset::mock_ethereum_usdc();
 
-        assert_eq!(
-            chart_sections(&token, Currency::USD, None, None, Some(vec![]), vec![], None),
-            vec![section(GemListSectionTitle::None, vec![contract(&token, None)])]
-        );
+        assert_eq!(chart_sections(&token, Currency::USD, None, None, Some(vec![]), vec![], None), vec![GemListSection::untitled(vec![contract(&token, None)])]);
     }
 
     #[test]
@@ -693,15 +670,12 @@ mod tests {
         assert_eq!(first(Some(1.0), vec![]), Some(set_price_alert()));
         assert_eq!(
             first(Some(1.0), vec![auto.clone(), notified.clone()]),
-            Some(section(
-                GemListSectionTitle::None,
-                vec![GemListRow::Link {
-                    title: GemListRowTitle::PriceAlerts,
-                    value: Some("1".to_string()),
-                    icon: GemListRowIcon::None,
-                    action: GemRowAction::PriceAlerts,
-                }]
-            ))
+            Some(GemListSection::untitled(vec![GemListRow::Link {
+                title: GemListRowTitle::PriceAlerts,
+                value: Some("1".to_string()),
+                icon: GemListRowIcon::None,
+                action: GemRowAction::PriceAlerts,
+            }]))
         );
         assert_eq!(first(Some(1.0), vec![notified]), Some(set_price_alert()));
         assert_eq!(first(Some(0.0), vec![auto.clone()]), None);

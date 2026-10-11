@@ -20,7 +20,7 @@ use super::model::{
 };
 use crate::formatted_number::{GemFormattedNumber, GemValueTone, value_tone};
 use crate::models::custom_types::GemBigInt;
-use crate::models::list::{GemInfoTopic, GemListRow, GemListRowTitle, GemListSection, GemListSectionFooter, GemListSectionTitle};
+use crate::models::list::{GemInfoTopic, GemListRow, GemListRowTitle, GemListSection};
 use crate::models::placeholder::EMPTY_VALUE;
 use crate::models::state::GemListPhase;
 use crate::perpetual::GemPerpetual;
@@ -145,11 +145,7 @@ fn details_sections(asset: &Asset, direction: &PerpetualDirection, data: &Perpet
     ]
     .into_iter()
     .flatten()
-    .map(|rows| GemListSection {
-        title: GemListSectionTitle::None,
-        footer: GemListSectionFooter::None,
-        rows,
-    })
+    .map(GemListSection::untitled)
     .collect()
 }
 

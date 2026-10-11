@@ -8,7 +8,7 @@ use primitives::{CoreEmoji, OptionStringExt, RewardRedemptionOption, RewardStatu
 use super::model::{GemIncomingCode, GemRewardsInviteAction, GemRewardsPendingReferral, GemRewardsRedemption, GemRewardsState, GemRewardsWallet};
 use crate::config::rewards::get_referral_url;
 use crate::formatted_number::{GemFormattedNumber, GemNumberUnit};
-use crate::models::list::{GemListRow, GemListRowTitle, GemListSection, GemListSectionFooter, GemListSectionTitle, GemNoticeKind};
+use crate::models::list::{GemListRow, GemListRowTitle, GemListSection, GemListSectionTitle, GemNoticeKind};
 use crate::services::localization::GemLocalizedText;
 use crate::services::wallet::rules as wallet_rules;
 use crate::services::wallet_session::rules as session_rules;
@@ -91,11 +91,7 @@ fn invite_action(has_referral_code: bool, can_invite: bool) -> Option<GemRewards
 
 fn sections(shows_info: bool, info_rows: Vec<GemListRow>) -> Vec<GemListSection> {
     match shows_info && !info_rows.is_empty() {
-        true => vec![GemListSection {
-            title: GemListSectionTitle::Info,
-            footer: GemListSectionFooter::None,
-            rows: info_rows,
-        }],
+        true => vec![GemListSection::new(GemListSectionTitle::Info, info_rows)],
         false => Vec::new(),
     }
 }

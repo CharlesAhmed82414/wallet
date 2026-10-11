@@ -611,3 +611,17 @@ pub struct GemListSection {
     pub footer: GemListSectionFooter,
     pub rows: Vec<GemListRow>,
 }
+
+impl GemListSection {
+    pub fn new(title: GemListSectionTitle, rows: Vec<GemListRow>) -> Self {
+        Self {
+            title,
+            footer: GemListSectionFooter::None,
+            rows,
+        }
+    }
+
+    pub fn untitled(rows: Vec<GemListRow>) -> Self {
+        Self::new(GemListSectionTitle::None, rows)
+    }
+}

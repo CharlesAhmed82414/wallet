@@ -6,7 +6,7 @@ use super::model::GemAddressDetails;
 use crate::config::image::GemImage;
 use crate::formatted_number::GemValueTone;
 use crate::models::copy::address_copy;
-use crate::models::list::{GemListRow, GemListRowTitle, GemListSection, GemListSectionFooter, GemListSectionTitle, GemNoticeKind, suspicious_address_notice};
+use crate::models::list::{GemListRow, GemListRowTitle, GemListSection, GemListSectionTitle, GemNoticeKind, suspicious_address_notice};
 use crate::models::state::{GemLoad, GemLoadState};
 use crate::services::assets::icon::asset_icon;
 use crate::services::assets::rules::asset_text;
@@ -62,7 +62,7 @@ pub(super) fn sections(details: &GemAddressDetails, address_name: Option<&Addres
     let name = display_name(address_name.map(|address_name| address_name.name.clone()).or_else(|| details.name.clone()), &details.address);
     let address_type = address_name.map(|address_name| address_name.address_type.clone()).or_else(|| details.address_type.clone());
     let warning = match details.status {
-        VerificationStatus::Suspicious => Some(section(vec![suspicious_address_notice(GemNoticeKind::Warning)])),
+        VerificationStatus::Suspicious => Some(GemListSection::untitled(vec![suspicious_address_notice(GemNoticeKind::Warning)])),
         VerificationStatus::Verified | VerificationStatus::Unverified => None,
     };
     let header = header(details, address_name);
@@ -82,22 +82,18 @@ pub(super) fn sections(details: &GemAddressDetails, address_name: Option<&Addres
         }))
         .collect();
     let balances = balance_section(details, &asset);
-    let balances = (!balances.is_empty()).then_some(GemListSection {
-        title: GemListSectionTitle::Balances,
-        footer: GemListSectionFooter::None,
-        rows: balances,
-    });
-    once(section(vec![header]))
+    let balances = (!balances.is_empty()).then_some(GemListSection::new(GemListSectionTitle::Balances, balances));
+    once(GemListSection::untitled(vec![header]))
         .chain(warning)
         .chain([
-            section(vec![GemListRow::Address {
+            GemListSection::untitled(vec![GemListRow::Address {
                 address: details.address.clone(),
                 copy: details.copy.clone(),
             }]),
-            section(info),
+            GemListSection::untitled(info),
         ])
         .chain(balances)
-        .chain(once(section(vec![GemListRow::explorer(&details.link)])))
+        .chain(once(GemListSection::untitled(vec![GemListRow::explorer(&details.link)])))
         .collect()
 }
 
@@ -128,14 +124,6 @@ fn header(details: &GemAddressDetails, address_name: Option<&AddressName>) -> Ge
             ),
         },
         Some(AddressType::Address | AddressType::Contract) | None => chain_icon,
-    }
-}
-
-fn section(rows: Vec<GemListRow>) -> GemListSection {
-    GemListSection {
-        title: GemListSectionTitle::None,
-        footer: GemListSectionFooter::None,
-        rows,
     }
 }
 

@@ -4,7 +4,7 @@ use primitives::{GEM_API_HOST, node_config::NodeRegion};
 
 use super::GemLatencyStatus;
 use super::model::GemServiceStatusTarget;
-use crate::models::list::{GemListRow, GemListRowTitle, GemListSection, GemListSectionFooter, GemListSectionTitle};
+use crate::models::list::{GemListRow, GemListRowTitle, GemListSection};
 
 pub fn targets() -> Vec<GemServiceStatusTarget> {
     std::iter::once(GEM_API_HOST)
@@ -22,24 +22,16 @@ pub fn sections(statuses: &HashMap<String, GemLatencyStatus>, stream: GemLatency
         status: statuses.get(host).cloned().unwrap_or(GemLatencyStatus::Loading),
     };
     vec![
-        GemListSection {
-            title: GemListSectionTitle::None,
-            footer: GemListSectionFooter::None,
-            rows: vec![
-                row(GemListRowTitle::Api, GEM_API_HOST, String::new()),
-                GemListRow::Latency {
-                    title: GemListRowTitle::Stream,
-                    title_suffix: String::new(),
-                    host: GEM_API_HOST.into(),
-                    status: stream,
-                },
-            ],
-        },
-        GemListSection {
-            title: GemListSectionTitle::None,
-            footer: GemListSectionFooter::None,
-            rows: NodeRegion::all().into_iter().map(|region| row(GemListRowTitle::GemWalletNode, region.host(), format!(" {}", region.flag()))).collect(),
-        },
+        GemListSection::untitled(vec![
+            row(GemListRowTitle::Api, GEM_API_HOST, String::new()),
+            GemListRow::Latency {
+                title: GemListRowTitle::Stream,
+                title_suffix: String::new(),
+                host: GEM_API_HOST.into(),
+                status: stream,
+            },
+        ]),
+        GemListSection::untitled(NodeRegion::all().into_iter().map(|region| row(GemListRowTitle::GemWalletNode, region.host(), format!(" {}", region.flag()))).collect()),
     ]
 }
 
@@ -48,6 +40,7 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
+    use crate::models::list::GemListSectionTitle;
 
     #[test]
     fn test_sections_group_api_and_stream_before_nodes() {

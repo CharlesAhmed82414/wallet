@@ -91,13 +91,8 @@ pub fn preferences_sections(input: PreferencesInput) -> Vec<GemListSection> {
     };
     let pickers = perpetual_pickers();
     let label = |options: &[GemPickerOption], value: u8| options.iter().find(|option| option.value == value).map(|option| option.label.clone()).unwrap_or(GemLocalizedText::None);
-    let section = |rows: Vec<GemListRow>| GemListSection {
-        title: GemListSectionTitle::None,
-        footer: GemListSectionFooter::None,
-        rows,
-    };
     vec![
-        section(
+        GemListSection::untitled(
             [
                 Some(link(GemListRowTitle::Currency, Some(currency::rules::currency_text(&input.currency)), GemListRowIcon::Currency, GemRowAction::Currency)),
                 input.language.map(|language| link(GemListRowTitle::Language, Some(language), GemListRowIcon::Language, GemRowAction::Language)),
@@ -109,7 +104,7 @@ pub fn preferences_sections(input: PreferencesInput) -> Vec<GemListSection> {
             .flatten()
             .collect(),
         ),
-        section(
+        GemListSection::untitled(
             [
                 Some(GemListRow::toggle(GemListRowTitle::Perpetuals, GemListRowIcon::Perpetuals, input.perpetuals_enabled, GemRowAction::Perpetuals)),
                 input
@@ -134,19 +129,14 @@ pub fn preferences_sections(input: PreferencesInput) -> Vec<GemListSection> {
 }
 
 pub fn notifications_sections(push_enabled: bool) -> Vec<GemListSection> {
-    let section = |row: GemListRow| GemListSection {
-        title: GemListSectionTitle::None,
-        footer: GemListSectionFooter::None,
-        rows: vec![row],
-    };
     vec![
-        section(GemListRow::toggle(GemListRowTitle::Notifications, GemListRowIcon::None, push_enabled, GemRowAction::PushNotifications)),
-        section(GemListRow::Link {
+        GemListSection::untitled(vec![GemListRow::toggle(GemListRowTitle::Notifications, GemListRowIcon::None, push_enabled, GemRowAction::PushNotifications)]),
+        GemListSection::untitled(vec![GemListRow::Link {
             title: GemListRowTitle::PriceAlerts,
             value: None,
             icon: GemListRowIcon::PriceAlerts,
             action: GemRowAction::PriceAlerts,
-        }),
+        }]),
     ]
 }
 
@@ -182,11 +172,7 @@ pub fn security_sections(input: GemSecurityInput, hide_balance_enabled: bool) ->
             .flatten()
             .collect(),
         },
-        GemListSection {
-            title: GemListSectionTitle::None,
-            footer: GemListSectionFooter::None,
-            rows: vec![toggle(GemListRowTitle::HideBalance, hide_balance_enabled, GemRowAction::HideBalance)],
-        },
+        GemListSection::untitled(vec![toggle(GemListRowTitle::HideBalance, hide_balance_enabled, GemRowAction::HideBalance)]),
     ]
 }
 
@@ -205,24 +191,14 @@ pub fn about_sections(version: String, build: String, update: Option<Release>) -
         target: GemUrlTarget::InApp,
     };
     vec![
-        GemListSection {
-            title: GemListSectionTitle::None,
-            footer: GemListSectionFooter::None,
-            rows: vec![
-                page(GemListRowTitle::TermsOfService, PublicUrl::TermsOfService),
-                page(GemListRowTitle::PrivacyPolicy, PublicUrl::PrivacyPolicy),
-                page(GemListRowTitle::Website, PublicUrl::Website),
-            ],
-        },
-        GemListSection {
-            title: GemListSectionTitle::Community,
-            footer: GemListSectionFooter::None,
-            rows: vec![GemListRow::Social { links: community_links() }],
-        },
-        GemListSection {
-            title: GemListSectionTitle::None,
-            footer: GemListSectionFooter::None,
-            rows: [
+        GemListSection::untitled(vec![
+            page(GemListRowTitle::TermsOfService, PublicUrl::TermsOfService),
+            page(GemListRowTitle::PrivacyPolicy, PublicUrl::PrivacyPolicy),
+            page(GemListRowTitle::Website, PublicUrl::Website),
+        ]),
+        GemListSection::new(GemListSectionTitle::Community, vec![GemListRow::Social { links: community_links() }]),
+        GemListSection::untitled(
+            [
                 Some(GemListRow::Text {
                     title: GemListRowTitle::Version,
                     value: format!("{version} ({build})"),
@@ -238,7 +214,7 @@ pub fn about_sections(version: String, build: String, update: Option<Release>) -
             .into_iter()
             .flatten()
             .collect(),
-        },
+        ),
     ]
 }
 
@@ -285,11 +261,7 @@ pub fn sections(wallets_count: usize, notifications_available: bool, wallet_conn
     ]
     .into_iter()
     .filter(|rows: &Vec<GemListRow>| !rows.is_empty())
-    .map(|rows| GemListSection {
-        title: GemListSectionTitle::None,
-        footer: GemListSectionFooter::None,
-        rows,
-    })
+    .map(GemListSection::untitled)
     .collect()
 }
 
