@@ -66,7 +66,6 @@ mod tests {
     use crate::testkit::TestAlienProvider;
     use futures::executor::block_on;
     use primitives::Wallet;
-    use std::sync::Mutex;
 
     fn service(files: Arc<MemoryFileStore>, wallets: Arc<MemoryWalletStore>) -> GemAvatarService {
         GemAvatarService {
@@ -81,10 +80,7 @@ mod tests {
             image_url: image_url.map(str::to_string),
             ..Wallet::mock()
         };
-        let wallets = Arc::new(MemoryWalletStore {
-            wallets: Mutex::new(vec![wallet.clone()]),
-            ..Default::default()
-        });
+        let wallets = Arc::new(MemoryWalletStore::with_wallets(vec![wallet.clone()]));
         (wallets, wallet)
     }
 

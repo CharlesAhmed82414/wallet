@@ -84,10 +84,7 @@ pub fn price_alert_service(store: Arc<dyn GemPriceAlertStore>) -> Arc<super::Gem
 fn price_alert_service_with(provider: Arc<TestAlienProvider>, store: Arc<dyn GemPriceAlertStore>, asset_store: Arc<MemoryAssetStore>, permissions: Arc<dyn GemNotificationPermissions>) -> super::GemPriceAlertService {
     let preferences = Arc::new(GemPreferencesService::new(Arc::new(MemoryPreferencesStore::default())));
     let api = Arc::new(GemDeviceApiClient::new(provider.clone(), Arc::new(GemDeviceKeyService::new(Arc::new(EmptyPreferences)))));
-    let wallets = Arc::new(MemoryWalletStore {
-        wallets: Mutex::new(vec![Wallet::mock()]),
-        ..Default::default()
-    });
+    let wallets = Arc::new(MemoryWalletStore::with_wallets(vec![Wallet::mock()]));
     let session = Arc::new(GemWalletSessionService::new(Arc::new(MemoryWalletSessionStore::default()), wallets));
     let device = GemDeviceService::mock(api.clone(), session, preferences.clone());
     let assets = Arc::new(GemAssetsService::mock(provider, asset_store));

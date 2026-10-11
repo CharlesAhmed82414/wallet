@@ -67,10 +67,7 @@ impl FiatQuoteTestkit {
         let wallet = Wallet::mock();
         let preferences_store = Arc::new(MemoryPreferencesStore::default());
         let preferences = Arc::new(GemPreferencesService::new(preferences_store.clone()));
-        let wallets = Arc::new(MemoryWalletStore {
-            wallets: Mutex::new(vec![wallet.clone()]),
-            ..Default::default()
-        });
+        let wallets = Arc::new(MemoryWalletStore::with_wallets(vec![wallet.clone()]));
         let session = Arc::new(GemWalletSessionService::new(Arc::new(MemoryWalletSessionStore { current: Mutex::new(Some(wallet.id)) }), wallets));
         let provider = Arc::new(TestAlienProvider::with_json(200, r#"{"redirectUrl":"https://provider.example/checkout"}"#));
         let gateway = Arc::new(GemGateway::new(provider.clone(), Arc::new(GemNodeService::mock()), preferences_store, Arc::new(EmptyPreferences)));

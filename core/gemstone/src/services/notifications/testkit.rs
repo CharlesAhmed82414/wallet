@@ -17,10 +17,7 @@ impl GemNotificationsService {
     pub fn mock(provider: Arc<TestAlienProvider>, permissions: Arc<dyn GemNotificationPermissions>) -> Self {
         let preferences = Arc::new(GemPreferencesService::new(Arc::new(MemoryPreferencesStore::default())));
         let device_api = Arc::new(GemDeviceApiClient::new(provider, Arc::new(GemDeviceKeyService::new(Arc::new(EmptyPreferences)))));
-        let wallets = Arc::new(MemoryWalletStore {
-            wallets: std::sync::Mutex::new(vec![Wallet::mock()]),
-            ..Default::default()
-        });
+        let wallets = Arc::new(MemoryWalletStore::with_wallets(vec![Wallet::mock()]));
         let session = Arc::new(GemWalletSessionService::new(Arc::new(MemoryWalletSessionStore::default()), wallets));
         let device = GemDeviceService::mock(device_api, session, preferences.clone());
         Self::new(device, preferences, permissions)

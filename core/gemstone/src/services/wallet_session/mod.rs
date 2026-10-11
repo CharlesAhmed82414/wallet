@@ -93,13 +93,7 @@ mod tests {
     }
 
     fn service_with(wallets: Vec<Wallet>, current: Option<WalletId>) -> GemWalletSessionService {
-        GemWalletSessionService::new(
-            Arc::new(MemoryWalletSessionStore { current: Mutex::new(current) }),
-            Arc::new(MemoryWalletStore {
-                wallets: Mutex::new(wallets),
-                ..Default::default()
-            }),
-        )
+        GemWalletSessionService::new(Arc::new(MemoryWalletSessionStore { current: Mutex::new(current) }), Arc::new(MemoryWalletStore::with_wallets(wallets)))
     }
 
     #[test]

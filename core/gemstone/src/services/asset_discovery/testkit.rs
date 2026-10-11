@@ -60,10 +60,7 @@ impl DiscoveryTestkit {
     pub fn with_provider(provider: Arc<TestAlienProvider>, wallet: Wallet) -> Self {
         let preferences_store = Arc::new(MemoryPreferencesStore::default());
         let preferences = Arc::new(GemPreferencesService::new(preferences_store.clone()));
-        let wallets = Arc::new(MemoryWalletStore {
-            wallets: Mutex::new(vec![wallet.clone()]),
-            ..Default::default()
-        });
+        let wallets = Arc::new(MemoryWalletStore::with_wallets(vec![wallet.clone()]));
         let session = Arc::new(GemWalletSessionService::new(
             Arc::new(MemoryWalletSessionStore {
                 current: Mutex::new(Some(wallet.id.clone())),

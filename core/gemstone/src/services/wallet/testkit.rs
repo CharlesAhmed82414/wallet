@@ -38,6 +38,15 @@ pub struct MemoryWalletStore {
     pub set_image_url_error: Mutex<Option<GemServiceError>>,
 }
 
+impl MemoryWalletStore {
+    pub fn with_wallets(wallets: Vec<Wallet>) -> Self {
+        Self {
+            wallets: Mutex::new(wallets),
+            ..Default::default()
+        }
+    }
+}
+
 #[async_trait::async_trait]
 impl GemWalletStore for MemoryWalletStore {
     async fn get_wallets(&self) -> Result<Vec<Wallet>, GemServiceError> {
