@@ -58,20 +58,30 @@ impl Parser {
         if state.is_enabled {
             true
         } else {
-            self.sleep_or_shutdown(timeout).await;
+            self.sleep_or_shutdown(timeout.min(self.options.max_check)).await;
             false
         }
     }
 
     async fn get_latest_block(&self, state: &ParserState) -> Result<i64, Box<dyn Error + Send + Sync>> {
         let latest_block = self.provider.get_block_latest_number().await? as i64;
-        let _ = self.state_service.set_latest_block(latest_block).await;
+        self.state_service.set_latest_block(latest_block).await?;
 
-        if state.current_block == 0 {
-            let _ = self.state_service.set_current_block(latest_block).await;
-        }
+        let current_block = if state.current_block == 0 {
+            self.state_service.set_current_block(latest_block).await?;
+            latest_block
+        } else {
+            state.current_block
+        };
+        self.reporter.update_state(current_block, latest_block, state.is_enabled);
 
         Ok(latest_block)
+    }
+
+    async fn set_current_block(&self, block: i64, state: &ParserState) -> Result<(), Box<dyn Error + Send + Sync>> {
+        self.state_service.set_current_block(block).await?;
+        self.reporter.update_state(block, state.latest_block, state.is_enabled);
+        Ok(())
     }
 
     async fn run_block_plan(&self, plan: BlockPlan, state: &ParserState, timeout: Duration) -> Result<bool, Box<dyn Error + Send + Sync>> {
@@ -81,7 +91,7 @@ impl Parser {
         match plan.kind {
             BlockPlanKind::Enqueue => {
                 self.stream_producer.publish_blocks(self.chain, &plan.range.blocks).await?;
-                let _ = self.state_service.set_current_block(plan.range.end_block).await;
+                self.set_current_block(plan.range.end_block, state).await?;
 
                 info_with_fields!(
                     "block add to queue",
@@ -97,7 +107,7 @@ impl Parser {
 
         match self.parse_blocks(plan.range.blocks).await {
             Ok(result) => {
-                let _ = self.state_service.set_current_block(plan.range.end_block).await;
+                self.set_current_block(plan.range.end_block, state).await?;
 
                 info_with_fields!(
                     "block complete",
@@ -115,9 +125,6 @@ impl Parser {
             }
         }
 
-        if should_reload_catchup(plan.range.remaining, self.options.catchup_reload_interval) {
-            return Ok(false);
-        }
         if state.timeout_between_blocks > 0 && self.sleep_or_shutdown(Duration::from_millis(state.timeout_between_blocks as u64)).await {
             return Ok(false);
         }
@@ -126,18 +133,28 @@ impl Parser {
     }
 
     async fn run_block_plans(&self, timeout: Duration) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let started = Instant::now();
+        let mut processed_blocks = 0;
+
         loop {
             if self.is_shutdown() {
                 break;
             }
 
             let state = self.state_service.get_state().await?;
+            self.reporter.update_state(state.current_block, state.latest_block, state.is_enabled);
 
             let Some(plan) = plan_next_block(&state, state.current_block, state.latest_block) else {
                 break;
             };
 
+            let block_count = plan.range.blocks.len() as i64;
             if !self.run_block_plan(plan, &state, timeout).await? {
+                break;
+            }
+            processed_blocks += block_count;
+
+            if should_reload_catchup(processed_blocks, self.options.catchup_reload_interval, started.elapsed(), self.options.max_check) {
                 break;
             }
         }

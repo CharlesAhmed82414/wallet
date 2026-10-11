@@ -36,8 +36,8 @@ pub fn timeout_for_state(state: &ParserState, min_check: Duration, max_check: Du
     remaining.clamp(min_check, upper)
 }
 
-pub fn should_reload_catchup(remaining: i64, interval: i64) -> bool {
-    interval > 0 && remaining % interval == 0
+pub fn should_reload_catchup(processed_blocks: i64, interval: i64, elapsed: Duration, max_check: Duration) -> bool {
+    (interval > 0 && processed_blocks >= interval) || elapsed >= max_check
 }
 
 pub fn plan_next_block(state: &ParserState, current_block: i64, latest_block: i64) -> Option<BlockPlan> {
@@ -67,7 +67,7 @@ pub fn plan_next_block(state: &ParserState, current_block: i64, latest_block: i6
 
 #[cfg(test)]
 mod tests {
-    use super::{BlockPlanKind, plan_next_block, should_reload_catchup, timeout_for_state};
+    use super::{BlockPlan, BlockPlanKind, BlockRange, plan_next_block, should_reload_catchup, timeout_for_state};
     use chrono::Utc;
     use std::time::Duration;
     use storage::ParserState;
@@ -117,10 +117,78 @@ mod tests {
     }
 
     #[test]
-    fn test_should_reload_catchup_respects_interval() {
-        assert!(!should_reload_catchup(10, 0));
-        assert!(should_reload_catchup(10, 5));
-        assert!(!should_reload_catchup(11, 5));
+    fn test_should_reload_catchup_counts_processed_blocks() {
+        for (processed, interval, expected) in [(10, 0, false), (4, 5, false), (5, 5, true), (11, 5, true), (49, 50, false), (50, 50, true), (56, 50, true)] {
+            assert_eq!(should_reload_catchup(processed, interval, Duration::ZERO, MAX), expected);
+        }
+    }
+
+    #[test]
+    fn test_should_reload_catchup_limits_elapsed_time() {
+        for interval in [0, 50] {
+            for (elapsed, expected) in [(7, false), (8, true), (9, true)] {
+                assert_eq!(should_reload_catchup(0, interval, Duration::from_secs(elapsed), MAX), expected);
+            }
+        }
+    }
+
+    #[test]
+    fn test_catchup_batches_reload_without_aligned_remaining() {
+        for (queue_behind_blocks, kind) in [(None, BlockPlanKind::Parse), (Some(0), BlockPlanKind::Enqueue)] {
+            for (parallel_blocks, expected_batches, expected_processed) in [(5, 10, 50), (7, 8, 56)] {
+                let mut state = ParserState {
+                    current_block: 100,
+                    latest_block: 1014,
+                    await_blocks: 0,
+                    parallel_blocks,
+                    queue_behind_blocks,
+                    ..ParserState::mock()
+                };
+                let mut processed = 0;
+                let mut batches = 0;
+                loop {
+                    let plan = plan_next_block(&state, state.current_block, state.latest_block).unwrap();
+                    assert_eq!(plan.kind, kind);
+                    processed += plan.range.blocks.len() as i64;
+                    state.current_block = plan.range.end_block;
+                    batches += 1;
+                    if should_reload_catchup(processed, 50, Duration::ZERO, MAX) {
+                        break;
+                    }
+                }
+                assert_eq!((batches, processed, state.current_block), (expected_batches, expected_processed, 100 + expected_processed));
+            }
+        }
+    }
+
+    #[test]
+    fn test_plan_next_block_disabled_chain_resumes_from_checkpoint() {
+        for (queue_behind_blocks, kind) in [(None, BlockPlanKind::Parse), (Some(0), BlockPlanKind::Enqueue)] {
+            let mut state = ParserState {
+                current_block: 100,
+                latest_block: 200,
+                await_blocks: 0,
+                parallel_blocks: 5,
+                queue_behind_blocks,
+                ..ParserState::mock()
+            };
+            let completed = plan_next_block(&state, state.current_block, state.latest_block).unwrap();
+            state.current_block = completed.range.end_block;
+            state.is_enabled = false;
+            assert_eq!(plan_next_block(&state, state.current_block, state.latest_block), None);
+            state.is_enabled = true;
+            assert_eq!(
+                plan_next_block(&state, state.current_block, state.latest_block),
+                Some(BlockPlan {
+                    range: BlockRange {
+                        blocks: vec![106, 107, 108, 109, 110],
+                        end_block: 110,
+                        remaining: 90
+                    },
+                    kind,
+                })
+            );
+        }
     }
 
     #[test]

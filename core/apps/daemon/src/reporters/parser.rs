@@ -43,6 +43,30 @@ mod tests {
     use primitives::AssetId;
 
     #[test]
+    fn test_state_changes_are_visible_on_next_scrape() {
+        let metrics = Arc::new(ParserMetrics::new());
+        let reporter = ParserReporter::new(Chain::Robinhood, metrics.clone());
+        for (current_block, latest_block, is_enabled) in [(100, 200, true), (105, 200, true), (105, 205, false), (110, 205, true)] {
+            reporter.update_state(current_block, latest_block, is_enabled);
+            let mut registry = MetricsRegistry::new();
+            metrics.register(registry.registry_mut());
+            let output = registry.encode();
+            let state = output
+                .lines()
+                .filter(|line| line.starts_with("parser_state_current_block{") || line.starts_with("parser_state_latest_block{") || line.starts_with("parser_state_is_enabled{"))
+                .collect::<Vec<_>>();
+            assert_eq!(
+                state,
+                vec![
+                    format!(r#"parser_state_latest_block{{chain="robinhood"}} {latest_block}"#),
+                    format!(r#"parser_state_current_block{{chain="robinhood"}} {current_block}"#),
+                    format!(r#"parser_state_is_enabled{{chain="robinhood"}} {}"#, i64::from(is_enabled)),
+                ]
+            );
+        }
+    }
+
+    #[test]
     fn records_native_and_token_transfers_separately() {
         let metrics = Arc::new(ParserMetrics::new());
         let reporter = ParserReporter::new(Chain::Ethereum, metrics.clone());
