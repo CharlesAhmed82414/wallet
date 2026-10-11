@@ -18,7 +18,6 @@ import com.gemwallet.android.ui.style.color
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.space8
 import uniffi.gemstone.GemChartHeader
-import uniffi.gemstone.GemValueTone
 
 @Composable
 fun ChartHeader(header: GemChartHeader, date: String?, modifier: Modifier = Modifier) {
@@ -50,7 +49,7 @@ fun ChartHeader(header: GemChartHeader, date: String?, modifier: Modifier = Modi
                 NumericText(
                     text = change.text(),
                     style = if (secondaryValue != null) changeStyle else MaterialTheme.typography.bodyLarge,
-                    color = (change.tone ?: GemValueTone.PLAIN).color(),
+                    color = change.tone.color(),
                 )
             }
         }

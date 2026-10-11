@@ -270,7 +270,7 @@ class SwapViewModel @Inject constructor(
     fun onSelectPercent(percent: Int) {
         val asset = payAsset.value ?: return
         val value = service.amountForPercent(asset.balance.available, percent.toUInt())
-        val text = numberFormat().inputText(value.toString(), asset.asset.decimals.toUInt()) ?: return
+        val text = numberFormat().inputText(value.toString(), asset.asset.decimals) ?: return
         setPresetPayValue(text)
     }
 

@@ -39,7 +39,7 @@ fun AboutUsScreen(onCancel: () -> Unit, viewModel: AboutUsViewModel = hiltViewMo
     Scene(title = stringResource(id = R.string.settings_aboutus), onClose = onCancel) {
         LazyColumn {
             viewState.sections.forEachIndexed { index, section ->
-                section.title?.titleRes()?.let { title -> item(key = "section:$index") { SubheaderItem(title) } }
+                section.title.titleRes()?.let { title -> item(key = "section:$index") { SubheaderItem(title) } }
                 itemsPositioned(section.rows) { position, row ->
                     val opensMenu = row.opensDeveloperMenu()
                     Box(modifier = Modifier.fillMaxWidth()) {

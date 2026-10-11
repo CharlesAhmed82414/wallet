@@ -68,7 +68,7 @@ class PendingNavigationCoordinator @Inject constructor(private val notificationN
         val outcome = when (pending) {
             is PendingNavigation.FromNotification -> {
                 val destination = notificationNavigation.prepareNavigation(pending.type, pending.data)
-                replace(pending, destination?.takeIf { it.routes.isNotEmpty() })
+                replace(pending, destination.takeIf { it.routes.isNotEmpty() })
                 return null
             }
 

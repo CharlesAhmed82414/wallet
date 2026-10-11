@@ -122,7 +122,7 @@ fun GemListRowView(
                     when {
                         openAddress != null -> Modifier.clickable(onClick = openAddress)
                         row.url != null -> Modifier.clickable { uriHandler.open(context, row.url) }
-                        selects -> Modifier.clickable { selectAction?.let { onSelect?.invoke(it) } }
+                        selects -> Modifier.clickable { onSelect(selectAction) }
                         else -> Modifier
                     },
                 ),

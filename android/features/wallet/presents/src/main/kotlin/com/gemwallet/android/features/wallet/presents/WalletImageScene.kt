@@ -111,7 +111,7 @@ internal fun WalletImageScene(wallet: GemWalletDetails?, emojis: List<String>, a
                         )
 
                         GemListPhase.Rows -> NftGrid(
-                            nftImages = avatars?.items.orEmpty(),
+                            nftImages = avatars.items,
                             onNftImage = { onAction(WalletImageAction.SetNftImage(it)) },
                         )
 
