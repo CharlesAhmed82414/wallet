@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.onboarding.presents.import_wallet.components
 
+import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,12 +19,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.compose.ui.text.input.TextFieldValue
 import com.gemwallet.android.features.onboarding.viewmodels.import_wallet.ImportInputUIModel
 import com.gemwallet.android.ui.R
@@ -38,6 +40,14 @@ import com.gemwallet.android.ui.theme.paddingSmall
 import com.gemwallet.android.ui.theme.space8
 import uniffi.gemstone.GemNameIndicator
 
+private val noPersonalizedLearning = PlatformTextInputInterceptor { request, nextHandler ->
+    nextHandler.startInputMethod { outAttributes ->
+        val connection = request.createInputConnection(outAttributes)
+        outAttributes.imeOptions = outAttributes.imeOptions or EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+        connection
+    }
+}
+
 @Composable
 internal fun ImportInput(inputState: TextFieldValue, input: ImportInputUIModel, indicator: GemNameIndicator?, onScan: (() -> Unit)?, onValueChange: (TextFieldValue) -> Unit) {
     val clipboardManager = LocalContext.current.clipboardManager()
@@ -47,34 +57,35 @@ internal fun ImportInput(inputState: TextFieldValue, input: ImportInputUIModel, 
         modifier = Modifier.fillMaxSize(),
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            BasicTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("importInputField"),
-                onValueChange = onValueChange,
-                value = inputState,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                ),
-                minLines = 2,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                decorationBox = { innerTextField ->
-                    if (inputState.text.isEmpty()) {
-                        Text(
-                            text = stringResource(input.placeholder),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
-                    innerTextField()
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    platformImeOptions = PlatformImeOptions("flagNoPersonalizedLearning"),
-                    autoCorrectEnabled = false,
-                ),
-                interactionSource = interactionSource,
-            )
+            InterceptPlatformTextInput(noPersonalizedLearning) {
+                BasicTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("importInputField"),
+                    onValueChange = onValueChange,
+                    value = inputState,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    minLines = 2,
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    decorationBox = { innerTextField ->
+                        if (inputState.text.isEmpty()) {
+                            Text(
+                                text = stringResource(input.placeholder),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.secondary,
+                            )
+                        }
+                        innerTextField()
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        autoCorrectEnabled = false,
+                    ),
+                    interactionSource = interactionSource,
+                )
+            }
             Row(
                 modifier = Modifier.align(Alignment.TopEnd),
                 verticalAlignment = Alignment.CenterVertically,

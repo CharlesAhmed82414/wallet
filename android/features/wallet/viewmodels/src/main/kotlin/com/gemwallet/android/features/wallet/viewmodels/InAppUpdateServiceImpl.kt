@@ -47,6 +47,7 @@ class InAppUpdateServiceImpl @Inject constructor(@param:ApplicationContext priva
     override suspend fun clearDownloadedUpdate() {
         withContext(Dispatchers.IO) {
             deleteDownloadedApk()
+            runCatching { File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), APK_FILE_NAME).delete() }
         }
     }
 
@@ -202,12 +203,10 @@ class InAppUpdateServiceImpl @Inject constructor(@param:ApplicationContext priva
         runCatching { getApkFile().delete() }
     }
 
-    private fun getApkFile(): File = File(
-        context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir,
-        APK_FILE_NAME,
-    )
+    private fun getApkFile(): File = File(context.filesDir, UPDATES_DIRECTORY).apply { mkdirs() }.resolve(APK_FILE_NAME)
 
     companion object {
+        private const val UPDATES_DIRECTORY = "updates"
         private const val APK_FILE_NAME = "gem.apk"
     }
 }
