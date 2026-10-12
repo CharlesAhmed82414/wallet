@@ -6,12 +6,12 @@ use crate::{CacheKey, CacherClient};
 
 #[async_trait]
 pub trait DeviceSignatureCacher: Send + Sync {
-    async fn remember_signature(&self, signature: &str) -> Result<bool, Box<dyn Error + Send + Sync>>;
+    async fn remember_signature(&self, signature: &str, ttl: u64) -> Result<bool, Box<dyn Error + Send + Sync>>;
 }
 
 #[async_trait]
 impl DeviceSignatureCacher for CacherClient {
-    async fn remember_signature(&self, signature: &str) -> Result<bool, Box<dyn Error + Send + Sync>> {
-        self.set_if_absent(CacheKey::DeviceRequestSignature(signature)).await
+    async fn remember_signature(&self, signature: &str, ttl: u64) -> Result<bool, Box<dyn Error + Send + Sync>> {
+        self.set_if_absent(CacheKey::DeviceRequestSignature(signature, ttl)).await
     }
 }

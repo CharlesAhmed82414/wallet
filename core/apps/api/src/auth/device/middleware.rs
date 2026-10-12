@@ -7,7 +7,7 @@ use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use gem_auth::{AUTHORIZATION_HEADER, device_auth_message, device_body_hash, parse_device_auth, verify_device_signature};
 use gem_tracing::error_fields;
-use http::{Method, Uri};
+use http::{Method, StatusCode, Uri};
 use http_body_util::LengthLimitError;
 use primitives::hex::encode_with_0x;
 use services::auth::AuthClient;
@@ -81,10 +81,13 @@ async fn verify(auth: &DeviceAuth, uri: &Uri, request: Request) -> Result<Reques
         return Err(ApiError::bad_request("Body hash mismatch"));
     }
     if let Some(replay) = auth.replay.as_ref().filter(|_| is_mutation(&parts.method)) {
-        match replay.remember_request_signature(&encode_with_0x(&payload.signature)).await {
+        match replay.remember_request_signature(&encode_with_0x(&payload.signature), 2 * auth.config.tolerance.as_secs()).await {
             Ok(true) => {}
             Ok(false) => return Err(ApiError::unauthorized(DeviceError::ReplayedRequest.to_string())),
-            Err(error) => error_fields!("replay check unavailable", error = error.to_string(), device_id = payload.device_id.as_str()),
+            Err(error) => {
+                error_fields!("replay check unavailable", error = error.to_string(), device_id = payload.device_id.as_str());
+                return Err(ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "Replay check unavailable"));
+            }
         }
     }
     parts.extensions.insert(VerifiedRequest {

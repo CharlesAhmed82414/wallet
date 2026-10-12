@@ -15,8 +15,8 @@ impl AuthClient {
         Self { nonces, signatures }
     }
 
-    pub async fn remember_request_signature(&self, signature: &str) -> Result<bool, Box<dyn Error + Send + Sync>> {
-        self.signatures.remember_signature(signature).await
+    pub async fn remember_request_signature(&self, signature: &str, ttl: u64) -> Result<bool, Box<dyn Error + Send + Sync>> {
+        self.signatures.remember_signature(signature, ttl).await
     }
 
     pub async fn get_nonce(&self, device_id: &str) -> Result<AuthNonce, Box<dyn Error + Send + Sync>> {
