@@ -2,8 +2,7 @@ use std::collections::HashSet;
 use std::{error::Error, fmt};
 
 use reqwest::header::{HeaderMap, HeaderName};
-use reqwest::redirect::Policy;
-use reqwest::{Client, ClientBuilder, Error as RequestError, Request};
+use reqwest::{Client, Error as RequestError, Request};
 
 use super::ProxyResponse;
 
@@ -29,10 +28,6 @@ impl fmt::Display for TransportError {
 }
 
 impl Error for TransportError {}
-
-pub(crate) fn client_builder() -> ClientBuilder {
-    gem_client::builder().redirect(Policy::none())
-}
 
 pub(crate) fn filter_headers(headers: &HeaderMap, forward_headers: &HashSet<HeaderName>) -> HeaderMap {
     headers.iter().filter(|(name, _)| forward_headers.contains(*name)).map(|(name, value)| (name.clone(), value.clone())).collect()

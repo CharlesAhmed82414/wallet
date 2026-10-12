@@ -2,7 +2,6 @@ use std::error::Error;
 use std::net::IpAddr;
 use std::time::Duration;
 
-use reqwest::redirect::Policy;
 use reqwest::{Client, Url};
 use serde::de::DeserializeOwned;
 
@@ -17,13 +16,7 @@ pub(crate) struct OffchainClient {
 impl OffchainClient {
     pub(crate) fn new(config: OffchainClientConfig) -> Self {
         let timeout = Duration::from_secs(config.timeout);
-        let client = gem_client::builder()
-            .timeout(timeout)
-            .connect_timeout(timeout)
-            .redirect(Policy::none())
-            .no_proxy()
-            .build()
-            .expect("Failed to build offchain client");
+        let client = gem_client::builder().timeout(timeout).connect_timeout(timeout).no_proxy().build().expect("Failed to build offchain client");
         Self { client, limit: config.limit }
     }
 

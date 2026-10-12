@@ -8,6 +8,7 @@ const FAILED_TO_BUILD_REQWEST_CLIENT: &str = "Failed to build reqwest client";
 pub fn builder() -> reqwest::ClientBuilder {
     reqwest::Client::builder()
         .user_agent(GEM_WALLET_USER_AGENT)
+        .redirect(reqwest::redirect::Policy::none())
         .timeout(DEFAULT_REQUEST_TIMEOUT)
         .connect_timeout(Duration::from_secs(15))
         .pool_idle_timeout(Duration::from_secs(90))

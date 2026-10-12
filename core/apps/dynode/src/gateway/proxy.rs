@@ -7,7 +7,6 @@ use tokio::time::{MissedTickBehavior, interval};
 
 use crate::config::routes::{ProxyConfig, ProxyHealthConfig};
 use crate::metrics::Metrics;
-use crate::proxy::transport;
 
 pub(super) struct OutboundProxy {
     health: ProxyHealthConfig,
@@ -50,7 +49,7 @@ impl OutboundProxy {
 }
 
 pub(super) fn build_client(timeout: Duration, proxy: Option<&str>) -> Result<Client, RequestError> {
-    let mut builder = transport::client_builder().timeout(timeout);
+    let mut builder = gem_client::builder().timeout(timeout);
     if let Some(proxy) = proxy {
         builder = builder.proxy(Proxy::all(proxy)?);
     }
