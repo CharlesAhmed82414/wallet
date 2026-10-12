@@ -14,7 +14,7 @@ Five dot-separated parts: the 64-hex Ed25519 public key, the Unix timestamp in m
 1706000000000.GET./v3/devices/transactions?asset_id=ethereum&limit=5.multicoin_0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb.e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ```
 
-The backend checks the body hash on every signed request, including requests without a body, and keeps the timestamp within the configured tolerance. A `/v3` POST, PUT or DELETE is accepted once: a second request carrying the same signature inside the tolerance window is rejected as replayed.
+The backend checks the body hash on every signed request, including requests without a body, and keeps the timestamp within the configured tolerance.
 
 The header lives in the shared `gem_auth` crate, used by the client and the backend; the device key never crosses the FFI boundary ([Keystore v4](KEYSTORE_V4.md)). Backend side: [device authentication](../core/apps/api/src/auth/device/middleware.rs), [cryptographic check](../core/crates/gem_auth/src/device_signature.rs), [request guards](../core/apps/api/src/auth/device/guard.rs).
 

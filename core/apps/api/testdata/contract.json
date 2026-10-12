@@ -1384,15 +1384,6 @@
     "content_type": "application/json",
     "body": "number"
   },
-  "v3_notifications_read_replayed": {
-    "status": 401,
-    "content_type": "application/json",
-    "body": {
-      "error": {
-        "message": "Replayed request"
-      }
-    }
-  },
   "v3_price_alerts": {
     "status": 200,
     "content_type": "application/json",

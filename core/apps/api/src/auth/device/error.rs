@@ -10,7 +10,6 @@ pub enum DeviceError {
     WalletNotFound,
     MissingWalletId,
     InvalidAuthorizationFormat,
-    ReplayedRequest,
     DatabaseError,
 }
 
@@ -26,7 +25,6 @@ impl fmt::Display for DeviceError {
             Self::WalletNotFound => write!(f, "Wallet not found"),
             Self::MissingWalletId => write!(f, "Missing wallet ID"),
             Self::InvalidAuthorizationFormat => write!(f, "Invalid authorization format"),
-            Self::ReplayedRequest => write!(f, "Replayed request"),
             Self::DatabaseError => write!(f, "Database error"),
         }
     }

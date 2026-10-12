@@ -27,7 +27,6 @@ fn authenticated(router: Router<AppState>, state: &AppState, limit: usize, schem
         config: state.0.auth_config.clone(),
         limit,
         scheme,
-        replay: (scheme == SignedPath::PathAndQuery).then(|| state.0.auth.clone()),
     };
     router.layer(from_fn_with_state(auth, device_auth))
 }

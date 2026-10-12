@@ -6,11 +6,8 @@ use axum::extract::{OriginalUri, Request, State};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use gem_auth::{AUTHORIZATION_HEADER, device_auth_message, device_body_hash, parse_device_auth, verify_device_signature};
-use gem_tracing::error_fields;
-use http::{Method, StatusCode, Uri};
+use http::Uri;
 use http_body_util::LengthLimitError;
-use primitives::hex::encode_with_0x;
-use services::auth::AuthClient;
 
 use super::{DEVICE_ID_LENGTH, DeviceAuthConfig, DeviceError};
 use crate::error::ApiError;
@@ -26,7 +23,6 @@ pub struct DeviceAuth {
     pub config: Arc<DeviceAuthConfig>,
     pub limit: usize,
     pub scheme: SignedPath,
-    pub replay: Option<Arc<AuthClient>>,
 }
 
 #[derive(Clone)]
@@ -80,24 +76,10 @@ async fn verify(auth: &DeviceAuth, uri: &Uri, request: Request) -> Result<Reques
     if device_body_hash(&body) != payload.body_hash {
         return Err(ApiError::bad_request("Body hash mismatch"));
     }
-    if let Some(replay) = auth.replay.as_ref().filter(|_| is_mutation(&parts.method)) {
-        match replay.remember_request_signature(&encode_with_0x(&payload.signature), 2 * auth.config.tolerance.as_secs()).await {
-            Ok(true) => {}
-            Ok(false) => return Err(ApiError::unauthorized(DeviceError::ReplayedRequest.to_string())),
-            Err(error) => {
-                error_fields!("replay check unavailable", error = error.to_string(), device_id = payload.device_id.as_str());
-                return Err(ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "Replay check unavailable"));
-            }
-        }
-    }
     parts.extensions.insert(VerifiedRequest {
         device_id: payload.device_id,
         wallet_id: payload.wallet_id,
         body: body.clone(),
     });
     Ok(Request::from_parts(parts, Body::from(body)))
-}
-
-fn is_mutation(method: &Method) -> bool {
-    matches!(*method, Method::POST | Method::PUT | Method::DELETE | Method::PATCH)
 }

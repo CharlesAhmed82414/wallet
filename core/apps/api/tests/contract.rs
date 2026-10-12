@@ -495,7 +495,6 @@ fn v3_cases(harness: &Harness) -> Vec<Case> {
     let wallet = harness.wallet_id.clone();
     let query_signed_for_other_asset = harness.sign_now("GET", "/v3/devices/transactions?asset_id=bitcoin&limit=5", &wallet, &[]);
     let path_only_signature = harness.sign_now("GET", "/v3/devices/transactions", &wallet, &[]);
-    let replayed = harness.sign_now("POST", "/v3/devices/notifications/read", "", &[]);
     vec![
         Case::new("v3_device", Method::GET, "/v3/devices").device(),
         Case::new("v3_is_registered", Method::GET, "/v3/devices/is-registered").device(),
@@ -510,8 +509,7 @@ fn v3_cases(harness: &Harness) -> Vec<Case> {
         Case::new("v3_address_names", Method::POST, "/v3/devices/address-names")
             .device()
             .json(json!([{"chain": "ethereum", "address": TEST_PRIVATE_KEY_ETHEREUM_ADDRESS}])),
-        Case::new("v3_notifications_read", Method::POST, "/v3/devices/notifications/read").auth(Auth::Header(replayed.clone())),
-        Case::new("v3_notifications_read_replayed", Method::POST, "/v3/devices/notifications/read").auth(Auth::Header(replayed)),
+        Case::new("v3_notifications_read", Method::POST, "/v3/devices/notifications/read").device(),
         Case::new("v3_subscriptions_repeat_get", Method::GET, "/v3/devices/subscriptions").device(),
         Case::new("v3_dropped_token", Method::GET, "/v3/devices/token").device(),
         Case::new("v3_dropped_legacy_transaction", Method::GET, &format!("/v3/devices/transaction/{TRANSACTION_ID}")).device(),

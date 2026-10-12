@@ -55,7 +55,6 @@ fn authenticated(state: &StreamState, scheme: SignedPath) -> Router<StreamState>
         config: state.auth_config.clone(),
         limit: STREAM_BODY_LIMIT,
         scheme,
-        replay: None,
     };
     Router::new().route("/stream", get(stream)).layer(from_fn_with_state(auth, device_auth))
 }
