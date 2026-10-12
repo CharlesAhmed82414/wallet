@@ -14,6 +14,7 @@ use serde_json::Value;
 use self::error::ResponseError;
 use crate::BoxError;
 use crate::cache::RequestCache;
+use crate::config::RPC_ROUTE;
 use crate::jsonrpc_types::{JsonRpcCall, JsonRpcRequest, JsonRpcResult};
 use crate::metrics::Metrics;
 use crate::proxy::constants::JSON_CONTENT_TYPE;
@@ -194,7 +195,7 @@ impl JsonRpcHandler {
         metrics.record_node_upstream(
             request.chain,
             url.url.host_str().unwrap_or_default(),
-            &request.path,
+            RPC_ROUTE,
             result.as_ref().map_or(StatusCode::BAD_GATEWAY.as_u16(), |response| response.status),
             attempt_start.elapsed(),
         );

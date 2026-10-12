@@ -77,7 +77,7 @@ impl HttpMetrics {
     }
 }
 
-fn method_label(method: &Method) -> &'static str {
+pub fn method_label(method: &Method) -> &'static str {
     match *method {
         Method::GET => "GET",
         Method::HEAD => "HEAD",

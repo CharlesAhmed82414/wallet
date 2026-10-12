@@ -5,6 +5,7 @@ use serde::Deserialize;
 
 use crate::jsonrpc_types::RequestType;
 
+use super::allowlist::unlisted_route;
 use super::cache::ContractCacheConfig;
 use super::{AllowlistConfig, CacheRule, CacheRules, ChainConfig};
 
@@ -15,12 +16,15 @@ pub struct ChainTypesConfig {
 }
 
 impl ChainTypesConfig {
-    pub fn allows(&self, chain_config: &ChainConfig, request_type: &RequestType) -> bool {
+    pub fn route(&self, chain_config: &ChainConfig, request_type: &RequestType) -> Option<String> {
         if let Some(allowlist) = chain_config.allowlist.as_ref() {
-            return allowlist.allows(request_type);
+            return allowlist.route(request_type);
         }
 
-        self.chain_types.get(&chain_config.chain.chain_type()).is_none_or(|config| config.allows(chain_config.chain, request_type))
+        match self.chain_types.get(&chain_config.chain.chain_type()) {
+            Some(config) => config.route(chain_config.chain, request_type),
+            None => Some(unlisted_route(request_type)),
+        }
     }
 
     pub(crate) fn cache_rules(&self, chain: Chain) -> Option<CacheRules> {
@@ -44,7 +48,7 @@ struct ChainTypeConfig {
 }
 
 impl ChainTypeConfig {
-    fn allows(&self, chain: Chain, request_type: &RequestType) -> bool {
+    fn route(&self, chain: Chain, request_type: &RequestType) -> Option<String> {
         let allowlists = [self.policy.allowlist.as_ref(), self.chains.get(&chain).and_then(|config| config.allowlist.as_ref())];
         let mut has_rules = false;
 
@@ -53,12 +57,12 @@ impl ChainTypeConfig {
                 continue;
             }
             has_rules = true;
-            if allowlist.allows(request_type) {
-                return true;
+            if let Some(route) = allowlist.route(request_type) {
+                return Some(route);
             }
         }
 
-        !has_rules
+        (!has_rules).then(|| unlisted_route(request_type))
     }
 }
 
@@ -104,8 +108,8 @@ mod tests {
         assert_eq!(optimism.rpc_ttl("eth_blockNumber"), Some(Duration::from_secs(60)));
         assert_eq!(optimism.rpc_ttl("eth_chainId"), None);
         let chain = ChainConfig::mock(Chain::Ethereum);
-        assert!(config.allows(&chain, &RequestType::mock_jsonrpc("eth_chainId")));
-        assert!(!config.allows(&chain, &RequestType::mock_jsonrpc("eth_blockNumber")));
+        assert!(config.route(&chain, &RequestType::mock_jsonrpc("eth_chainId")).is_some());
+        assert!(config.route(&chain, &RequestType::mock_jsonrpc("eth_blockNumber")).is_none());
         assert!(config.cache_rules(Chain::Solana).is_none());
     }
 
@@ -120,9 +124,9 @@ mod tests {
         }))
         .unwrap();
 
-        assert!(config.allows(&ChainConfig::mock(Chain::Ethereum), &RequestType::mock_jsonrpc("eth_call")));
-        assert!(config.allows(&ChainConfig::mock(Chain::Arbitrum), &RequestType::mock_jsonrpc("eth_call")));
-        assert!(!config.allows(&ChainConfig::mock(Chain::Ethereum), &RequestType::mock_jsonrpc("unsupported_method")));
+        assert!(config.route(&ChainConfig::mock(Chain::Ethereum), &RequestType::mock_jsonrpc("eth_call")).is_some());
+        assert!(config.route(&ChainConfig::mock(Chain::Arbitrum), &RequestType::mock_jsonrpc("eth_call")).is_some());
+        assert!(config.route(&ChainConfig::mock(Chain::Ethereum), &RequestType::mock_jsonrpc("unsupported_method")).is_none());
     }
 
     #[test]
@@ -132,8 +136,8 @@ mod tests {
         }))
         .unwrap();
 
-        assert!(config.allows(&ChainConfig::mock(Chain::Tron), &RequestType::mock_jsonrpc("unknown_method")));
-        assert!(config.allows(&ChainConfig::mock(Chain::Solana), &RequestType::mock_jsonrpc("unknown_method")));
+        assert!(config.route(&ChainConfig::mock(Chain::Tron), &RequestType::mock_jsonrpc("unknown_method")).is_some());
+        assert!(config.route(&ChainConfig::mock(Chain::Solana), &RequestType::mock_jsonrpc("unknown_method")).is_some());
     }
 
     #[test]
@@ -157,8 +161,9 @@ mod tests {
         let quote = RequestType::from_request("GET", "/thorchain/quote/swap?from_asset=SOL.SOL".to_string(), Bytes::new());
         let denied = RequestType::from_request("GET", "/thorchain/vaults/asgard".to_string(), Bytes::new());
 
-        assert!(config.allows(&ChainConfig::mock(Chain::Thorchain), &balance));
-        assert!(config.allows(&ChainConfig::mock(Chain::Thorchain), &quote));
-        assert!(!config.allows(&ChainConfig::mock(Chain::Thorchain), &denied));
+        let chain = ChainConfig::mock(Chain::Thorchain);
+        assert_eq!(config.route(&chain, &balance).as_deref(), Some("/cosmos/bank/v1beta1/balances/**"));
+        assert_eq!(config.route(&chain, &quote).as_deref(), Some("/thorchain/quote/swap"));
+        assert_eq!(config.route(&chain, &denied), None);
     }
 }

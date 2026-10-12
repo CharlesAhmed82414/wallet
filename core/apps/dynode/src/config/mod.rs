@@ -11,7 +11,7 @@ pub(crate) mod routes;
 mod settings;
 mod url;
 
-pub use allowlist::AllowlistConfig;
+pub use allowlist::{AllowlistConfig, REJECTED_ROUTE, RPC_ROUTE};
 pub use cache::{CacheConfig, MemoryConfig};
 pub(crate) use cache::{CacheRule, CacheRules};
 pub use chain_types::ChainTypesConfig;

@@ -7,6 +7,7 @@ use std::{
 use bytes::Bytes;
 use chain_providers::BroadcastProviders;
 use gem_tracing::{DurationMs, info_with_fields};
+use http_server::method_label;
 use primitives::{Chain, ResponseError, ResponseResult, response::ErrorDetail};
 use reqwest::StatusCode;
 use serde_json::Value;
@@ -15,7 +16,7 @@ use tokio::sync::RwLock;
 use self::error::NodeServiceError;
 use crate::BoxError;
 use crate::cache::RequestCache;
-use crate::config::{ChainConfig, ChainTypesConfig, ErrorMatcherConfig, HeadersConfig, MonitoringConfig, RetryConfig, Url};
+use crate::config::{ChainConfig, ChainTypesConfig, ErrorMatcherConfig, HeadersConfig, MonitoringConfig, REJECTED_ROUTE, RetryConfig, Url};
 use crate::failure_reason::FailureReason;
 use crate::jsonrpc_types::{JsonRpcErrorResponse, RequestType};
 use crate::metrics::Metrics;
@@ -79,32 +80,39 @@ impl NodeService {
     pub async fn proxy_request(&self, request: &ProxyRequest) -> Result<ProxyResponse, BoxError> {
         let chain = request.chain;
         let _inflight = self.metrics.track_node_inflight(chain);
+        let route = self.route(request);
         let mut remote_host = None;
-        let result = self.proxy_request_to_node(request, &mut remote_host).await;
+        let result = self.proxy_request_to_node(request, route.as_deref(), &mut remote_host).await;
         if request.is_broadcast(&self.broadcast_providers) {
             self.metrics.record_transaction_broadcast(request, &result, &self.broadcast_providers, remote_host.as_deref().unwrap_or("unknown"));
         }
         let status = result.as_ref().map_or(StatusCode::INTERNAL_SERVER_ERROR.as_u16(), |response| response.status);
-        self.metrics.record_node_response(chain, &request.path, status);
+        let route = route.as_deref().unwrap_or(REJECTED_ROUTE);
+        self.metrics.record_node_response(chain, route, status);
         if let Ok(response) = &result {
-            self.metrics.add_proxy_response(chain.as_ref(), request.method.as_str(), request.path.as_str(), response.status, request.elapsed().as_millis());
+            self.metrics.add_proxy_response(chain.as_ref(), method_label(&request.method), route, response.status, request.elapsed().as_millis());
         }
         result
     }
 
-    async fn proxy_request_to_node(&self, request: &ProxyRequest, broadcast_host: &mut Option<String>) -> Result<ProxyResponse, BoxError> {
+    fn route(&self, request: &ProxyRequest) -> Option<String> {
+        let chain_config = self.get_chain_config(request).ok()?;
+        self.chain_types.route(chain_config, request.request_type())
+    }
+
+    async fn proxy_request_to_node(&self, request: &ProxyRequest, route: Option<&str>, broadcast_host: &mut Option<String>) -> Result<ProxyResponse, BoxError> {
         Self::log_incoming_request(request);
 
         let chain_config = self.get_chain_config(request)?;
-        if !self.chain_types.allows(chain_config, request.request_type()) {
+        let Some(route) = route else {
             return Self::request_not_allowed_response(request);
-        }
+        };
         let Some(urls) = self.request_urls(chain_config, request).await else {
             return self.node_not_found_response(request);
         };
         if urls.len() == 1 {
             let url = RequestUrl::for_request(request, &urls[0], chain_config)?;
-            return self.proxy.forward_request(request, &url, broadcast_host).await;
+            return self.proxy.forward_request(request, &url, route, broadcast_host).await;
         }
 
         let retry_enabled = self.retry_config.enabled;
@@ -133,7 +141,7 @@ impl NodeService {
                 );
             }
             let result = match upstream_url {
-                Ok(url) => self.proxy.forward_request(request, &url, broadcast_host).await,
+                Ok(url) => self.proxy.forward_request(request, &url, route, broadcast_host).await,
                 Err(error) => Err(error.into()),
             };
             match result {
@@ -153,7 +161,7 @@ impl NodeService {
                     let retry_reason = FailureReason::Status(response.status).to_string();
                     if index + 1 < max_attempts {
                         self.metrics.add_proxy_retry(request.chain.as_ref(), remote_host.as_str(), &retry_reason);
-                        self.metrics.record_node_failover(request.chain, remote_host.as_str(), &request.path, &retry_reason);
+                        self.metrics.record_node_failover(request.chain, remote_host.as_str(), route, &retry_reason);
                     }
                     last_error = Some(retry_reason);
                     last_error_data = upstream_data;
@@ -183,7 +191,7 @@ impl NodeService {
                     );
                     if index + 1 < max_attempts {
                         self.metrics.add_proxy_retry(request.chain.as_ref(), remote_host.as_str(), &retry_reason);
-                        self.metrics.record_node_failover(request.chain, remote_host.as_str(), &request.path, &retry_reason);
+                        self.metrics.record_node_failover(request.chain, remote_host.as_str(), route, &retry_reason);
                     }
                     last_error = Some(retry_reason);
                 }
@@ -360,7 +368,7 @@ mod tests {
     use reqwest::{Method, header::HeaderMap};
 
     use super::*;
-    use crate::config::Override;
+    use crate::config::{AllowlistConfig, Override, RPC_ROUTE};
 
     #[tokio::test]
     async fn test_broadcast_metrics_count_final_response_without_webhook() {
@@ -410,9 +418,25 @@ mod tests {
             };
             let request = ProxyRequest::mock_jsonrpc(Chain::Ethereum, "eth_sendRawTransaction");
             let mut remote_host = None;
-            let _ = service.proxy_request_to_node(&request, &mut remote_host).await;
+            let _ = service.proxy_request_to_node(&request, Some(RPC_ROUTE), &mut remote_host).await;
             assert_eq!(remote_host.as_deref(), expected);
         }
+    }
+
+    #[tokio::test]
+    async fn test_rejected_requests_share_one_metric_label() {
+        let service = NodeService::mock(ChainConfig {
+            allowlist: Some(AllowlistConfig::mock()),
+            ..ChainConfig::mock(Chain::Bitcoin)
+        });
+        for path in ["/random/a1", "/random/b2"] {
+            let response = service.proxy_request(&ProxyRequest::mock(Chain::Bitcoin, Method::GET, path, &[])).await.unwrap();
+            assert_eq!(response.status, NodeServiceError::RequestNotAllowed.status());
+        }
+
+        let encoded = service.metrics.get_metrics();
+        assert!(encoded.contains(r#"path="rejected""#));
+        assert!(!encoded.contains("/random"));
     }
 
     #[test]

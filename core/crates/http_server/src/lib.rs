@@ -6,6 +6,6 @@ mod shutdown;
 
 pub use error::{ErrorBody, status_message};
 pub use layers::{INTERNAL_ERROR_MESSAGE, catch_panic_layer, timeout_layer, with_security_headers};
-pub use metrics::{HttpMetrics, MetricsLayer};
+pub use metrics::{HttpMetrics, MetricsLayer, method_label};
 pub use serve::{ServeConfig, serve};
 pub use shutdown::{ShutdownReceiver, ShutdownSender, shutdown_channel, spawn_signal_handler};
