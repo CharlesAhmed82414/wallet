@@ -42,7 +42,6 @@ pub const BASE_USDC_TOKEN_ID: &str = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 pub static BASE_USDC_ASSET_ID: LazyLock<AssetId> = LazyLock::new(|| AssetId::from_token(Chain::Base, BASE_USDC_TOKEN_ID));
 
 pub const BASE_USDT_TOKEN_ID: &str = "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2";
-pub static BASE_USDT_ASSET_ID: LazyLock<AssetId> = LazyLock::new(|| AssetId::from_token(Chain::Base, BASE_USDT_TOKEN_ID));
 
 pub const ETHEREUM_USDC_TOKEN_ID: &str = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 pub static ETHEREUM_USDC_ASSET_ID: LazyLock<AssetId> = LazyLock::new(|| AssetId::from_token(Chain::Ethereum, ETHEREUM_USDC_TOKEN_ID));
