@@ -53,6 +53,7 @@ import com.gemwallet.android.ui.components.list_item.AssetItemAction
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.AssetSectionHeaderItem
 import com.gemwallet.android.ui.components.list_item.SubheaderItem
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.list_item.property.itemsPositioned
 import com.gemwallet.android.ui.components.progress.CircularProgressIndicator16
 import com.gemwallet.android.ui.components.screen.Scene
@@ -75,6 +76,7 @@ import uniffi.gemstone.GemEmptyState
 import uniffi.gemstone.GemEmptyStateAction
 import uniffi.gemstone.GemEmptyStateKind
 import uniffi.gemstone.GemSelectAssetState
+import uniffi.gemstone.GemSelectRowAction
 import uniffi.gemstone.emptyState
 
 @Composable
@@ -85,6 +87,7 @@ fun SelectAssetScene(
     unpinned: ImmutableList<AssetInfoDataAggregate>,
     recent: ImmutableList<Asset>,
     state: GemSelectAssetState,
+    rowAction: GemSelectRowAction,
     query: TextFieldState,
     empty: GemEmptyState = emptyState(GemEmptyStateKind.SEARCH_ASSETS),
     availableChains: List<Chain> = emptyList(),
@@ -112,6 +115,7 @@ fun SelectAssetScene(
         unpinned = unpinned,
         recent = recent,
         state = state,
+        rowAction = rowAction,
         query = query,
         empty = empty,
         availableChains = availableChains,
@@ -135,6 +139,7 @@ fun SelectAssetScene(
     unpinned: ImmutableList<AssetInfoDataAggregate>,
     recent: ImmutableList<Asset>,
     state: GemSelectAssetState,
+    rowAction: GemSelectRowAction,
     query: TextFieldState,
     empty: GemEmptyState = emptyState(GemEmptyStateKind.SEARCH_ASSETS),
     availableChains: List<Chain> = emptyList(),
@@ -155,7 +160,10 @@ fun SelectAssetScene(
     assetsHeaderClickable: Boolean = false,
     snackbar: SnackbarHostState? = null,
 ) {
-    val onSelect: (Asset) -> Unit = { onAction(SelectAssetAction.Select(it)) }
+    val onSelect: ((Asset) -> Unit)? = when (rowAction) {
+        GemSelectRowAction.NAVIGATE, GemSelectRowAction.SELECT -> { asset -> onAction(SelectAssetAction.Select(asset)) }
+        GemSelectRowAction.TOGGLE -> null
+    }
     val onSelectRecent: (Asset) -> Unit = { onAction(SelectAssetAction.SelectRecent(it)) }
     val onOpenRecentsSheet: (() -> Unit)? = if (recentsSheetEnabled) {
         { onAction(SelectAssetAction.OpenRecentsSheet) }
@@ -327,6 +335,7 @@ fun SelectAssetRow(
             listPosition = position,
             asset = item,
             onAction = onItemAction?.let { handler -> { action -> handler(item, action) } },
+            accessory = onSelect?.let { { DataBadgeChevron() } },
         )
     }
 }
@@ -404,6 +413,7 @@ fun PreviewAssetScreenUI() {
             popular = emptyList<AssetInfoDataAggregate>().toImmutableList(),
             recent = emptyList<Asset>().toImmutableList(),
             state = GemSelectAssetState.IDLE,
+            rowAction = GemSelectRowAction.NAVIGATE,
             title = "Send",
             query = rememberTextFieldState(),
             onAction = {},

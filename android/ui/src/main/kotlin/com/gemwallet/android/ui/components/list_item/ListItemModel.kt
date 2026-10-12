@@ -282,7 +282,11 @@ private fun TitleTag(text: String, style: ListItemTextStyle, type: ListItemTagTy
         ListItemTagType.None, ListItemTagType.Pending -> Unit
     }
     when (style) {
-        ListItemTextStyle.Primary -> Text(
+        ListItemTextStyle.Primary,
+        ListItemTextStyle.Body,
+        ListItemTextStyle.Secondary,
+        ListItemTextStyle.Faded,
+        -> Text(
             modifier = Modifier
                 .padding(start = paddingHalfSmall)
                 .background(
@@ -312,10 +316,5 @@ private fun TitleTag(text: String, style: ListItemTextStyle, type: ListItemTagTy
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelMedium,
         )
-
-        ListItemTextStyle.Body,
-        ListItemTextStyle.Secondary,
-        ListItemTextStyle.Faded,
-        -> Badge(text)
     }
 }

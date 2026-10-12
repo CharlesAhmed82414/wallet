@@ -1264,6 +1264,8 @@ What this replaces is the row assembled in the body: `ListItemView(title:subtitl
 
 The NFT list, fiat transaction row and curated asset list use title left, secondary value trailing and chevron last. iOS `ListItemModel.subtitle` names that trailing slot, not a second title line. The NFT verified badge belongs to the grid (`GemNftRow.is_verified`), not the list; details use the collection status already held.
 
+A row that opens another screen ends with the chevron on both apps, rich rows included (asset, position, price alert, transaction): iOS gets it from `NavigationLink` or `NavigationCustomLink`, Android draws `DataBadgeChevron` after the trailing value. A display-only row and a toggle row have none. A select-asset list decides from the flow's `GemSelectRowAction`: `Navigate` and `Select` rows open something and carry the chevron, `Toggle` rows do not.
+
 ### Dispatch Core work that can block
 
 The `flowOn` above is not decoration. A synchronous Core call such as `GemTransactionDetailsService.detailRows` can read store callbacks that block on Room, and UniFFI polls the Rust future on the calling thread — so without it the read lands on main, where Room throws before any work happens.

@@ -62,6 +62,7 @@ fun SelectAssetScreen(
         unpinned = unpinned,
         recent = if (showRecents) recent else emptyList<Asset>().toImmutableList(),
         state = uiStates,
+        rowAction = viewModel.flow.rowAction,
         empty = searchEmptyState,
         availableChains = availableChains,
         filter = filter,

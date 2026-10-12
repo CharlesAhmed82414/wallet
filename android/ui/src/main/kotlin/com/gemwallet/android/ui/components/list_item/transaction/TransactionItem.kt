@@ -31,6 +31,7 @@ import com.gemwallet.android.ui.components.list_item.ListItemDefaults
 import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.components.list_item.ListItemSupportText
 import com.gemwallet.android.ui.components.list_item.ListItemTitleText
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.progress.CircularProgressIndicator10
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.localization.statusLabelRes
@@ -95,6 +96,7 @@ fun TransactionItem(data: GemTransactionRow, listPosition: ListPosition, onClick
                     ListItemSupportText(it)
                 }
             }
+            DataBadgeChevron()
         },
     )
 }

@@ -13,6 +13,7 @@ import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.DropDownContextItem
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.models.ListPosition
 import com.gemwallet.android.ui.theme.WalletTheme
@@ -79,6 +80,7 @@ fun PerpetualListItem(item: GemPerpetualMarketItem, modifier: Modifier = Modifie
         row = item.row,
         modifier = modifier,
         listPosition = listPosition,
+        accessory = { DataBadgeChevron() },
     )
 }
 

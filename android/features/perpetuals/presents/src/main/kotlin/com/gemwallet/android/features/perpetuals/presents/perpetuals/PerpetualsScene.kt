@@ -33,6 +33,7 @@ import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.AssetSectionHeaderItem
 import com.gemwallet.android.ui.components.list_item.SubheaderItem
 import com.gemwallet.android.ui.components.list_item.listItem
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.list_item.property.itemsPositioned
 import com.gemwallet.android.ui.components.screen.PullToRefreshBox
 import com.gemwallet.android.ui.components.screen.Scene
@@ -145,6 +146,7 @@ internal fun PerpetualsScene(
                                     row = item.row,
                                     listPosition = position,
                                     modifier = Modifier.clickable { onAction(PerpetualsAction.OpenPerpetual(item.asset)) },
+                                    accessory = { DataBadgeChevron() },
                                 )
                             }
                         }

@@ -25,6 +25,7 @@ import com.gemwallet.android.ui.components.SearchBar
 import com.gemwallet.android.ui.components.empty.EmptyContentView
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.dateSectionedList
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.list_item.rememberDaySections
 import com.gemwallet.android.ui.components.screen.ModalBottomSheet
 import com.gemwallet.android.ui.components.screen.SheetExpansion
@@ -91,6 +92,7 @@ fun RecentsScene(isVisible: Boolean, viewState: GemRecentsViewState, query: Text
                             asset = recent.asset,
                             listPosition = position,
                             modifier = Modifier.clickable { onSelect(recent.asset) },
+                            trailing = { DataBadgeChevron() },
                         )
                     }
                 }

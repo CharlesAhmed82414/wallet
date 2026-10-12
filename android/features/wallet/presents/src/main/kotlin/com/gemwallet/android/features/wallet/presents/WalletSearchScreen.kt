@@ -175,6 +175,7 @@ fun WalletSearchScreen(onAction: (WalletSearchAction) -> Unit, viewModel: Wallet
         unpinned = previewAssets.toImmutableList(),
         recent = recent,
         state = state,
+        rowAction = viewModel.flow.rowAction,
         empty = searchEmptyState,
         searchable = false,
         onAction = { action ->

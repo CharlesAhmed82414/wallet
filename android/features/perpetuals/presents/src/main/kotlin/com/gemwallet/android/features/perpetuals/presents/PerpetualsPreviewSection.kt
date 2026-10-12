@@ -45,6 +45,7 @@ fun PerpetualsPreviewSection(onOpenPerpetuals: () -> Unit, onOpenPerpetual: (Ass
                     listPosition = ListPosition.getPosition(index, positions.size),
                     modifier = Modifier.clickable { onOpenPerpetual(position.asset.id) },
                     hideBalance = position.hideBalance,
+                    accessory = { DataBadgeChevron() },
                 )
             }
         }

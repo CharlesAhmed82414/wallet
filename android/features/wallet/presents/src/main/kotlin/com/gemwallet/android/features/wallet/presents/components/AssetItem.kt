@@ -9,6 +9,7 @@ import com.gemwallet.android.ext.toIdentifier
 import com.gemwallet.android.ui.components.list_item.AssetContextActions
 import com.gemwallet.android.ui.components.list_item.AssetContextMenuRow
 import com.gemwallet.android.ui.components.list_item.AssetListItem
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.models.ListPosition
 import com.wallet.core.primitives.AssetId
 import uniffi.gemstone.GemAssetSectionKind
@@ -33,6 +34,6 @@ internal fun AssetItem(
         onClick = { onAssetClick(item.id) },
         modifier = modifier.testTag(item.id.toIdentifier()),
     ) { rowModifier ->
-        AssetListItem(asset = item, listPosition = listPosition, modifier = rowModifier)
+        AssetListItem(asset = item, listPosition = listPosition, modifier = rowModifier, accessory = { DataBadgeChevron() })
     }
 }

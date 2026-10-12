@@ -53,8 +53,8 @@ sealed interface AssetItemAction {
 }
 
 @Composable
-fun AssetListItem(asset: AssetInfoDataAggregate, listPosition: ListPosition, modifier: Modifier = Modifier, onAction: ((AssetItemAction) -> Unit)? = null) {
-    AssetListItem(row = asset.row, listPosition = listPosition, modifier = modifier, hideBalance = asset.hideBalance, onAction = onAction)
+fun AssetListItem(asset: AssetInfoDataAggregate, listPosition: ListPosition, modifier: Modifier = Modifier, onAction: ((AssetItemAction) -> Unit)? = null, accessory: (@Composable () -> Unit)? = null) {
+    AssetListItem(row = asset.row, listPosition = listPosition, modifier = modifier, hideBalance = asset.hideBalance, onAction = onAction, accessory = accessory)
 }
 
 @Composable
@@ -81,7 +81,7 @@ fun AssetListItem(row: GemAssetItemRow, listPosition: ListPosition, modifier: Mo
             }
         }
 
-        GemAssetItemTrailing.None -> accessory
+        GemAssetItemTrailing.None -> null
     }
     ListItem(
         modifier = modifier,
@@ -92,7 +92,14 @@ fun AssetListItem(row: GemAssetItemRow, listPosition: ListPosition, modifier: Mo
         leading = @Composable { AssetIcon(row.icon) },
         title = @Composable { ListItemTitleText(row.title, { Badge(text = row.titleExtra) }) },
         subtitle = row.subtitle?.let { subtitle -> { AssetItemSupport(subtitle.string(context), subtitle.tone, row.subtitleExtra?.let { it.string(context) to it.tone }) } },
-        trailing = trailing?.let { content -> { content() } },
+        trailing = if (trailing == null && accessory == null) {
+            null
+        } else {
+            {
+                trailing?.invoke()
+                accessory?.invoke()
+            }
+        },
     )
 }
 

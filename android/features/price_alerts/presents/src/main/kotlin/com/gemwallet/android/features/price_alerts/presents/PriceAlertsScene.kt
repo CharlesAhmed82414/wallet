@@ -33,6 +33,7 @@ import com.gemwallet.android.ui.components.list_item.ActionIcon
 import com.gemwallet.android.ui.components.list_item.GemListRowView
 import com.gemwallet.android.ui.components.list_item.SwipeableItemWithActions
 import com.gemwallet.android.ui.components.list_item.listSections
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.screen.PullToRefreshBox
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.components.screen.showSnackbar
@@ -177,6 +178,7 @@ private fun LazyListScope.assets(revealable: MutableState<String?>, sections: Li
                     .testTag(item.data.asset.toPrimitives().id.toIdentifier()),
                 item = item,
                 listPosition = position,
+                accessory = onChart?.let { { DataBadgeChevron() } },
             )
         }
     }
