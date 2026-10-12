@@ -33,7 +33,7 @@ use tower_http::normalize_path::NormalizePathLayer;
 use crate::auth::device::{DeviceAuthConfig, JwtConfig};
 use crate::routes::devices::support::SupportImageUploadConfig;
 use crate::state::{AppState, Clients};
-use crate::stream::{StreamObserverConfig, StreamState};
+use crate::stream::{StreamObserverConfig, StreamPricesConfig, StreamState};
 
 fn device_auth_config(settings: &Settings) -> Arc<DeviceAuthConfig> {
     let jwt = JwtConfig {
@@ -121,7 +121,9 @@ async fn stream_state(settings: &Settings, shutdown: ShutdownReceiver) -> Result
         observer: Arc::new(StreamObserverConfig {
             redis_url: settings.redis.url.clone(),
             device_stream: services.device_stream(cacher_client).await?,
-            prices_limit: services.config().get_usize(ConfigKey::DeviceStreamPricesLimit).await?,
+            prices: StreamPricesConfig {
+                limit: services.config().get_usize(ConfigKey::DeviceStreamPricesLimit).await?,
+            },
         }),
         shutdown,
         connections: TaskTracker::new(),
