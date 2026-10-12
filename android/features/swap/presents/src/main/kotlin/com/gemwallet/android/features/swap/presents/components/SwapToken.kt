@@ -92,15 +92,6 @@ internal fun SwapToken(item: AssetData?, side: GemSwapSideState, calculating: Bo
 
 @Composable
 private fun SwapItemLotInfo(title: String, icon: GemAssetIcon?, enabled: Boolean, onClick: () -> Unit) {
-    if (icon == null) {
-        SelectAssetInfo(title, enabled, onClick)
-    } else {
-        AssetData(title, icon, enabled, onClick)
-    }
-}
-
-@Composable
-private fun SelectAssetInfo(title: String, enabled: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .clickable(enabled = enabled, onClick = onClick)
@@ -109,25 +100,7 @@ private fun SelectAssetInfo(title: String, enabled: Boolean, onClick: () -> Unit
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(paddingSmall, Alignment.End),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-        )
-        AssetPickerChevron()
-    }
-}
-
-@Composable
-private fun AssetData(title: String, icon: GemAssetIcon, enabled: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clickable(enabled = enabled, onClick = onClick)
-            .smallPadding()
-            .heightIn(min = listItemIconSize),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(paddingSmall, Alignment.End),
-    ) {
-        AssetIcon(icon)
+        icon?.let { AssetIcon(it) }
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
