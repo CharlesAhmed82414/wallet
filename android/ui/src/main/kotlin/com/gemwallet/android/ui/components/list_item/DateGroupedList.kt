@@ -50,7 +50,7 @@ fun <D, T> rememberDaySections(days: List<D>, day: (D) -> GemDay, items: (D) -> 
 
 fun <T> dateSections(items: List<T>, createdAt: (T) -> Long, zone: ZoneId, locale: Locale, formatter: SectionDateFormatter): List<DateSection<T>> =
     formatter.boundaries.sections(items.map { Instant.ofEpochMilli(createdAt(it)).atZone(zone).toLocalDate().gemDay() }, true).map { section ->
-        DateSection(label = formatter.format(section.day.localDate(), locale), items = section.positions.map { items[it.toInt()] })
+        DateSection(label = formatter.format(section.label, section.day.localDate(), locale), items = section.positions.map { items[it.toInt()] })
     }
 
 @OptIn(ExperimentalFoundationApi::class)
