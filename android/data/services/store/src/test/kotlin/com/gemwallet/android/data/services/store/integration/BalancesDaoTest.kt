@@ -158,7 +158,7 @@ class BalancesDaoTest {
 
         val observed = database.assetsDao().getAssetsInfo(wallet).first()
 
-        assertEquals("both rows of the batch are there, never one", 2, observed.count { it.balanceAvailable != null })
+        assertEquals("both rows of the batch are there, never one", 2, observed.size)
         assertNull("a balance with nothing to carry has no metadata", database.balancesDao().getByAssets(wallet, listOf("ethereum")).single().metadata)
     }
 }

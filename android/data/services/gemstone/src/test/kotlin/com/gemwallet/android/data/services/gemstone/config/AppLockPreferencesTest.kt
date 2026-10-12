@@ -6,6 +6,7 @@ import com.gemwallet.android.data.services.store.ConfigStore
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -15,6 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import uniffi.gemstone.GemSecureStore
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AppLockPreferencesTest {
 
     private val configStore = mockk<ConfigStore>(relaxed = true)

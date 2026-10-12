@@ -56,6 +56,9 @@ subprojects {
             }
         }
     }
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+        compilerOptions.allWarningsAsErrors.set(true)
+    }
     if (path != ":app" && file("src/androidTest").exists()) {
         throw GradleException("$path has src/androidTest. Put tests that need Android in an integration package under src/test; they run on Robolectric.")
     }

@@ -96,7 +96,7 @@ class AssetsQueryTest {
             listOf(AssetId(Chain.Solana), AssetId(Chain.Bitcoin), AssetId(Chain.Ethereum), AssetId(Chain.Tron)),
             assets.map { it.asset.id },
         )
-        assertEquals(listOf(true, false, false, false), assets.map { it.metadata?.isPinned })
+        assertEquals(listOf(true, false, false, false), assets.map { it.metadata.isPinned })
     }
 
     @Test

@@ -47,6 +47,7 @@ internal class AuthenticatedKeysetAead(private val alias: String) : Aead {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             builder.setUserAuthenticationParameters(PASSWORD_AUTHENTICATION_WINDOW_SECONDS, KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL)
         } else {
+            @Suppress("DEPRECATION")
             builder.setUserAuthenticationValidityDurationSeconds(PASSWORD_AUTHENTICATION_WINDOW_SECONDS)
         }
         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply {

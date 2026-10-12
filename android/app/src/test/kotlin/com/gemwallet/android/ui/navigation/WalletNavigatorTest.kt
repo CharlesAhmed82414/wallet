@@ -59,6 +59,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.job
@@ -83,6 +84,7 @@ import uniffi.gemstone.GemWalletSecretKind
 import uniffi.gemstone.UrlAction
 import uniffi.gemstone.WalletConnectLink
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class WalletNavigatorTest {
     @Before
     fun setUp() {

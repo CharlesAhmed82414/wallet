@@ -149,10 +149,12 @@ class ScreenshotsCapture {
         context.startActivity(intent)
         val activity = monitor.waitForActivityWithTimeout(2000)
         val baseContext = activity.baseContext
+        @Suppress("DEPRECATION")
         val locale = Locale(language, country)
         Locale.setDefault(locale)
         val config: Configuration = baseContext.resources.configuration
         config.setLocale(locale)
+        @Suppress("DEPRECATION")
         baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
     }
 

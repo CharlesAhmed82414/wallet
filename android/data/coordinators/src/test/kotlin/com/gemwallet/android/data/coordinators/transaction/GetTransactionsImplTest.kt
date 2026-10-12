@@ -14,6 +14,7 @@ import com.wallet.core.primitives.WalletId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -27,6 +28,7 @@ import org.junit.Test
 import uniffi.gemstone.activityFilters
 import java.util.concurrent.atomic.AtomicInteger
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class GetTransactionsImplTest {
 
     private val wallet = mockWallet()

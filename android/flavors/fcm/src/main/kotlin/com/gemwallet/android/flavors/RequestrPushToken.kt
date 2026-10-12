@@ -7,6 +7,7 @@ class StoreRequestPushToken : RequestPushToken {
 
     override suspend fun requestToken(callback: (String) -> Unit) {
         try {
+            @Suppress("DEPRECATION")
             FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                 val token = if (task.isSuccessful) {
                     task.result

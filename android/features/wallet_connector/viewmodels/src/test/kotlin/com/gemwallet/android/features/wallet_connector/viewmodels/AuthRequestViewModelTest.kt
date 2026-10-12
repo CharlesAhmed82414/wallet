@@ -115,7 +115,7 @@ class AuthRequestViewModelTest {
 
     private suspend fun AuthRequestViewModel.awaitContent(): AuthRequestUIState.Content = when (val settled = awaitSettled()) {
         is AuthRequestUIState.Content -> settled
-        is AuthRequestUIState.Error -> throw AssertionError(settled.text.toString())
+        is AuthRequestUIState.Error -> throw AssertionError(settled.text)
         else -> throw AssertionError("unexpected state $settled")
     }
 

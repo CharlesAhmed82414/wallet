@@ -117,6 +117,7 @@ class PasswordKeysetInstrumentedTest {
     private fun store() = TinkEncryptedKeyValueStore(context, config, PasswordKeyset(context, config)::get)
 
     private fun authenticate() {
+        @Suppress("DEPRECATION")
         val intent = checkNotNull(context.getSystemService(KeyguardManager::class.java).createConfirmDeviceCredentialIntent("Test", null))
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         val entry = checkNotNull(device.wait(Until.findObject(By.clazz("android.widget.EditText")), 10000)) { "Credential prompt did not appear" }
