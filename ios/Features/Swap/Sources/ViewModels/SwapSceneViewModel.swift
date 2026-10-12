@@ -19,6 +19,7 @@ import struct Gemstone.GemSwapSession
 import enum Gemstone.GemSwapSide
 import struct Gemstone.GemSwapSideState
 import struct Gemstone.GemSwapViewState
+import func Gemstone.swapErrorDisplay
 import enum Gemstone.SwapperError
 import enum Gemstone.SwapProvider
 import struct Gemstone.SwapQuote
@@ -41,6 +42,7 @@ public final class SwapSceneViewModel {
 
     public var session: GemSwapSession
     @ObservationIgnored private var viewStateCache: (session: GemSwapSession, pay: AssetData?, receive: AssetData?, state: GemSwapViewState)?
+    var quoteDataErrorAlert: AlertMessage?
     public var isPresentingInfoSheet: SwapSheetType?
 
     public let fromAssetQuery: ObservableQuery<AssetQueryOptional>
@@ -156,8 +158,9 @@ public final class SwapSceneViewModel {
         viewState.isTransferLoading
     }
 
-    var error: GemSwapErrorDisplay? {
-        viewState.error
+    var quoteError: GemSwapErrorDisplay? {
+        guard case let .failed(error) = viewState.quotesState else { return nil }
+        return error
     }
 
     var isReceiveFieldLoading: Bool {
@@ -172,8 +175,8 @@ public final class SwapSceneViewModel {
         Set([fromAsset?.asset.id, toAsset?.asset.id].compactMap(\.self))
     }
 
-    var errorInfoAction: VoidAction {
-        guard let topic = viewState.error?.info() else {
+    var quoteErrorInfoAction: VoidAction {
+        guard let topic = quoteError?.info() else {
             return nil
         }
         return VoidAction { [weak self] in
@@ -366,7 +369,9 @@ extension SwapSceneViewModel {
             onSwap?(transferData)
             session = session.onTransferHandedOff(transfer: transfer)
         } catch {
-            session = session.onTransferFailed(transfer: transfer, error: error as? SwapperError ?? .TransactionError(error.localizedDescription))
+            let quoteDataError = error as? SwapperError ?? .TransactionError(error.localizedDescription)
+            session = session.onTransferFailed(transfer: transfer, error: quoteDataError)
+            quoteDataErrorAlert = AlertMessage(title: errorTitle, error: swapErrorDisplay(error: quoteDataError, payAsset: fromAsset?.asset.toGem()))
         }
     }
 

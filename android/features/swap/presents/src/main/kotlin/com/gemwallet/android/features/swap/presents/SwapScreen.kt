@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.domains.confirm.ConfirmTransferInput
 import com.gemwallet.android.domains.swap.SwapItemType
 import com.gemwallet.android.features.swap.presents.dialogs.PriceImpactWarningDialog
+import com.gemwallet.android.features.swap.presents.dialogs.SwapQuoteDataErrorDialog
 import com.gemwallet.android.features.swap.viewmodels.SwapViewModel
 import com.gemwallet.android.ui.ObserveStartedState
 import com.gemwallet.android.ui.components.InfoBottomSheet
@@ -19,6 +20,7 @@ import com.gemwallet.android.ui.components.screen.SheetExpansion
 import com.gemwallet.android.ui.components.swap.SwapDetailsBottomSheet
 import com.gemwallet.android.ui.components.swap.SwapSlippageBottomSheet
 import com.wallet.core.primitives.AssetId
+import uniffi.gemstone.GemSwapErrorDisplay
 
 @Composable
 fun SwapScreen(
@@ -39,6 +41,7 @@ fun SwapScreen(
 
     var isShowPriceImpactAlert by remember { mutableStateOf(false) }
     var isShowDetails by remember { mutableStateOf(false) }
+    var quoteDataError by remember { mutableStateOf<GemSwapErrorDisplay?>(null) }
 
     ObserveStartedState(viewModel::setRefreshEnabled)
 
@@ -71,6 +74,7 @@ fun SwapScreen(
 
                 SwapAction.Swap -> viewModel.onPrimaryAction(
                     onConfirm = onConfirm,
+                    onError = { quoteDataError = it },
                     onShowPriceImpactWarning = { isShowPriceImpactAlert = true },
                 )
 
@@ -84,7 +88,12 @@ fun SwapScreen(
         priceImpact = viewState.details?.summary?.priceImpactRow,
         asset = pay?.asset,
         onDismiss = { isShowPriceImpactAlert = false },
-        onContinue = { viewModel.swap(onConfirm) },
+        onContinue = { viewModel.swap(onConfirm = onConfirm, onError = { quoteDataError = it }) },
+    )
+
+    SwapQuoteDataErrorDialog(
+        error = quoteDataError,
+        onDismiss = { quoteDataError = null },
     )
 
     SwapDetailsBottomSheet(

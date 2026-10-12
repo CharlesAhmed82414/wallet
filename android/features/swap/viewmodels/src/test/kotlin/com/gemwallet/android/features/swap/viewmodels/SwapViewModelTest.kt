@@ -67,10 +67,12 @@ import org.junit.Rule
 import org.junit.Test
 import uniffi.gemstone.GemInfoTopic
 import uniffi.gemstone.GemSwapButtonAction
+import uniffi.gemstone.GemSwapErrorDisplay
 import uniffi.gemstone.GemSwapPairSelection
 import uniffi.gemstone.GemSwapPairSuggestion
 import uniffi.gemstone.GemSwapQuoteInput
 import uniffi.gemstone.GemSwapQuoteServiceInterface
+import uniffi.gemstone.GemSwapQuotesState
 import uniffi.gemstone.GemSwapRequest
 import uniffi.gemstone.GemTransferData
 import uniffi.gemstone.InternalException
@@ -148,7 +150,7 @@ class SwapViewModelTest {
         assertNull(subject.infoSheet.value)
         var confirmations = 0
 
-        subject.swap { confirmations += 1 }
+        subject.swap(onConfirm = { confirmations += 1 }, onError = {})
         advanceUntilIdle()
 
         assertEquals(GemInfoTopic.RegionUnavailable, subject.infoSheet.value)
@@ -379,7 +381,7 @@ class SwapViewModelTest {
 
         coVerify(exactly = 2) { swapQuoteService.getQuotes(any()) }
         assertTrue(viewModel.viewState.value.isQuoteLoading)
-        assertNull(viewModel.viewState.value.error)
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
     }
 
     @Test
@@ -471,7 +473,7 @@ class SwapViewModelTest {
         failQuote(viewModel, SwapperException.ComputeQuoteException("boom"))
 
         coVerify(exactly = 1) { swapQuoteService.getQuotes(any()) }
-        assertNotNull(viewModel.viewState.value.error)
+        assertTrue(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
     }
 
     @Test
@@ -482,7 +484,7 @@ class SwapViewModelTest {
         failQuote(viewModel, InternalException("panic"))
 
         val state = viewModel.viewState.value
-        assertNotNull(state.error)
+        assertTrue(state.quotesState is GemSwapQuotesState.Failed)
         assertEquals(GemSwapButtonAction.RetryQuote, state.buttonAction)
     }
 
@@ -510,7 +512,7 @@ class SwapViewModelTest {
         advanceUntilIdle()
         failQuote(viewModel, SwapperException.ComputeQuoteException("offline"))
 
-        viewModel.onPrimaryAction(onConfirm = {}, onShowPriceImpactWarning = {})
+        viewModel.onPrimaryAction(onConfirm = {}, onError = {}, onShowPriceImpactWarning = {})
         runCurrent()
 
         coVerify(exactly = 2) { swapQuoteService.getQuotes(any()) }
@@ -523,16 +525,16 @@ class SwapViewModelTest {
         val viewModel = createViewModel(swapSavedState())
         advanceUntilIdle()
         seedReadyQuote(viewModel)
-        viewModel.swap {}
+        viewModel.swap(onConfirm = {}, onError = {})
         awaitCondition { viewModel.viewState.value.buttonAction == GemSwapButtonAction.RetryTransfer }
         failQuote(viewModel, SwapperException.ComputeQuoteException("offline"))
         stubBuildConfirmInput()
-        viewModel.onPrimaryAction(onConfirm = { viewModel.setRefreshEnabled(false) }, onShowPriceImpactWarning = {})
+        viewModel.onPrimaryAction(onConfirm = { viewModel.setRefreshEnabled(false) }, onError = {}, onShowPriceImpactWarning = {})
         awaitCondition { !viewModel.viewState.value.isTransferLoading && viewModel.viewState.value.buttonAction == GemSwapButtonAction.RetryQuote }
         viewModel.setRefreshEnabled(true)
         runCurrent()
 
-        viewModel.onPrimaryAction(onConfirm = {}, onShowPriceImpactWarning = {})
+        viewModel.onPrimaryAction(onConfirm = {}, onError = {}, onShowPriceImpactWarning = {})
         advanceUntilIdle()
 
         coVerify(exactly = 3) { swapQuoteService.getQuotes(any()) }
@@ -548,13 +550,13 @@ class SwapViewModelTest {
 
         seedReadyQuote(viewModel)
         assertEquals(ButtonState.Enabled, viewModel.viewState.value.buttonState.buttonState())
-        assertNull(viewModel.viewState.value.error)
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
         assertEquals(2.5, viewModel.viewState.value.details?.provider?.amount?.value)
 
         viewModel.setRefreshEnabled(true)
         advanceUntilIdle()
         val confirmed = mutableListOf<ConfirmTransferInput>()
-        viewModel.swap { confirmed += it }
+        viewModel.swap(onConfirm = { confirmed += it }, onError = {})
         awaitCondition { viewModel.viewState.value.isTransferLoading }
 
         quoteAnswers.trySend(Result.success(listOf(mockSwapperQuote(fromValue = BigInteger("1000000000"), toValue = BigInteger("2600000"), request = mockSwapperQuoteRequest(toAsset = mockSwapperQuoteAsset(decimals = 6u))))))
@@ -582,12 +584,22 @@ class SwapViewModelTest {
         advanceUntilIdle()
 
         seedReadyQuote(viewModel)
+        val alerts = mutableListOf<GemSwapErrorDisplay>()
 
-        viewModel.swap {}
-        awaitCondition { viewModel.viewState.value.error != null }
+        viewModel.swap(onConfirm = {}, onError = { alerts += it }).join()
+        runCurrent()
 
-        assertEquals(GemInfoTopic.NoQuote.infoSheet(), viewModel.viewState.value.error?.info()?.infoSheet())
+        assertEquals(GemInfoTopic.NoQuote.infoSheet(), alerts.single().info()?.infoSheet())
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
         assertEquals(2.5, viewModel.viewState.value.details?.provider?.amount?.value)
+        assertEquals(GemSwapButtonAction.RetryTransfer, viewModel.viewState.value.buttonAction)
+
+        viewModel.onPrimaryAction(onConfirm = {}, onError = { alerts += it }, onShowPriceImpactWarning = {})
+        advanceUntilIdle()
+
+        assertEquals(listOf(alerts.first(), alerts.first()), alerts)
+        coVerify(exactly = 2) { swapQuoteService.transferData(any()) }
+        coVerify(exactly = 1) { swapQuoteService.getQuotes(any()) }
     }
 
     @Test
@@ -600,15 +612,18 @@ class SwapViewModelTest {
         seedReadyQuote(viewModel)
         val quote = viewModel.viewState.value.quote
         var confirmations = 0
+        var alert: GemSwapErrorDisplay? = null
 
-        viewModel.swap { confirmations += 1 }
-        awaitCondition { viewModel.viewState.value.error != null }
+        viewModel.swap(onConfirm = { confirmations += 1 }, onError = { alert = it }).join()
+        runCurrent()
 
         val state = viewModel.viewState.value
         assertFalse(state.isTransferLoading)
         assertEquals(GemSwapButtonAction.RetryTransfer, state.buttonAction)
         assertEquals(ButtonState.Enabled, state.buttonState.buttonState())
         assertEquals(quote, state.quote)
+        assertNotNull(alert)
+        assertFalse(state.quotesState is GemSwapQuotesState.Failed)
         assertEquals(0, confirmations)
     }
 
@@ -624,11 +639,13 @@ class SwapViewModelTest {
         advanceUntilIdle()
 
         seedReadyQuote(viewModel)
+        var alert: GemSwapErrorDisplay? = null
 
-        viewModel.swap {}
-        awaitCondition { viewModel.viewState.value.error != null }
+        viewModel.swap(onConfirm = {}, onError = { alert = it }).join()
+        runCurrent()
 
         val state = viewModel.viewState.value
+        assertNotNull(alert)
         assertEquals(R.string.wallet_swap, state.buttonAction.stringRes())
         assertEquals(ButtonState.Enabled, state.buttonState.buttonState())
         assertEquals(2.5, viewModel.viewState.value.details?.provider?.amount?.value)
@@ -638,6 +655,7 @@ class SwapViewModelTest {
         var confirmed: GemTransferData? = null
         viewModel.onPrimaryAction(
             onConfirm = { confirmed = it.data },
+            onError = {},
             onShowPriceImpactWarning = {},
         )
         awaitCondition { confirmed != null }
@@ -659,17 +677,18 @@ class SwapViewModelTest {
         advanceUntilIdle()
 
         seedReadyQuote(viewModel)
-        viewModel.swap {}
-        awaitCondition { viewModel.viewState.value.error != null }
+        viewModel.swap(onConfirm = {}, onError = {})
+        awaitCondition { viewModel.viewState.value.buttonAction == GemSwapButtonAction.RetryTransfer }
 
         viewModel.setProvider(SwapProvider.UNISWAP_V3)
         advanceUntilIdle()
 
         assertEquals(ButtonState.Enabled, viewModel.viewState.value.buttonState.buttonState())
-        assertNull(viewModel.viewState.value.error)
+        assertEquals(GemSwapButtonAction.Swap, viewModel.viewState.value.buttonAction)
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
 
-        viewModel.swap {}
-        awaitCondition { viewModel.viewState.value.error != null }
+        viewModel.swap(onConfirm = {}, onError = {})
+        awaitCondition { viewModel.viewState.value.buttonAction == GemSwapButtonAction.RetryTransfer }
 
         viewModel.payValue.setTextAndPlaceCursorAtEnd("2")
         Snapshot.sendApplyNotifications()
@@ -688,10 +707,10 @@ class SwapViewModelTest {
         quoteAnswers.trySend(Result.success(listOf(mockSwapperQuote(fromValue = BigInteger("1000000000"), toValue = BigInteger("2500000"), request = mockSwapperQuoteRequest(toAsset = mockSwapperQuoteAsset(decimals = 6u))))))
         runCurrent()
 
-        viewModel.swap {}
+        viewModel.swap(onConfirm = {}, onError = {})
         awaitCondition { viewModel.viewState.value.isTransferLoading }
         confirmInputGate.complete(Unit)
-        awaitCondition { viewModel.viewState.value.buttonState.buttonState() == ButtonState.Enabled && viewModel.viewState.value.error == null }
+        awaitCondition { viewModel.viewState.value.buttonState.buttonState() == ButtonState.Enabled && viewModel.viewState.value.quotesState !is GemSwapQuotesState.Failed }
         advanceUntilIdle()
         coVerify(exactly = 1) { swapQuoteService.getQuotes(any()) }
 
@@ -711,7 +730,7 @@ class SwapViewModelTest {
         quoteAnswers.trySend(Result.success(listOf(mockSwapperQuote(fromValue = BigInteger("1000000000"), toValue = BigInteger("2500000"), request = mockSwapperQuoteRequest(toAsset = mockSwapperQuoteAsset(decimals = 6u))))))
         runCurrent()
         assertEquals(ButtonState.Enabled, viewModel.viewState.value.buttonState.buttonState())
-        assertNull(viewModel.viewState.value.error)
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
 
         advanceUntilIdle()
 
@@ -736,16 +755,14 @@ class SwapViewModelTest {
         seedReadyQuote(viewModel)
 
         var wasTransferLoadingOnConfirm = false
-        viewModel.swap {
-            wasTransferLoadingOnConfirm = viewModel.viewState.value.isTransferLoading
-        }
+        viewModel.swap(onConfirm = { wasTransferLoadingOnConfirm = viewModel.viewState.value.isTransferLoading }, onError = {})
         awaitCondition { viewModel.viewState.value.isTransferLoading }
         confirmInputGate.complete(Unit)
         awaitCondition { !viewModel.viewState.value.isTransferLoading }
 
         assertTrue(wasTransferLoadingOnConfirm)
         assertEquals(ButtonState.Enabled, viewModel.viewState.value.buttonState.buttonState())
-        assertNull(viewModel.viewState.value.error)
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
     }
 
     @Test
@@ -765,9 +782,7 @@ class SwapViewModelTest {
         seedReadyQuote(viewModel)
 
         var confirmInput: GemTransferData? = null
-        viewModel.swap { input ->
-            confirmInput = input.data
-        }
+        viewModel.swap(onConfirm = { confirmInput = it.data }, onError = {})
         awaitCondition { viewModel.viewState.value.isTransferLoading }
 
         viewModel.payValue.setTextAndPlaceCursorAtEnd("2")
@@ -801,6 +816,7 @@ class SwapViewModelTest {
         var confirmCalls = 0
         viewModel.onPrimaryAction(
             onConfirm = { confirmCalls += 1 },
+            onError = {},
             onShowPriceImpactWarning = { showWarningCalls += 1 },
         )
         advanceUntilIdle()
@@ -809,7 +825,7 @@ class SwapViewModelTest {
         assertEquals(0, swapCalls)
         assertEquals(0, confirmCalls)
         assertEquals(ButtonState.Enabled, viewModel.viewState.value.buttonState.buttonState())
-        assertNull(viewModel.viewState.value.error)
+        assertFalse(viewModel.viewState.value.quotesState is GemSwapQuotesState.Failed)
     }
 
     @Test
@@ -820,7 +836,7 @@ class SwapViewModelTest {
         failQuote(viewModel, SwapperException.InputAmountException("500000000"))
         awaitCondition { viewModel.viewState.value.buttonAction.stringRes() == R.string.swap_use_minimum_amount }
 
-        viewModel.onPrimaryAction(onConfirm = {}, onShowPriceImpactWarning = {})
+        viewModel.onPrimaryAction(onConfirm = {}, onError = {}, onShowPriceImpactWarning = {})
         advanceUntilIdle()
 
         assertEquals("0.5", viewModel.payValue.text.toString())
@@ -834,7 +850,7 @@ class SwapViewModelTest {
         failQuote(viewModel, SwapperException.InputAmountException("1"))
         awaitCondition { viewModel.viewState.value.buttonAction.stringRes() == R.string.swap_use_minimum_amount }
 
-        viewModel.onPrimaryAction(onConfirm = {}, onShowPriceImpactWarning = {})
+        viewModel.onPrimaryAction(onConfirm = {}, onError = {}, onShowPriceImpactWarning = {})
         advanceUntilIdle()
 
         assertEquals("0.000000001", viewModel.payValue.text.toString())
@@ -890,6 +906,6 @@ class SwapViewModelTest {
         quoteAnswers.trySend(Result.success(listOf(mockSwapperQuote(fromValue = BigInteger("1000000000"), toValue = BigInteger("2500000"), request = mockSwapperQuoteRequest(toAsset = mockSwapperQuoteAsset(decimals = 6u))))))
         testDispatcher.scheduler.runCurrent()
         viewModel.setRefreshEnabled(false)
-        awaitCondition { viewModel.viewState.value.buttonState.buttonState() == ButtonState.Enabled && viewModel.viewState.value.error == null }
+        awaitCondition { viewModel.viewState.value.buttonState.buttonState() == ButtonState.Enabled && viewModel.viewState.value.quotesState !is GemSwapQuotesState.Failed }
     }
 }

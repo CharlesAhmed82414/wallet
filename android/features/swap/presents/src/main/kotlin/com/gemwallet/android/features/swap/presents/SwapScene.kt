@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import com.gemwallet.android.domains.swap.SwapItemType
 import com.gemwallet.android.features.swap.presents.components.SwapButton
-import com.gemwallet.android.features.swap.presents.components.SwapError
+import com.gemwallet.android.features.swap.presents.components.SwapQuoteError
 import com.gemwallet.android.features.swap.presents.components.SwapToken
 import com.gemwallet.android.features.swap.viewmodels.SwapViewModel
 import com.gemwallet.android.ui.R
@@ -137,7 +137,7 @@ internal fun SwapScene(viewState: GemSwapViewState, pay: AssetData?, receive: As
             }
 
             item {
-                SwapError(viewState)
+                SwapQuoteError(viewState)
             }
         }
     }

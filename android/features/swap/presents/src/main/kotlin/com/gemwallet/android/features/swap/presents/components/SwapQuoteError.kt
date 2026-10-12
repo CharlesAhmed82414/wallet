@@ -10,17 +10,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.InfoBottomSheet
-import com.gemwallet.android.ui.components.InfoSheetEntity
 import com.gemwallet.android.ui.components.infoSheet
 import com.gemwallet.android.ui.components.list_item.WarningItem
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ListPosition
+import uniffi.gemstone.GemSwapQuotesState
 import uniffi.gemstone.GemSwapViewState
 
 @Composable
-internal fun SwapError(viewState: GemSwapViewState) {
+internal fun SwapQuoteError(viewState: GemSwapViewState) {
     var isShowInfoSheet by remember { mutableStateOf(false) }
-    val error = viewState.error ?: return
+    val error = (viewState.quotesState as? GemSwapQuotesState.Failed)?.error ?: return
     val errorText = error.text(LocalContext.current)
     val infoSheetEntity = error.info()?.infoSheet()
 

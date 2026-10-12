@@ -140,10 +140,6 @@ impl GemSwapSession {
     fn quote_error_display(&self, pay_asset: Option<&Asset>) -> Option<GemSwapErrorDisplay> {
         self.quote_error().as_ref().map(|error| GemSwapErrorDisplay::new(error, pay_asset))
     }
-
-    fn error_display(&self, pay_asset: Option<&Asset>) -> Option<GemSwapErrorDisplay> {
-        self.error().as_ref().map(|error| GemSwapErrorDisplay::new(error, pay_asset))
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, uniffi::Enum)]
@@ -198,7 +194,6 @@ pub struct GemSwapViewState {
     pub button_action: GemSwapButtonAction,
     pub button_state: GemButtonState,
     pub quote: Option<SwapperQuote>,
-    pub error: Option<GemSwapErrorDisplay>,
     pub is_quote_loading: bool,
     pub is_transfer_loading: bool,
     pub allows_provider_selection: bool,
@@ -394,7 +389,6 @@ impl GemSwapSession {
             action: self.action(),
             button_state: self.button_state(button_action.clone()),
             button_action,
-            error: self.error_display(pay.as_ref().map(|pay| &pay.asset)),
             is_quote_loading: self.is_quote_loading(),
             is_transfer_loading,
             allows_provider_selection: self.allows_provider_selection(),
@@ -459,10 +453,6 @@ fn receive_amount(quote: &SwapperQuote) -> GemFormattedNumber {
 }
 
 impl GemSwapSession {
-    fn error(&self) -> Option<SwapperError> {
-        self.transfer_error().or_else(|| self.quote_error())
-    }
-
     fn action(&self) -> GemSwapSessionAction {
         match (&self.transfer_phase, &self.quote_phase) {
             (GemSwapTransferPhase::Loading { .. }, _) => GemSwapSessionAction::TransferLoading,
@@ -825,7 +815,8 @@ mod tests {
 
         let failed = started.on_transfer_failed(transfer.clone(), SwapperError::TransactionError("boom".into()));
         assert_eq!(failed.transfer_error(), Some(SwapperError::TransactionError("boom".into())));
-        assert_eq!(failed.error(), failed.transfer_error(), "a failed transfer outranks the quote it came from");
+        let failed_view = view(&failed, 1000);
+        assert_eq!(failed_view.quotes_state, GemSwapQuotesState::Quotes, "a quote-data failure does not become an inline quote error");
         assert_eq!(
             failed.action(),
             GemSwapSessionAction::TransferError {

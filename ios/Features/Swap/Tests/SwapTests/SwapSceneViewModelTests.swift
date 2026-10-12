@@ -8,6 +8,7 @@ import GemstonePrimitives
 import GemstonePrimitivesTestKit
 import GemstoneServicesTestKit
 import InfoSheet
+import Localization
 import Observation
 import Primitives
 import PrimitivesTestKit
@@ -154,7 +155,7 @@ struct SwapSceneViewModelTests {
         #expect(model.amountInputModel.text == "1")
         #expect(model.toValue.isEmpty)
         #expect(model.viewState.quote == nil)
-        #expect(model.viewState.error == nil)
+        #expect(model.quoteError == nil)
         #expect(model.loadTrigger?.isImmediate == true)
     }
 
@@ -293,12 +294,13 @@ struct SwapSceneViewModelTests {
         await model.load()
 
         #expect(model.isReceiveFieldLoading == false)
-        #expect(model.viewState.error != nil)
+        #expect(model.quoteError != nil)
+        #expect(model.quoteDataErrorAlert == nil)
         #expect(model.viewState.buttonAction == .retryQuote)
     }
 
     @Test
-    func unexpectedTransferErrorReleasesLoading() async {
+    func unexpectedQuoteDataErrorReleasesLoading() async {
         let service = GemSwapQuoteServiceMock()
         service.transferError = AnyError("offline")
         let model = SwapSceneViewModel.mock(service: service)
@@ -307,6 +309,11 @@ struct SwapSceneViewModelTests {
         await model.onSelectSwapConfirmation()
 
         #expect(model.viewState.isTransferLoading == false)
+        #expect(model.viewState.buttonAction == .retryTransfer)
+        #expect(model.quoteError == nil)
+        #expect(model.quoteDataErrorAlert?.message == Localized.Errors.Swap.noQuoteAvailable)
+        model.quoteDataErrorAlert = nil
+        #expect(model.quoteDataErrorAlert == nil)
         #expect(model.viewState.buttonAction == .retryTransfer)
     }
 

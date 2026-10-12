@@ -25,12 +25,12 @@ public struct SwapScene: View {
                 additionalInfoSectionView
             }
 
-            if let error = model.error {
+            if let error = model.quoteError {
                 Section {
                     ListItemErrorView(
                         errorTitle: model.errorTitle,
                         error: error,
-                        infoAction: model.errorInfoAction,
+                        infoAction: model.quoteErrorInfoAction,
                     )
                 }
             }
@@ -70,6 +70,7 @@ public struct SwapScene: View {
                     .sheetPresentation([.medium])
             }
         }
+        .alertSheet($model.quoteDataErrorAlert)
         .onChangeBindQuery(model.fromAssetQuery, action: model.onChangeFromAsset)
         .onChangeBindQuery(model.toAssetQuery, action: model.onChangeToAsset)
         .debouncedTask(id: model.loadTrigger, interval: GemConstants.swapQuoteDebounce) {

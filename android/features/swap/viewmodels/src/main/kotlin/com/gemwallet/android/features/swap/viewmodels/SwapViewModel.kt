@@ -64,6 +64,7 @@ import uniffi.gemstone.GemSlippageSelection
 import uniffi.gemstone.GemSlippageSession
 import uniffi.gemstone.GemSlippageViewState
 import uniffi.gemstone.GemSwapButtonAction
+import uniffi.gemstone.GemSwapErrorDisplay
 import uniffi.gemstone.GemSwapPairSelection
 import uniffi.gemstone.GemSwapQuoteInput
 import uniffi.gemstone.GemSwapQuoteServiceInterface
@@ -74,6 +75,7 @@ import uniffi.gemstone.SwapProvider
 import uniffi.gemstone.SwapperException
 import uniffi.gemstone.formattedPercentage
 import uniffi.gemstone.newSlippageSession
+import uniffi.gemstone.swapErrorDisplay
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.time.Duration
@@ -280,7 +282,7 @@ class SwapViewModel @Inject constructor(
         refreshRequests.tryEmit(Unit)
     }
 
-    fun onPrimaryAction(onConfirm: (ConfirmTransferInput) -> Unit, onShowPriceImpactWarning: () -> Unit) {
+    fun onPrimaryAction(onConfirm: (ConfirmTransferInput) -> Unit, onError: (GemSwapErrorDisplay) -> Unit, onShowPriceImpactWarning: () -> Unit) {
         val state = viewState.value
         if (state.buttonState != GemButtonState.ENABLED) {
             return
@@ -294,11 +296,11 @@ class SwapViewModel @Inject constructor(
                     }
                     onShowPriceImpactWarning()
                 } else {
-                    swap(onConfirm)
+                    swap(onConfirm, onError)
                 }
             }
 
-            GemSwapButtonAction.RetryTransfer -> swap(onConfirm)
+            GemSwapButtonAction.RetryTransfer -> swap(onConfirm, onError)
 
             GemSwapButtonAction.RetryQuote -> refresh()
 
@@ -315,7 +317,7 @@ class SwapViewModel @Inject constructor(
         refreshEnabled.value = isEnabled
     }
 
-    fun swap(onConfirm: (ConfirmTransferInput) -> Unit) = viewModelScope.launch(ioDispatcher) {
+    fun swap(onConfirm: (ConfirmTransferInput) -> Unit, onError: (GemSwapErrorDisplay) -> Unit) = viewModelScope.launch(ioDispatcher) {
         if (!service.isAvailable()) {
             infoSheet.value = GemInfoTopic.RegionUnavailable
             return@launch
@@ -325,20 +327,28 @@ class SwapViewModel @Inject constructor(
         val transfer = started.transferPhase
         session.value = started
 
-        try {
-            val params = service.transferData(quote)
+        val params = try {
+            service.transferData(quote)
+        } catch (error: Throwable) {
+            if (error is CancellationException) throw error
             if (session.value.transferPhase != transfer) {
                 return@launch
             }
+            val quoteDataError = error as? SwapperException ?: SwapperException.TransactionException(error.message ?: error.toString())
+            session.update { it.onTransferFailed(transfer, quoteDataError) }
+            val display = swapErrorDisplay(quoteDataError, payAsset.value?.asset?.toGem())
             withContext(Dispatchers.Main) {
-                onConfirm(ConfirmTransferInput(params))
+                onError(display)
             }
-            session.update { it.onTransferHandedOff(transfer) }
-        } catch (error: Throwable) {
-            if (error is CancellationException) throw error
-            val transferError = error as? SwapperException ?: SwapperException.TransactionException(error.message ?: error.toString())
-            session.update { it.onTransferFailed(transfer, transferError) }
+            return@launch
         }
+        if (session.value.transferPhase != transfer) {
+            return@launch
+        }
+        withContext(Dispatchers.Main) {
+            onConfirm(ConfirmTransferInput(params))
+        }
+        session.update { it.onTransferHandedOff(transfer) }
     }
 
     private suspend fun refreshPair(assetIds: List<String>) = withContext(ioDispatcher) {
