@@ -40,12 +40,12 @@ import com.gemwallet.android.features.transfer.viewmodels.confirm.models.network
 import com.gemwallet.android.model.text
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.SuffixTextField
-import com.gemwallet.android.ui.components.image.AsyncImage
 import com.gemwallet.android.ui.components.image.IconWithBadge
-import com.gemwallet.android.ui.components.image.iconModel
+import com.gemwallet.android.ui.components.image.ListItemImageView
 import com.gemwallet.android.ui.components.list_item.Badge
 import com.gemwallet.android.ui.components.list_item.ListItem
 import com.gemwallet.android.ui.components.list_item.ListItemDefaults
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.components.list_item.ListItemModel
 import com.gemwallet.android.ui.components.list_item.ListItemSupportText
 import com.gemwallet.android.ui.components.list_item.ListItemTitleText
@@ -261,7 +261,7 @@ private fun FeeAssetRow(feeAsset: FeeAssetUIModel, isSelected: Boolean, listPosi
                     null
                 },
             ) {
-                AsyncImage(model = feeAsset.row.icon.iconModel(), placeholderText = feeAsset.row.icon.placeholder, size = listItemIconSize)
+                ListItemImageView(ListItemImage.Asset(feeAsset.row.icon), size = listItemIconSize)
             }
         },
         title = { ListItemTitleText(feeAsset.row.title, { Badge(text = feeAsset.row.titleExtra) }) },

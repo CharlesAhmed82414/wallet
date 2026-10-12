@@ -73,10 +73,9 @@ internal fun ConnectionProposalScene(
         ) {
             item {
                 CenteredListHead(
-                    icon = peer.iconUrl,
+                    iconUrl = peer.iconUrl,
                     title = peer.title,
                     subtitle = peer.host.orEmpty(),
-                    contentDescription = "wallet_connect_app_icon",
                     subtitleLayout = CenteredListHeadSubtitleLayout.Vertical,
                 )
             }

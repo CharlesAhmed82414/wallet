@@ -8,9 +8,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.gemwallet.android.ui.components.image.IconWithBadge
-import com.gemwallet.android.ui.components.image.iconModel
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.models.ListPosition
+import com.gemwallet.android.ui.style.listItemImage
 import com.wallet.core.primitives.Chain
 import uniffi.gemstone.GemChainRow
 
@@ -20,7 +20,7 @@ fun ChainItem(row: GemChainRow, modifier: Modifier = Modifier, listPosition: Lis
         title = row.title,
         modifier = modifier,
         listPosition = listPosition,
-        icon = row.icon.iconModel(),
+        icon = ListItemImage.Asset(row.icon),
         subtitle = row.standard?.string(LocalContext.current),
         paddingHorizontal = paddingHorizontal,
         trailing = trailing,
@@ -29,7 +29,16 @@ fun ChainItem(row: GemChainRow, modifier: Modifier = Modifier, listPosition: Lis
 }
 
 @Composable
-fun ChainItem(title: String, modifier: Modifier = Modifier, listPosition: ListPosition, icon: Any? = null, subtitle: String? = null, paddingHorizontal: Dp? = null, trailing: @Composable (() -> Unit)? = null, onClick: (() -> Unit)? = {}) {
+fun ChainItem(
+    title: String,
+    modifier: Modifier = Modifier,
+    listPosition: ListPosition,
+    icon: ListItemImage? = null,
+    subtitle: String? = null,
+    paddingHorizontal: Dp? = null,
+    trailing: @Composable (() -> Unit)? = null,
+    onClick: (() -> Unit)? = {},
+) {
     val modifier = onClick?.let { modifier.clickable(onClick = it) } ?: modifier
     ListItem(
         modifier = modifier,
@@ -37,9 +46,7 @@ fun ChainItem(title: String, modifier: Modifier = Modifier, listPosition: ListPo
         paddingHorizontal = paddingHorizontal,
         listPosition = listPosition,
         leading = @Composable {
-            IconWithBadge(
-                icon = (icon as? Chain)?.iconModel() ?: icon,
-            )
+            icon?.let { IconWithBadge(image = it) }
         },
         title = @Composable {
             ListItemTitleText(
@@ -56,6 +63,6 @@ fun ChainItem(title: String, modifier: Modifier = Modifier, listPosition: ListPo
 @Composable
 fun PreviewChainSelectItem() {
     MaterialTheme {
-        ChainItem(icon = Chain.Polygon, listPosition = ListPosition.Middle, title = "Foo title") {}
+        ChainItem(icon = Chain.Polygon.listItemImage(), listPosition = ListPosition.Middle, title = "Foo title") {}
     }
 }

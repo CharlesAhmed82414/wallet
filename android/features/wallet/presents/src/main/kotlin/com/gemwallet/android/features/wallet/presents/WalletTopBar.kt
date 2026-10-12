@@ -13,14 +13,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.image.AsyncImage
+import com.gemwallet.android.ui.components.image.ListItemImageView
 import com.gemwallet.android.ui.icons.AppIcons
-import com.gemwallet.android.ui.style.iconModel
+import com.gemwallet.android.ui.style.listItemImage
 import com.gemwallet.android.ui.theme.paddingSmall
 import com.gemwallet.android.ui.theme.smallIconSize
 import uniffi.gemstone.GemWalletRow
@@ -31,17 +30,12 @@ private const val SearchActionTag = "search"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletTopBar(walletRow: GemWalletRow?, onShowWallets: () -> Unit, onSearch: () -> Unit, onScan: () -> Unit) {
-    val walletIcon = walletRow?.iconModel(LocalContext.current)
-
     CenterAlignedTopAppBar(
         title = {
             TextButton(onClick = onShowWallets) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (walletIcon != null) {
-                        AsyncImage(
-                            model = walletIcon,
-                            size = smallIconSize,
-                        )
+                    if (walletRow != null) {
+                        ListItemImageView(walletRow.listItemImage(), size = smallIconSize)
                         Spacer(modifier = Modifier.size(paddingSmall))
                     }
                     Text(

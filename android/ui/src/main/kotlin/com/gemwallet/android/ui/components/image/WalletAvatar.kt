@@ -17,9 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.theme.paddingSmall
 import com.gemwallet.android.ui.theme.space2
@@ -28,7 +28,7 @@ import com.gemwallet.android.ui.theme.tinyIconSize
 private val removeBadgeSize = 28.dp
 
 @Composable
-fun WalletAvatar(imageUrl: String?, placeholder: Any?, size: Dp, modifier: Modifier = Modifier, supportIcon: Any? = null, onClick: (() -> Unit)? = null, onRemove: (() -> Unit)? = null) {
+fun WalletAvatar(image: ListItemImage, size: Dp, modifier: Modifier = Modifier, badgeImage: ListItemImage? = null, onClick: (() -> Unit)? = null, onRemove: (() -> Unit)? = null) {
     val clickModifier = if (onClick != null) {
         Modifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
@@ -40,8 +40,8 @@ fun WalletAvatar(imageUrl: String?, placeholder: Any?, size: Dp, modifier: Modif
     }
     Box(modifier = modifier.then(clickModifier)) {
         IconWithBadge(
-            icon = walletImageModel(LocalContext.current, imageUrl) ?: placeholder,
-            supportIcon = supportIcon,
+            image = image,
+            badgeImage = badgeImage,
             size = size,
         )
         if (onRemove != null) {

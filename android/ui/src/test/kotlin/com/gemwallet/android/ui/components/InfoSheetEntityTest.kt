@@ -4,10 +4,12 @@ import android.content.Context
 import com.gemwallet.android.model.text
 import com.gemwallet.android.testkit.mockGemFormattedNumber
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.list_item.ListItemImage
+import com.gemwallet.android.ui.components.list_item.ListItemImageStyle
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.text
-import com.gemwallet.android.ui.style.badgeIconModel
-import com.gemwallet.android.ui.style.iconModel
+import com.gemwallet.android.ui.style.badgeImage
+import com.gemwallet.android.ui.style.listItemImage
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
@@ -24,8 +26,8 @@ class InfoSheetEntityTest {
     fun theWatchWalletSheetShowsTheStandaloneWatchIcon() {
         val image = GemInfoTopic.WatchWallet.infoSheet().sheet.image
 
-        assertEquals(R.drawable.watch_badge, image.iconModel())
-        assertNull(image.badgeIconModel())
+        assertEquals(ListItemImage.Drawable(R.drawable.watch_badge, style = ListItemImageStyle.Avatar), image.listItemImage())
+        assertNull(image.badgeImage())
     }
 
     @Test

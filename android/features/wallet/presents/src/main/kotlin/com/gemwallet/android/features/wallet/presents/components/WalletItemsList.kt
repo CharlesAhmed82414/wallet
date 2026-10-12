@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.list_item.DropDownContextItem
@@ -50,7 +49,7 @@ internal fun LazyListScope.wallets(
             menuItems = {
                 WalletDropDownItem(
                     if (row.isPinned) R.string.common_unpin else R.string.common_pin,
-                    if (row.isPinned) R.drawable.keep_off else AppIcons.PushPin,
+                    if (row.isPinned) AppIcons.KeepOff else AppIcons.PushPin,
                 ) {
                     onTogglePin(row)
                     longPressedWallet.value = ""
@@ -70,22 +69,18 @@ internal fun LazyListScope.wallets(
 }
 
 @Composable
-private fun WalletDropDownItem(@StringRes text: Int, icon: Any, color: Color = Color.Unspecified, onClick: () -> Unit) {
+private fun WalletDropDownItem(@StringRes text: Int, icon: ImageVector, color: Color = Color.Unspecified, onClick: () -> Unit) {
     val text = stringResource(text)
     DropdownMenuItem(
         text = {
             Text(text = text, color = color)
         },
         trailingIcon = {
-            when (icon) {
-                is ImageVector -> Icon(
-                    imageVector = icon,
-                    tint = color,
-                    contentDescription = text,
-                )
-
-                is Int -> Icon(painterResource(icon), text)
-            }
+            Icon(
+                imageVector = icon,
+                tint = color,
+                contentDescription = text,
+            )
         },
         onClick = onClick,
     )

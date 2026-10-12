@@ -67,10 +67,9 @@ internal fun WalletConnectReviewScene(model: WalletConnectReviewModel, buttonSta
             if (header == null) {
                 item {
                     CenteredListHead(
-                        icon = model.icon,
+                        iconUrl = model.icon,
                         title = model.name,
                         subtitle = model.uri,
-                        contentDescription = "wallet_connect_app_icon",
                         subtitleLayout = CenteredListHeadSubtitleLayout.Vertical,
                     )
                 }

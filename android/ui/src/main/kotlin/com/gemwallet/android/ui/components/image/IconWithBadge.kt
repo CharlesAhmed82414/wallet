@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.gemwallet.android.ext.toGem
+import com.gemwallet.android.ui.components.list_item.ListItemImage
+import com.gemwallet.android.ui.style.badgeImage
 import com.gemwallet.android.ui.theme.listItemIconSize
 import com.gemwallet.android.ui.theme.space2
 import com.wallet.core.primitives.Asset
@@ -28,31 +30,28 @@ fun AssetIcon(asset: Asset, size: Dp = listItemIconSize, badgeBackgroundColor: C
 @Composable
 fun AssetIcon(icon: GemAssetIcon, size: Dp = listItemIconSize, badgeBackgroundColor: Color? = null) {
     IconWithBadge(
-        icon = icon.iconModel(),
-        placeholder = icon.placeholder,
-        supportIcon = icon.supportIconModel(),
+        image = ListItemImage.Asset(icon),
+        badgeImage = icon.badgeImage(),
         size = size,
         badgeBackgroundColor = badgeBackgroundColor,
     )
 }
 
 @Composable
-fun IconWithBadge(icon: Any?, placeholder: String? = null, supportIcon: Any? = null, size: Dp = listItemIconSize, badgeBackgroundColor: Color? = null) {
-    icon ?: return
+fun IconWithBadge(image: ListItemImage, badgeImage: ListItemImage? = null, size: Dp = listItemIconSize, badgeBackgroundColor: Color? = null) {
     IconWithBadge(
         size = size,
         badgeBackgroundColor = badgeBackgroundColor,
-        badge = supportIcon?.let { url -> { SupportIconBadge(icon = url, size = size) } },
+        badge = badgeImage?.let { badge -> { ListItemImageView(badge, size = badgeLayout(size).contentSize) } },
     ) {
-        MainIcon(icon = icon, placeholder = placeholder, size = size)
+        ListItemImageView(image, size = size)
     }
 }
 
 @Composable
-fun IconWithBadge(icon: Any?, placeholder: String? = null, size: Dp = listItemIconSize, badgeBackgroundColor: Color? = null, badge: @Composable () -> Unit) {
-    icon ?: return
+fun IconWithBadge(image: ListItemImage, size: Dp = listItemIconSize, badgeBackgroundColor: Color? = null, badge: @Composable () -> Unit) {
     IconWithBadge(size = size, badgeBackgroundColor = badgeBackgroundColor, badge = badge) {
-        MainIcon(icon = icon, placeholder = placeholder, size = size)
+        ListItemImageView(image, size = size)
     }
 }
 
@@ -83,25 +82,6 @@ internal fun badgeLayout(size: Dp): BadgeLayout {
         contentSize = contentSize,
         badgeSize = contentSize + BADGE_RING_WIDTH * 2,
         offset = (size / contentSize).dp + BADGE_RING_WIDTH,
-    )
-}
-
-@Composable
-private fun MainIcon(icon: Any, placeholder: String?, size: Dp) {
-    AsyncImage(
-        model = icon,
-        placeholderText = placeholder,
-        contentDescription = "list_item_icon",
-        size = size,
-    )
-}
-
-@Composable
-private fun SupportIconBadge(icon: Any, size: Dp) {
-    AsyncImage(
-        model = icon,
-        size = badgeLayout(size).contentSize,
-        contentDescription = null,
     )
 }
 

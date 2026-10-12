@@ -61,13 +61,7 @@ token_names=("${names[@]}")
     echo "package com.gemwallet.android.ui.components.image"
     echo
     echo "import androidx.annotation.DrawableRes"
-    echo "import com.gemwallet.android.domains.asset.iconChain"
-    echo "import com.gemwallet.android.domains.asset.localTokenIcon"
-    echo "import com.gemwallet.android.domains.asset.remoteIconUrl"
-    echo "import com.gemwallet.android.domains.asset.supportIconChain"
     echo "import com.gemwallet.android.ui.R"
-    echo "import com.wallet.core.primitives.Asset"
-    echo "import com.wallet.core.primitives.AssetId"
     echo "import com.wallet.core.primitives.Chain"
     echo "import uniffi.gemstone.GemLocalTokenIcon"
     echo
@@ -86,16 +80,6 @@ token_names=("${names[@]}")
         echo "    GemLocalTokenIcon.$(echo "$name" | tr '[:lower:]' '[:upper:]') -> R.drawable.token_$name"
     done
     echo "}"
-    echo
-    echo "fun Chain.iconModel(): Any? = iconChain().iconResource()"
-    echo
-    echo "fun AssetId.iconModel(): Any? = iconChain()?.iconResource() ?: localTokenIcon()?.iconResource() ?: remoteIconUrl()"
-    echo
-    echo "fun AssetId.supportIconModel(): Any? = supportIconChain()?.iconResource()"
-    echo
-    echo "fun Asset.iconModel(): Any? = id.iconModel()"
-    echo
-    echo "fun Asset.supportIconModel(): Any? = id.supportIconModel()"
 } > "$mapping"
 
 echo "converted ${#chain_names[@]} chain, ${#swap_names[@]} swap, ${#fiat_names[@]} fiat and ${#token_names[@]} token icons"

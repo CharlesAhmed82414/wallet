@@ -15,7 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import com.gemwallet.android.ui.components.image.AsyncImage
+import com.gemwallet.android.ui.components.image.ListItemImageView
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.theme.headerIconSize
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingHalfSmall
@@ -67,13 +68,12 @@ fun CenteredListHead(
 
 @Composable
 fun CenteredListHead(
-    icon: Any?,
+    iconUrl: String?,
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     iconSize: Dp = headerIconSize,
     placeholderText: String? = title.firstOrNull()?.uppercaseChar()?.toString(),
-    contentDescription: String = "centered_list_head_icon",
     subtitleLayout: CenteredListHeadSubtitleLayout = CenteredListHeadSubtitleLayout.Horizontal,
     bottomPadding: Dp = paddingDefault,
 ) {
@@ -84,13 +84,8 @@ fun CenteredListHead(
         subtitleLayout = subtitleLayout,
         bottomPadding = bottomPadding,
         leading = {
-            if (icon != null) {
-                AsyncImage(
-                    model = icon,
-                    size = iconSize,
-                    placeholderText = placeholderText,
-                    contentDescription = contentDescription,
-                )
+            if (iconUrl != null) {
+                ListItemImageView(ListItemImage.Url(iconUrl, placeholderText), size = iconSize)
             }
         },
     )

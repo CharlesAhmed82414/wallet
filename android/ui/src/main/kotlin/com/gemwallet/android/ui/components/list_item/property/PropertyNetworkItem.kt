@@ -7,8 +7,8 @@ import com.gemwallet.android.domains.asset.chain
 import com.gemwallet.android.ext.asset
 import com.gemwallet.android.ext.networkName
 import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.image.iconModel
 import com.gemwallet.android.ui.models.ListPosition
+import com.gemwallet.android.ui.style.listItemImage
 import com.wallet.core.primitives.Chain
 
 @Composable
@@ -22,7 +22,7 @@ fun PropertyNetworkItem(chain: Chain, value: String = chain.networkName(), listP
         data = {
             PropertyDataText(
                 text = value,
-                badge = { DataBadgeChevron(asset.chain.iconModel(), onOpenNetwork != null) },
+                badge = { DataBadgeChevron(asset.chain.listItemImage(), onOpenNetwork != null) },
             )
         },
         listPosition = listPosition,

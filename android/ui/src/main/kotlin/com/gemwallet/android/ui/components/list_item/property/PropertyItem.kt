@@ -25,11 +25,12 @@ import com.gemwallet.android.ui.components.InfoButton
 import com.gemwallet.android.ui.components.InfoSheetEntity
 import com.gemwallet.android.ui.components.LocalNumericTransition
 import com.gemwallet.android.ui.components.NumericText
-import com.gemwallet.android.ui.components.image.AsyncImage
+import com.gemwallet.android.ui.components.image.ListItemImageView
 import com.gemwallet.android.ui.components.list_item.ChevronIcon
 import com.gemwallet.android.ui.components.list_item.ChevronIconDefaults
 import com.gemwallet.android.ui.components.list_item.ListItem
 import com.gemwallet.android.ui.components.list_item.ListItemDefaults
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.models.ListPosition
 import com.gemwallet.android.ui.theme.Spacer8
 import com.gemwallet.android.ui.theme.paddingMiddle
@@ -37,10 +38,9 @@ import com.gemwallet.android.ui.theme.smallIconSize
 import com.gemwallet.android.ui.theme.space8
 
 @Composable
-fun PropertyItem(@StringRes action: Int, actionIconModel: Any? = null, data: String? = null, info: InfoSheetEntity? = null, listPosition: ListPosition = ListPosition.Middle, onClick: () -> Unit) {
+fun PropertyItem(@StringRes action: Int, data: String? = null, info: InfoSheetEntity? = null, listPosition: ListPosition = ListPosition.Middle, onClick: () -> Unit) {
     PropertyItem(
         action = stringResource(action),
-        actionIconModel = actionIconModel,
         data = data,
         info = info,
         listPosition = listPosition,
@@ -49,13 +49,12 @@ fun PropertyItem(@StringRes action: Int, actionIconModel: Any? = null, data: Str
 }
 
 @Composable
-fun PropertyItem(action: String, actionIconModel: Any? = null, data: String? = null, info: InfoSheetEntity? = null, listPosition: ListPosition = ListPosition.Middle, onClick: () -> Unit) {
+fun PropertyItem(action: String, data: String? = null, info: InfoSheetEntity? = null, listPosition: ListPosition = ListPosition.Middle, onClick: () -> Unit) {
     PropertyItem(
         modifier = Modifier.clickable(onClick = onClick),
         title = {
             PropertyTitleText(
                 text = action,
-                trailing = actionIconModel?.let { { AsyncImage(model = it, size = smallIconSize) } },
                 info = info,
             )
         },
@@ -205,8 +204,8 @@ fun DataBadgeChevron(isShowChevron: Boolean = true, content: (@Composable RowSco
 }
 
 @Composable
-fun DataBadgeChevron(icon: Any?, isShowChevron: Boolean = true) {
+fun DataBadgeChevron(image: ListItemImage?, isShowChevron: Boolean = true) {
     DataBadgeChevron(isShowChevron) {
-        AsyncImage(icon, size = smallIconSize)
+        image?.let { ListItemImageView(it, size = smallIconSize) }
     }
 }

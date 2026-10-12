@@ -46,22 +46,18 @@ fun ValidatorItem(data: GemValidatorRow, listPosition: ListPosition, isSelected:
     )
 }
 
-val GemValidatorRow.icon: Any
-    get() = provider?.iconResource() ?: imageUrl
+val GemValidatorRow.image: ListItemImage
+    get() = provider?.let { ListItemImage.Drawable(it.iconResource(), style = ListItemImageStyle.Avatar) } ?: ListItemImage.Url(imageUrl, placeholder)
 
 @Composable
 private fun ValidatorIcon(data: GemValidatorRow, isSelected: Boolean) {
     if (isSelected) {
         IconWithBadge(
-            icon = data.icon,
-            placeholder = data.placeholder,
+            image = data.image,
             badge = { SelectionCheckmark() },
         )
     } else {
-        IconWithBadge(
-            icon = data.icon,
-            placeholder = data.placeholder,
-        )
+        IconWithBadge(image = data.image)
     }
 }
 

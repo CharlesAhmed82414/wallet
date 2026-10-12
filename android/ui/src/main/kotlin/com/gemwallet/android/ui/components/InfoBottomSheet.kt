@@ -25,9 +25,8 @@ import com.gemwallet.android.ui.components.screen.SheetExpansion
 import com.gemwallet.android.ui.localization.label
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.open
-import com.gemwallet.android.ui.style.badgeIconModel
-import com.gemwallet.android.ui.style.iconModel
-import com.gemwallet.android.ui.style.placeholder
+import com.gemwallet.android.ui.style.badgeImage
+import com.gemwallet.android.ui.style.listItemImage
 import com.gemwallet.android.ui.theme.Spacer16
 import com.gemwallet.android.ui.theme.extraLargeIconSize
 import com.gemwallet.android.ui.theme.paddingDefault
@@ -115,12 +114,13 @@ private fun InfoSheetIcon(image: GemInfoImage) {
         modifier = Modifier.size(infoSheetIconSize),
         contentAlignment = Alignment.Center,
     ) {
-        IconWithBadge(
-            icon = image.iconModel(),
-            placeholder = image.placeholder,
-            supportIcon = image.badgeIconModel(),
-            size = infoSheetIconSize,
-            badgeBackgroundColor = MaterialTheme.colorScheme.background,
-        )
+        image.listItemImage()?.let {
+            IconWithBadge(
+                image = it,
+                badgeImage = image.badgeImage(),
+                size = infoSheetIconSize,
+                badgeBackgroundColor = MaterialTheme.colorScheme.background,
+            )
+        }
     }
 }

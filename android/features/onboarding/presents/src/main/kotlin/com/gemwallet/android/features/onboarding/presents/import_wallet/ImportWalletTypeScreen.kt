@@ -20,6 +20,8 @@ import com.gemwallet.android.ui.components.DocsInfoButton
 import com.gemwallet.android.ui.components.SearchBar
 import com.gemwallet.android.ui.components.empty.EmptyContentView
 import com.gemwallet.android.ui.components.list_item.ChainItem
+import com.gemwallet.android.ui.components.list_item.ListItemImage
+import com.gemwallet.android.ui.components.list_item.ListItemImageStyle
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.models.ListPosition
@@ -57,7 +59,7 @@ private fun ImportWalletTypeScene(types: GemImportWalletTypes, chainFilter: Text
                 ChainItem(
                     modifier = Modifier.testTag("multicoin_item"),
                     title = types.multicoin.string(LocalContext.current),
-                    icon = R.drawable.multicoin_wallet,
+                    icon = ListItemImage.Drawable(R.drawable.multicoin_wallet, style = ListItemImageStyle.Avatar),
                     listPosition = ListPosition.Single,
                 ) {
                     onSelect(ImportType.phrase())

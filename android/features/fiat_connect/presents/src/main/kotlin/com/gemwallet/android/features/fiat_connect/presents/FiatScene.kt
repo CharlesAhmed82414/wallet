@@ -33,7 +33,7 @@ import com.gemwallet.android.ui.components.buttons.MainActionButton
 import com.gemwallet.android.ui.components.fields.AmountField
 import com.gemwallet.android.ui.components.fields.AmountSymbolPlacement
 import com.gemwallet.android.ui.components.fields.AmountSymbolUIModel
-import com.gemwallet.android.ui.components.image.iconModel
+import com.gemwallet.android.ui.components.image.listItemImage
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.GemListRowView
 import com.gemwallet.android.ui.components.list_item.ListItem
@@ -175,7 +175,7 @@ fun FiatScene(
                         modifier = Modifier.clickable(enabled = viewState.canSelectProvider) { isShowProviders.value = true },
                         accessory = {
                             DataBadgeChevron(
-                                icon = selectedProvider.provider.toPrimitives().iconModel(),
+                                image = selectedProvider.provider.toPrimitives().listItemImage(),
                                 isShowChevron = viewState.canSelectProvider,
                             )
                         },

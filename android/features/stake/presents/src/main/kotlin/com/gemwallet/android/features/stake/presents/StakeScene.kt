@@ -20,7 +20,6 @@ import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.features.stake.presents.components.stakeActions
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.empty.EmptyContentView
-import com.gemwallet.android.ui.components.image.iconModel
 import com.gemwallet.android.ui.components.list_head.CenteredListHead
 import com.gemwallet.android.ui.components.list_head.HeaderIcon
 import com.gemwallet.android.ui.components.list_item.DelegationItem

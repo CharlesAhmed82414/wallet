@@ -19,10 +19,7 @@ fun DelegationItem(row: GemDelegationListRow, listPosition: ListPosition, onClic
         modifier = Modifier.clickable(onClick = onClick),
         listPosition = listPosition,
         leading = {
-            IconWithBadge(
-                icon = validator.icon,
-                placeholder = validator.placeholder,
-            )
+            IconWithBadge(image = validator.image)
         },
         title = {
             ListItemTitleText(text = validator.name)

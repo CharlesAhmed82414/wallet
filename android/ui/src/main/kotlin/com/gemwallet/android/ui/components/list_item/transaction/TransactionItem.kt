@@ -26,9 +26,9 @@ import com.gemwallet.android.model.text
 import com.gemwallet.android.ui.components.image.AssetIcon
 import com.gemwallet.android.ui.components.image.BadgeCircle
 import com.gemwallet.android.ui.components.image.IconWithBadge
-import com.gemwallet.android.ui.components.image.iconModel
 import com.gemwallet.android.ui.components.list_item.ListItem
 import com.gemwallet.android.ui.components.list_item.ListItemDefaults
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.components.list_item.ListItemSupportText
 import com.gemwallet.android.ui.components.list_item.ListItemTitleText
 import com.gemwallet.android.ui.components.progress.CircularProgressIndicator10
@@ -122,8 +122,7 @@ private fun DirectionBadgedIcon(data: GemTransactionRow) {
         GemTransactionBadge.OUTGOING, GemTransactionBadge.ASSET -> MaterialTheme.colorScheme.primary
     }
     IconWithBadge(
-        icon = data.icon.iconModel(),
-        placeholder = data.icon.placeholder,
+        image = ListItemImage.Asset(data.icon),
         size = size,
     ) {
         BadgeCircle(size = size, color = color) {

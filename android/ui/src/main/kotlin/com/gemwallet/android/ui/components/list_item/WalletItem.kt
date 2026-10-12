@@ -13,8 +13,8 @@ import com.gemwallet.android.ui.components.image.IconWithBadge
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.models.ListPosition
-import com.gemwallet.android.ui.style.iconModel
-import com.gemwallet.android.ui.style.supportIcon
+import com.gemwallet.android.ui.style.badgeImage
+import com.gemwallet.android.ui.style.listItemImage
 import com.gemwallet.android.ui.theme.Spacer16
 import com.gemwallet.android.ui.theme.Spacer8
 import com.gemwallet.android.ui.theme.paddingSmall
@@ -34,8 +34,8 @@ fun WalletItem(row: GemWalletRow, isCurrent: Boolean, modifier: Modifier = Modif
         trailingContentEndPadding = paddingSmall,
         leading = @Composable {
             IconWithBadge(
-                icon = row.iconModel(context),
-                supportIcon = row.supportIcon(),
+                image = row.listItemImage(),
+                badgeImage = row.badgeImage(),
             )
         },
         title = {

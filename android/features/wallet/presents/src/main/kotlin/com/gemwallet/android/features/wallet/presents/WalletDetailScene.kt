@@ -30,12 +30,14 @@ import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.GemTextField
 import com.gemwallet.android.ui.components.image.WalletAvatar
 import com.gemwallet.android.ui.components.list_item.ListItem
+import com.gemwallet.android.ui.components.list_item.ListItemImage
+import com.gemwallet.android.ui.components.list_item.ListItemImageStyle
 import com.gemwallet.android.ui.components.list_item.ListItemModel
 import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.models.ListPosition
-import com.gemwallet.android.ui.style.iconModel
+import com.gemwallet.android.ui.style.listItemImage
 import com.gemwallet.android.ui.theme.Spacer16
 import com.gemwallet.android.ui.theme.defaultPadding
 import com.gemwallet.android.ui.theme.extraLargeIconSize
@@ -121,11 +123,10 @@ internal fun WalletDetailScene(wallet: GemWalletDetails?, snackbar: SnackbarHost
 @Composable
 private fun WalletAvatarHeader(wallet: GemWalletDetails, onClick: () -> Unit) {
     WalletAvatar(
-        imageUrl = wallet.row.imageUrl,
-        placeholder = wallet.row.placeholder.iconModel(),
+        image = wallet.row.listItemImage(),
         size = extraLargeIconSize,
         modifier = Modifier.padding(vertical = paddingDefault),
-        supportIcon = R.drawable.ic_edit_badge,
+        badgeImage = ListItemImage.Drawable(R.drawable.ic_edit_badge, style = ListItemImageStyle.Avatar),
         onClick = onClick,
     )
 }
