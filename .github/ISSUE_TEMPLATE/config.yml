@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security policy
+    url: https://github.com/gemwalletcom/wallet/security/policy
+    about: Do not report security problems in a public issue - please follow the policy.
