@@ -19,12 +19,12 @@ pub struct StreamObserver {
 }
 
 impl StreamObserver {
-    pub fn new(device_id: String, version: Version, price_client: Arc<PriceClient>) -> Self {
+    pub fn new(device_id: String, version: Version, price_client: Arc<PriceClient>, prices_limit: usize) -> Self {
         let device_channel = device_stream_channel(&device_id);
         Self {
             device_id,
             device_channel,
-            price_handler: PriceHandler::new(price_client, version),
+            price_handler: PriceHandler::new(price_client, version, prices_limit),
         }
     }
 

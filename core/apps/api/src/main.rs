@@ -16,6 +16,7 @@ use std::{error::Error, str::FromStr, sync::Arc};
 use ::defi::{DefiProviderClient, DefiProviderConfig};
 use ::nft::{NFTProviderClient, NFTProviderConfig};
 use chain_providers::ProviderFactory;
+use config_keys::ConfigKey;
 use gem_tracing::info_with_fields;
 use http_server::{ServeConfig, ShutdownReceiver, serve, shutdown_channel, spawn_signal_handler};
 use model::APIService;
@@ -120,6 +121,7 @@ async fn stream_state(settings: &Settings, shutdown: ShutdownReceiver) -> Result
         observer: Arc::new(StreamObserverConfig {
             redis_url: settings.redis.url.clone(),
             device_stream: services.device_stream(cacher_client).await?,
+            prices_limit: services.config().get_usize(ConfigKey::DeviceStreamPricesLimit).await?,
         }),
         shutdown,
         connections: TaskTracker::new(),

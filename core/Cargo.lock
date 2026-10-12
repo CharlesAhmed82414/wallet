@@ -523,6 +523,7 @@ dependencies = [
  "axum",
  "chain_providers",
  "chrono",
+ "config_keys",
  "defi",
  "fiat",
  "futures",
