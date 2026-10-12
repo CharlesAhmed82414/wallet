@@ -19,7 +19,7 @@ use chain_providers::ProviderFactory;
 use gem_tracing::info_with_fields;
 use http_server::{ServeConfig, ShutdownReceiver, serve, shutdown_channel, spawn_signal_handler};
 use model::APIService;
-use name_resolver::{NameClient, NameConfig, NameProviderFactory};
+use name_resolver::{NameClient, NameProviderFactory};
 use services::Services;
 use settings::Settings;
 use strum::IntoEnumIterator;
@@ -47,9 +47,6 @@ async fn api_clients(settings: &Settings) -> Result<Clients, Box<dyn Error + Sen
     let cacher_client = services.cacher().await?;
 
     let prices = services.prices(cacher_client.clone());
-    let name_config = NameConfig {
-        max_name_length: settings.name.max_name_length,
-    };
     let user_agent = settings::service_user_agent("api", None);
     let endpoints = ProviderFactory::get_chain_endpoints(settings);
     let native_provider = Arc::new(swapper::NativeProvider::new_with_endpoints(endpoints));
@@ -66,7 +63,7 @@ async fn api_clients(settings: &Settings) -> Result<Clients, Box<dyn Error + Sen
         fiat: Arc::new(services.fiat(stream_producer.clone()).await?),
         charts: Arc::new(services.charts()),
         config: Arc::new(services.app_config().await?),
-        names: Arc::new(NameClient::new(NameProviderFactory::new_providers(settings.name.clone()), name_config)),
+        names: Arc::new(NameClient::new(NameProviderFactory::new_providers(settings.name.clone()))),
         devices: Arc::new(services.devices()),
         search: Arc::new(services.search(cacher_client.clone()).await?),
         transactions: Arc::new(services.transactions()),

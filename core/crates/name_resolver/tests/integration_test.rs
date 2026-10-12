@@ -5,7 +5,7 @@ mod tests {
         alldomains::AllDomainsProvider, aptos::AptosProvider, basenames::BasenamesProvider, ens::EnsProvider, hyperliquid::HyperliquidProvider, icns::IcnsProvider, injective::InjectiveProvider, lens::LensProvider, near::NearProvider,
         sns::SnsProvider, suins::SuinsProvider,
     };
-    use name_resolver::{NameClient, NameConfig, NameQuery, NameResolver};
+    use name_resolver::{NameClient, NameQuery, NameResolver};
     use primitives::{Chain, NameProvider, node_config::get_nodes_for_chain};
     use settings::testkit::get_test_settings;
 
@@ -18,10 +18,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_ens_imported_name() {
-        let client = NameClient::new(
-            vec![Box::new(EnsProvider::new(ReqwestClient::new(get_nodes_for_chain(Chain::Ethereum)[0].url.clone(), reqwest_client())))],
-            NameConfig { max_name_length: 20 },
-        );
+        let client = NameClient::new(vec![Box::new(EnsProvider::new(ReqwestClient::new(get_nodes_for_chain(Chain::Ethereum)[0].url.clone(), reqwest_client())))]);
         let record = client.resolve("farcaster.xyz", Chain::Ethereum).await.unwrap().unwrap();
         assert_eq!(record.address, "0xF12E89805E10d96c0CDf22da88aED361eD9329cA");
     }
@@ -35,7 +32,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_sns() {
-        let client = NameClient::new(vec![Box::new(SnsProvider::new(ReqwestClient::new(get_test_settings().name.sns.url, reqwest_client())))], NameConfig { max_name_length: 20 });
+        let client = NameClient::new(vec![Box::new(SnsProvider::new(ReqwestClient::new(get_test_settings().name.sns.url, reqwest_client())))]);
         let record = client.resolve("bonfida.sns", Chain::Solana).await.unwrap().unwrap();
         assert_eq!(record.name, "bonfida.sns");
         assert_eq!(record.provider, NameProvider::Sns);
@@ -52,7 +49,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_icns() {
-        let client = NameClient::new(vec![Box::new(IcnsProvider::new(ReqwestClient::new(get_test_settings().name.icns.url, reqwest_client())))], NameConfig { max_name_length: 20 });
+        let client = NameClient::new(vec![Box::new(IcnsProvider::new(ReqwestClient::new(get_test_settings().name.icns.url, reqwest_client())))]);
         let record = client.resolve("dogemos.osmo", Chain::Osmosis).await.unwrap().unwrap();
         assert_eq!(record.address, "osmo1z98eg2ztdp2glyla62629nrlvczg8s7f8sgpm5");
     }

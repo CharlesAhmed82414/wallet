@@ -6,7 +6,7 @@ pub mod resolver;
 #[cfg(test)]
 pub mod testkit;
 
-pub use client::{NameClient, NameConfig};
+pub use client::NameClient;
 pub use factory::NameProviderFactory;
 pub use model::NameQuery;
 pub use resolver::NameResolver;

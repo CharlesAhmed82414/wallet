@@ -163,7 +163,6 @@ everstake:
   url: "https://eth-api-b2c.everstake.one"
 
 name:
-  max_name_length: 20
   ens:
     url: https://ethereum.publicnode.com
   ud:

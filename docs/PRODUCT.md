@@ -159,6 +159,7 @@ Wherever the user types an address (Send, Import Wallet, Contacts), a name such 
 
 | When | Expected | Why |
 |---|---|---|
+| A registered name is longer than 20 characters | it resolves according to its name service’s rules | name services have different length rules |
 | A typed name is not registered, or has no address for the network | not found | a name never becomes an empty or zero address |
 | A `.sol` name is typed while SRS resolution is paused | not found | `.sol` is never guessed from `.sns`; the two names can have different owners |
 | The name service cannot be reached | an error, not a missing name | |

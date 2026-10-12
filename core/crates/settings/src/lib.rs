@@ -223,7 +223,6 @@ pub struct Defi {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Name {
-    pub max_name_length: usize,
     pub ens: URL,
     pub ud: URL,
     pub sns: URL,
