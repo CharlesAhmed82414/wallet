@@ -62,8 +62,6 @@ import uniffi.gemstone.GemVerificationLevel
 import uniffi.gemstone.GemWalletPlaceholder
 import uniffi.gemstone.GemWalletRow
 import uniffi.gemstone.SwapPriceImpactType
-import uniffi.gemstone.WalletConnectionVerificationStatus
-import uniffi.gemstone.verificationLevel
 
 data class SupportBubbleColors(val bubble: Color, val text: Color, val meta: Color, val link: Color)
 
@@ -252,19 +250,19 @@ fun GemRewardsIntroItem.emoji(): String = when (this) {
 }
 
 @Composable
-fun WalletConnectionVerificationStatus.icon(): ImageVector = when (verificationLevel(this)) {
+fun GemVerificationLevel.icon(): ImageVector = when (this) {
     GemVerificationLevel.VERIFIED -> AppIcons.Verified
     GemVerificationLevel.UNVERIFIED, GemVerificationLevel.SUSPICIOUS -> AppIcons.Warning
 }
 
-fun WalletConnectionVerificationStatus.textStyle(): ListItemTextStyle = when (verificationLevel(this)) {
+fun GemVerificationLevel.textStyle(): ListItemTextStyle = when (this) {
     GemVerificationLevel.VERIFIED -> ListItemTextStyle.Positive
     GemVerificationLevel.UNVERIFIED -> ListItemTextStyle.Warning
     GemVerificationLevel.SUSPICIOUS -> ListItemTextStyle.Negative
 }
 
 @Composable
-fun WalletConnectionVerificationStatus.color(): Color = when (verificationLevel(this)) {
+fun GemVerificationLevel.color(): Color = when (this) {
     GemVerificationLevel.VERIFIED -> MaterialTheme.colorScheme.tertiary
     GemVerificationLevel.UNVERIFIED -> pendingColor
     GemVerificationLevel.SUSPICIOUS -> MaterialTheme.colorScheme.error

@@ -18,8 +18,8 @@ import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.features.wallet_connector.viewmodels.models.map
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.list_item.ListItemModel
+import com.gemwallet.android.ui.localization.stringRes
 import com.gemwallet.android.ui.localization.text
-import com.gemwallet.android.ui.localization.titleRes
 import com.gemwallet.android.ui.models.ButtonState
 import com.gemwallet.android.ui.models.buttonState
 import com.gemwallet.android.ui.style.textStyle
@@ -88,11 +88,11 @@ class ConnectionProposalViewModel @AssistedInject constructor(
     val proposalRows = combine(selectedWallet, state) { wallet, sceneState -> connectionProposal(sceneState.verificationStatus, wallet?.name.orEmpty()) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, connectionProposal(WalletConnectionVerificationStatus.UNKNOWN, ""))
 
-    val statusListItem = state.map { sceneState ->
+    val statusListItem = proposalRows.map { proposal ->
         ListItemModel(
             title = context.getString(R.string.transaction_status),
-            subtitle = context.getString(sceneState.verificationStatus.titleRes()),
-            subtitleStyle = sceneState.verificationStatus.textStyle(),
+            subtitle = context.getString(proposal.verification.stringRes()),
+            subtitleStyle = proposal.verification.textStyle(),
         )
     }
         .stateIn(viewModelScope, SharingStarted.Eagerly, ListItemModel(title = context.getString(R.string.transaction_status)))

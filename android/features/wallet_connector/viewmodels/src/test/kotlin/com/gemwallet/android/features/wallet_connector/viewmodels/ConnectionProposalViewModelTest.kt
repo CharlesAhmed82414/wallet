@@ -13,6 +13,7 @@ import com.gemwallet.android.testkit.mockWalletConnectVerifyContext
 import com.gemwallet.android.testkit.mockWalletConnectionSessionProposal
 import com.gemwallet.android.testkit.mockWalletId
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.list_item.ListItemTextStyle
 import com.gemwallet.android.ui.models.ButtonState
 import com.wallet.core.primitives.Chain
 import io.mockk.coEvery
@@ -79,6 +80,9 @@ class ConnectionProposalViewModelTest {
             every { getString(R.string.errors_connections_malicious_origin) } returns "Malicious origin"
             every { getString(R.string.errors_connections_unsupported_chain) } returns "Unsupported chain"
             every { getString(R.string.errors_connections_no_supported_wallets) } returns "No supported wallets"
+            every { getString(R.string.asset_verification_verified) } returns "Verified"
+            every { getString(R.string.asset_verification_unverified) } returns "Unverified"
+            every { getString(R.string.asset_verification_suspicious) } returns "Suspicious"
         },
     ).also { models.add(it) }
 
@@ -92,6 +96,29 @@ class ConnectionProposalViewModelTest {
         assertEquals("Uniswap", model.peer.value?.title)
         assertEquals(WalletConnectionVerificationStatus.VERIFIED, model.state.value.verificationStatus)
         assertEquals(ButtonState.Enabled, model.buttonState.first { it == ButtonState.Enabled })
+    }
+
+    @Test
+    fun `the status row shows the proposal's verification level`() = runTest(dispatcher) {
+        listOf(
+            WalletConnectionVerificationStatus.VERIFIED to ("Verified" to ListItemTextStyle.Positive),
+            WalletConnectionVerificationStatus.UNKNOWN to ("Unverified" to ListItemTextStyle.Warning),
+            WalletConnectionVerificationStatus.INVALID to ("Suspicious" to ListItemTextStyle.Negative),
+            WalletConnectionVerificationStatus.MALICIOUS to ("Suspicious" to ListItemTextStyle.Negative),
+        ).forEach { (status, expected) ->
+            val service = service()
+            coEvery { service.prepareSessionProposal(any(), any(), any(), any(), any()) } returns GemSessionProposal(
+                proposal = mockWalletConnectionSessionProposal(defaultWallet = main, wallets = listOf(main), metadata = mockApplicationMetadata(name = "Uniswap")).toGem(),
+                verificationStatus = status,
+                canChooseWallet = true,
+            )
+
+            val model = viewModel(service = service)
+            advanceUntilIdle()
+
+            assertEquals(expected.first, model.statusListItem.value.subtitle)
+            assertEquals(expected.second, model.statusListItem.value.subtitleStyle)
+        }
     }
 
     @Test

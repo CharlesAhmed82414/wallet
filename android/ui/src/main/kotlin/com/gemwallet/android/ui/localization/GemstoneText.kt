@@ -131,8 +131,6 @@ import uniffi.gemstone.PaymentStatus
 import uniffi.gemstone.PerpetualMarginType
 import uniffi.gemstone.PortfolioChartType
 import uniffi.gemstone.StakeProviderType
-import uniffi.gemstone.WalletConnectionVerificationStatus
-import uniffi.gemstone.verificationLevel
 import uniffi.gemstone.PriceChangeCalculator as GemPriceChangeCalculator
 
 private const val EMPTY_VALUE = "-"
@@ -488,9 +486,6 @@ fun GemVerificationLevel.stringRes(): Int = when (this) {
     GemVerificationLevel.UNVERIFIED -> R.string.asset_verification_unverified
     GemVerificationLevel.SUSPICIOUS -> R.string.asset_verification_suspicious
 }
-
-@StringRes
-fun WalletConnectionVerificationStatus.titleRes(): Int = verificationLevel(this).stringRes()
 
 @StringRes
 fun GemAssetSectionKind.titleRes(): Int? = when (this) {

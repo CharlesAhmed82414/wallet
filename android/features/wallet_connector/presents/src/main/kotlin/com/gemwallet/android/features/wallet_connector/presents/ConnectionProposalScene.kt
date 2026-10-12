@@ -98,9 +98,9 @@ internal fun ConnectionProposalScene(
                     listPosition = ListPosition.Last,
                     accessory = {
                         Icon(
-                            imageVector = state.verificationStatus.icon(),
+                            imageVector = proposalRows.verification.icon(),
                             contentDescription = null,
-                            tint = state.verificationStatus.color(),
+                            tint = proposalRows.verification.color(),
                         )
                     },
                 )

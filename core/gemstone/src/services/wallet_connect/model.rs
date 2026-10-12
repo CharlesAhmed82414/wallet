@@ -154,7 +154,6 @@ pub enum GemVerificationLevel {
     Suspicious,
 }
 
-#[uniffi::export]
 pub fn verification_level(status: WalletConnectionVerificationStatus) -> GemVerificationLevel {
     match status {
         WalletConnectionVerificationStatus::Verified => GemVerificationLevel::Verified,
