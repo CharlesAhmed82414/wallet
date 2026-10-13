@@ -46,6 +46,10 @@ tasks.withType<Exec>().configureEach {
     environment("CARGO_TARGET_DIR", coreRoot.resolve("target").absolutePath)
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+    compilerOptions.freeCompilerArgs.add("-Xwarning-level=UNUSED_EXPRESSION:disabled")
+}
+
 val buildGemstoneHost = tasks.register<Exec>("buildGemstoneHost") {
     description = "Build the host Gemstone library used by JVM tests"
     workingDir = coreRoot
@@ -101,6 +105,6 @@ tasks.configureEach {
 }
 
 dependencies {
-    api("net.java.dev.jna:jna:5.18.1@aar")
+    api("net.java.dev.jna:jna:5.19.1@aar")
     implementation(libs.kotlinx.coroutines.android)
 }

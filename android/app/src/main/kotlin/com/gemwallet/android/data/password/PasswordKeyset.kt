@@ -39,7 +39,7 @@ internal class PasswordKeyset(context: Context, private val config: TinkStoreCon
             val handle = unprotected.keysetHandle()
             authenticated.createKey()
             val encrypted = try {
-                TinkProtoKeysetFormat.serializeEncryptedKeyset(handle, authenticated, byteArrayOf())
+                TinkProtoKeysetFormat.serializeEncryptedKeyset(handle, authenticated, byteArrayOf(), RegistryConfiguration.get())
             } catch (error: Exception) {
                 authenticated.deleteKey()
                 throw error
@@ -49,7 +49,7 @@ internal class PasswordKeyset(context: Context, private val config: TinkStoreCon
         } else {
             val handle = protectedHandle()
             val master = AndroidKeystoreKmsClient.getOrGenerateNewAeadKey("android-keystore://${config.masterKeyAlias}")
-            val encrypted = TinkProtoKeysetFormat.serializeEncryptedKeyset(handle, master, byteArrayOf())
+            val encrypted = TinkProtoKeysetFormat.serializeEncryptedKeyset(handle, master, byteArrayOf(), RegistryConfiguration.get())
             check(preferences.edit().putString(config.keysetName, encrypted.hex).remove(protectedName).commit()) { "Wallet keyset write failed" }
             authenticated.deleteKey()
         }
@@ -60,7 +60,7 @@ internal class PasswordKeyset(context: Context, private val config: TinkStoreCon
         AeadConfig.register()
         val bytes = checkNotNull(preferences.getString(protectedName, null)) { "Wallet keyset is missing" }.fromHex()
         return try {
-            TinkProtoKeysetFormat.parseEncryptedKeyset(bytes, authenticated, byteArrayOf())
+            TinkProtoKeysetFormat.parseEncryptedKeyset(bytes, authenticated, byteArrayOf(), RegistryConfiguration.get())
         } finally {
             bytes.fill(0)
         }

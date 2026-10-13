@@ -214,7 +214,6 @@ class AuthRequestViewModelTest {
         val approve = approval()
         every { approve.approveAuthentication(any(), any(), any(), any(), any()) } answers {
             approved.complete(thirdArg())
-            Unit
         }
         val service = service { listOf(mockGemWalletConnectAuthAccount(account = mockAccount(chain = Chain.Ethereum, address = "0xabc").toGem(), chainId = "eip155:1", issuer = "did:pkh:eip155:1:0xabc")) }
         val model = viewModel(service, approve)

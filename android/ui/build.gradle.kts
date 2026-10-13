@@ -21,6 +21,7 @@ dependencies {
     api(project(":ui-models"))
 
     // Compose
+    api(platform(libs.compose.bom))
     api(libs.compose.ui)
     api(libs.compose.material3)
     api(libs.kotlinx.collections.immutable)

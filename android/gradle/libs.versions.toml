@@ -1,51 +1,52 @@
 [versions]
 activityCompose = "1.13.0"
-compose = "1.12.0-beta02"
-material3 = "1.5.0-alpha22"
+compose = "1.12.1"
+composeBom = "2026.09.00"
+material3 = "1.5.0-beta01"
 material = "1.14.0"
-navigation3 = "1.2.0-alpha04"
+navigation3 = "1.2.0"
 accompanistPermissions = "0.37.3"
-camera2 = "1.7.0-alpha01"
+camera2 = "1.7.0-alpha03"
 browser = "1.10.0"
-uiautomator = "2.4.0-rc01"
-walletconnect = "1.6.13"
+uiautomator = "2.4.0"
+walletconnect = "1.6.17"
 biometric = "1.4.0-alpha07"
-coilCompose = "3.4.0"
+coilCompose = "3.6.3"
 zxing-core = "3.5.4"
-coreKtx = "1.19.0"
+coreKtx = "1.19.1"
 coreSplashscreen = "1.2.0"
-datastore = "1.3.0-alpha09"
-firebaseMessaging = "25.1.0"
+datastore = "1.3.0-rc01"
+firebaseMessaging = "26.0.0"
 lifecycleRuntimeCompose = "2.11.0"
-okhttp = "5.3.2"
+okhttp = "5.5.0"
 review = "2.0.2"
-room = "2.8.4"
+room = "2.8.5"
 securityCrypto = "1.1.0"
 google-services = "4.5.0"
 gradle = "9.4.1"
-ksp = "2.3.9"
+ksp = "2.3.12"
 android-lib = "9.4.1"
 androidNdk = "28.1.13356709"
-kotlin = "2.3.21"
-hiltAndroid = "2.60"
-hiltLifecycleViewModelCompose = "1.4.0-rc01"
-kotlinSerialization = "2.3.21"
+kotlin = "2.4.21"
+hiltAndroid = "2.60.1"
+hiltLifecycleViewModelCompose = "1.4.0"
+kotlinSerialization = "2.4.21"
 kotlinxSerializationJson = "1.11.0"
-kotlinxCollectionsImmutable = "0.4.0"
+kotlinxCollectionsImmutable = "0.5.2"
 kotlinxCoroutinesAndroid = "1.11.0"
 
 junit = "4.13.2"
 junitVersion = "1.3.0"
 testRunner = "1.7.0"
-mockkVersion = "1.14.9"
+mockkVersion = "1.14.11"
 espressoCore = "3.7.0"
 robolectric = "4.17"
 
 
-glance-widgets = "1.3.0-alpha01"
-work = "2.11.2"
+glance-widgets = "1.3.0-alpha02"
+work = "2.12.0"
 
-tink = "1.22.0"
+tink = "1.23.0"
 
 [libraries]
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
@@ -62,10 +63,11 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "b
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 
 # Compose
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-runtime-annotation = { module = "androidx.compose.runtime:runtime-annotation", version.ref = "compose" }
 compose-activity = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 compose-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
+compose-ui = { module = "androidx.compose.ui:ui" }
 navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
@@ -130,10 +132,10 @@ androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", vers
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-junit-runner = { module = "androidx.test:runner", version.ref = "testRunner" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose" }
-androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "compose" }
-androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
-androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkVersion" }
 

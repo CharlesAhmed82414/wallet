@@ -166,7 +166,6 @@ class WalletConnectorRequestViewModelTest {
         val respond = mockk<RespondWalletConnectRequest>(relaxed = true) {
             every { respond(any(), any(), any(), any(), any()) } answers {
                 responded.complete(Triple(firstArg(), secondArg(), thirdArg()))
-                Unit
             }
         }
         val model = viewModel(

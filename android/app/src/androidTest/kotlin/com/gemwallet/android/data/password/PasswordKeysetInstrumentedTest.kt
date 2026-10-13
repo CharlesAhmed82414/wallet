@@ -120,10 +120,18 @@ class PasswordKeysetInstrumentedTest {
         @Suppress("DEPRECATION")
         val intent = checkNotNull(context.getSystemService(KeyguardManager::class.java).createConfirmDeviceCredentialIntent("Test", null))
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        val entry = checkNotNull(device.wait(Until.findObject(By.clazz("android.widget.EditText")), 10000)) { "Credential prompt did not appear" }
-        entry.text = pin
-        device.pressEnter()
-        assertTrue(device.wait(Until.gone(By.clazz("android.widget.EditText")), 10000))
+        checkNotNull(device.wait(Until.findObject(By.text("Test")), 10000)) { "Credential prompt did not appear" }
+        val keypad = device.findObject(By.res("cred_pin_pad"))
+        if (keypad != null) {
+            pin.forEach { digit -> checkNotNull(keypad.findObject(By.text(digit.toString()))).click() }
+            checkNotNull(device.findObject(By.res("com.android.systemui", "key_enter"))).click()
+            assertTrue(device.wait(Until.gone(By.res("cred_pin_pad")), 10000))
+        } else {
+            val entry = checkNotNull(device.wait(Until.findObject(By.clazz("android.widget.EditText")), 10000))
+            entry.text = pin
+            device.pressEnter()
+            assertTrue(device.wait(Until.gone(By.clazz("android.widget.EditText")), 10000))
+        }
     }
 
     private fun waitForAuthenticationToExpire() {

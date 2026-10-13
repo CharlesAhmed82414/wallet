@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gemwallet.android.math.fromHex
 import com.google.crypto.tink.InsecureSecretKeyAccess
+import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.AesGcmKeyManager
@@ -94,8 +95,8 @@ class SecureStorageFailureInstrumentedTest {
         assertTrue(onDisk.contains(encrypted))
         assertFalse(onDisk.contains(plaintext))
         val masterAead = AndroidKeystoreKmsClient().getAead("android-keystore://${config.masterKeyAlias}")
-        assertTrue(handle.equalsKeyset(TinkProtoKeysetFormat.parseEncryptedKeyset(encrypted.fromHex(), masterAead, byteArrayOf())))
-        assertThrows(GeneralSecurityException::class.java) { TinkProtoKeysetFormat.parseKeyset(encrypted.fromHex(), InsecureSecretKeyAccess.get()) }
+        assertTrue(handle.equalsKeyset(TinkProtoKeysetFormat.parseEncryptedKeyset(encrypted.fromHex(), masterAead, byteArrayOf(), RegistryConfiguration.get())))
+        assertThrows(GeneralSecurityException::class.java) { TinkProtoKeysetFormat.parseKeyset(encrypted.fromHex(), InsecureSecretKeyAccess.get(), RegistryConfiguration.get()) }
     }
 
     @Test

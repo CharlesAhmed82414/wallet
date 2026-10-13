@@ -7,6 +7,7 @@ import com.google.crypto.tink.Aead
 import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeyTemplate
 import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.TinkProtoKeysetFormat
 import java.security.GeneralSecurityException
 
@@ -18,10 +19,10 @@ internal fun encryptedKeyset(preferences: SharedPreferences, name: String, maste
     } else {
         val bytes = encoded.fromHex()
         try {
-            return@synchronized TinkProtoKeysetFormat.parseEncryptedKeyset(bytes, masterAead, byteArrayOf())
+            return@synchronized TinkProtoKeysetFormat.parseEncryptedKeyset(bytes, masterAead, byteArrayOf(), RegistryConfiguration.get())
         } catch (keystoreError: GeneralSecurityException) {
             try {
-                TinkProtoKeysetFormat.parseKeyset(bytes, InsecureSecretKeyAccess.get())
+                TinkProtoKeysetFormat.parseKeyset(bytes, InsecureSecretKeyAccess.get(), RegistryConfiguration.get())
             } catch (plaintextError: GeneralSecurityException) {
                 keystoreError.addSuppressed(plaintextError)
                 throw keystoreError
@@ -30,7 +31,7 @@ internal fun encryptedKeyset(preferences: SharedPreferences, name: String, maste
             bytes.fill(0)
         }
     }
-    val encrypted = TinkProtoKeysetFormat.serializeEncryptedKeyset(handle, masterAead, byteArrayOf())
+    val encrypted = TinkProtoKeysetFormat.serializeEncryptedKeyset(handle, masterAead, byteArrayOf(), RegistryConfiguration.get())
     check(preferences.putStringDurably(name, encrypted.hex)) { "Secure keyset write failed" }
     handle
 }

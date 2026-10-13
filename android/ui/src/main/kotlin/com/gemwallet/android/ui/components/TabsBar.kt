@@ -67,7 +67,7 @@ fun <T> TabsBar(tabs: List<T>, selected: T, onSelect: (T) -> Unit, scrollable: B
                     ),
                 checked = item == selected,
                 onCheckedChange = { onSelect(item) },
-                colors = ToggleButtonDefaults.toggleButtonColors()
+                colors = ToggleButtonDefaults.colors()
                     .copy(containerColor = MaterialTheme.colorScheme.background),
                 shapes = when (index) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()

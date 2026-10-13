@@ -14,11 +14,11 @@ class RouteArgumentsNavEntryDecoratorTest {
         val entry = NavEntry<NavKey>(key) {}
 
         assertEquals(
-            key.toString(),
+            entry.contentKey,
             entry.withOccurrenceContentKey(key, occurrence = 0).contentKey,
         )
         assertEquals(
-            "$key#1",
+            "${entry.contentKey}#1",
             entry.withOccurrenceContentKey(key, occurrence = 1).contentKey,
         )
     }

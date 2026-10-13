@@ -143,7 +143,6 @@ class PriceAlertsViewModelTest {
             every { getCurrency() } returns Currency.USD.toGem()
             coEvery { setEnabled(any()) } answers {
                 state = firstArg()
-                Unit
             }
             coEvery { refresh(any()) } returns GemLoadState.Data
             coEvery { deletePriceAlerts(any()) } returns Unit
