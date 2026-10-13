@@ -73,7 +73,10 @@ impl RecordStatus {
 
 #[cfg(test)]
 mod tests {
-    use primitives::{AssetId, Chain, asset_constants::ARBITRUM_USDC_ASSET_ID};
+    use primitives::{
+        AssetId, Chain,
+        asset_constants::{ARBITRUM_USDC_ASSET_ID, SMARTCHAIN_USDT_ASSET_ID},
+    };
 
     use super::*;
     use crate::bridgers::model::BridgersResponse;
@@ -99,6 +102,16 @@ mod tests {
             })
         );
         assert_eq!(opbnb_to_ton.swap_metadata(), None);
+        assert_eq!(
+            records[2].swap_metadata(),
+            Some(TransactionSwapMetadata::new(
+                AssetId::from_chain(Chain::XLayer),
+                BigUint::from(184_463_564_813_506_330u64),
+                SMARTCHAIN_USDT_ASSET_ID.clone(),
+                BigUint::from_str("22785689000000000000").unwrap(),
+                SwapperProvider::Bridgers,
+            ))
+        );
         assert_eq!(serde_json::from_str::<RecordStatus>(r#""refund_complete""#).unwrap(), RecordStatus::RefundComplete);
         assert_eq!(serde_json::from_str::<RecordStatus>(r#""wait_receive_send""#).unwrap(), RecordStatus::Pending);
     }
