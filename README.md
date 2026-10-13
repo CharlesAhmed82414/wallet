@@ -28,6 +28,10 @@ Gem Wallet is an open-source mobile wallet for iOS and Android. This repository 
 - `ios/`: SwiftUI application, packages, tests, and iOS-only submodules
 - `android/`: Kotlin/Compose application and Android build tooling
 - `core/`: shared Rust source used by both mobile apps
+- `docs/`: architecture, platform requirements and feature notes
+- `localization/`: the shared string catalogue for both apps
+- `scripts/`: repository automation used by the workflows and the justfile
+- `maestro/`: end-to-end UI flows used by the mobile test suites
 
 ## Getting Started
 
