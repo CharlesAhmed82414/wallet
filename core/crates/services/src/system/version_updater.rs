@@ -22,14 +22,7 @@ impl VersionUpdater {
     }
 
     pub fn stores() -> &'static [PlatformStore] {
-        &[
-            PlatformStore::AppStore,
-            PlatformStore::ApkUniversal,
-            PlatformStore::Fdroid,
-            PlatformStore::Huawei,
-            PlatformStore::SamsungStore,
-            PlatformStore::SolanaStore,
-        ]
+        &[PlatformStore::AppStore, PlatformStore::ApkUniversal, PlatformStore::Fdroid, PlatformStore::Huawei, PlatformStore::SolanaStore]
     }
 
     pub async fn update_store(&self, store: PlatformStore) -> Result<Option<String>, Box<dyn Error + Send + Sync>> {
