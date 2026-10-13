@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = פעילות חשודה
 errors_connections_malicious_origin = קשר זה מגיע ממקור לא אמין.
 errors_no_data_available = אין נתונים זמינים
 errors_dust_threshold_short = הרשת מחשיבה את הכמות הזו כאבק - העמלה גבוהה יותר מהכמות עצמה.
+errors_pending_transaction = עסקה קודמת עדיין ממתינה. המתינו לאישורה ונסו שוב.
 errors_swap_minimum_amount = סכום המסחר המינימלי הוא %@. אנא הזן סכום גבוה יותר.
 errors_perpetual_trigger_price_lower = מחיר ההפעלה צריך להיות נמוך ממחיר השוק
 errors_perpetual_trigger_price_higher = מחיר ההפעלה צריך להיות גבוה ממחיר השוק

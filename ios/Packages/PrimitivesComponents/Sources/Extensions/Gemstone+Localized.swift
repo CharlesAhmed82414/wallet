@@ -1648,6 +1648,7 @@ extension GemConfirmErrorDisplay: @retroactive LocalizedError {
             )
         case .dustThreshold: Localized.Errors.dustThresholdShort
         case .insufficientFunds: Localized.Info.InsufficientBalance.title
+        case .pendingTransaction: Localized.Errors.pendingTransaction
         case let .payment(status): status.errorText
         case let .message(msg): msg
         }

@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Mistænkelig aktivitet
 errors_connections_malicious_origin = Denne forbindelse kommer fra en upålidelig kilde.
 errors_no_data_available = Ingen data tilgængelige
 errors_dust_threshold_short = Netværket anser denne mængde for støv – gebyret er højere end selve mængden.
+errors_pending_transaction = En tidligere transaktion afventer stadig. Vent, til den er bekræftet, og prøv derefter igen.
 errors_swap_minimum_amount = Minimumsbeløbet for handel er %@. Indtast venligst et højere beløb.
 errors_perpetual_trigger_price_lower = Triggerprisen skal være lavere end markedsprisen
 errors_perpetual_trigger_price_higher = Triggerprisen skal være højere end markedsprisen

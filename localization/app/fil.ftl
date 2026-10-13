@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Kahina-hinalang Aktibidad
 errors_connections_malicious_origin = Ang koneksyon na ito ay nagmula sa isang hindi pinagkakatiwalaang pinagmulan.
 errors_no_data_available = Walang available na data
 errors_dust_threshold_short = Itinuturing ng network ang halagang ito bilang alikabok (dust) - ang bayad ay mas mataas kaysa sa halaga mismo.
+errors_pending_transaction = May naunang transaksyon na nakabinbin pa. Hintaying makumpirma ito, pagkatapos ay subukang muli.
 errors_swap_minimum_amount = Ang minimum na halaga ng kalakalan ay %@. Mangyaring maglagay ng mas mataas na halaga.
 errors_perpetual_trigger_price_lower = Dapat mas mababa sa presyo sa merkado ang trigger price
 errors_perpetual_trigger_price_higher = Dapat mas mataas sa presyo sa merkado ang trigger price

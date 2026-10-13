@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Denne forbindelse kommer fra en upålidelig kilde.</string>
   <string name="errors_no_data_available">Ingen data tilgængelige</string>
   <string name="errors_dust_threshold_short">Netværket anser denne mængde for støv – gebyret er højere end selve mængden.</string>
+  <string name="errors_pending_transaction">En tidligere transaktion afventer stadig. Vent, til den er bekræftet, og prøv derefter igen.</string>
   <string name="errors_swap_minimum_amount">Minimumsbeløbet for handel er %1$s. Indtast venligst et højere beløb.</string>
   <string name="errors_perpetual_trigger_price_lower">Triggerprisen skal være lavere end markedsprisen</string>
   <string name="errors_perpetual_trigger_price_higher">Triggerprisen skal være højere end markedsprisen</string>

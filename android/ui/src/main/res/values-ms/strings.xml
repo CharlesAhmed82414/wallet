@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Sambungan ini datang dari sumber yang tidak dipercayai.</string>
   <string name="errors_no_data_available">Tiada data tersedia</string>
   <string name="errors_dust_threshold_short">Rangkaian menganggap jumlah habuk ini - bayarannya lebih tinggi daripada jumlah itu sendiri.</string>
+  <string name="errors_pending_transaction">Transaksi sebelumnya masih belum selesai. Tunggu sehingga ia disahkan, kemudian cuba lagi.</string>
   <string name="errors_swap_minimum_amount">Jumlah dagangan minimum ialah %1$s. Sila masukkan jumlah yang lebih tinggi.</string>
   <string name="errors_perpetual_trigger_price_lower">Harga pencetus perlu lebih rendah daripada harga pasaran</string>
   <string name="errors_perpetual_trigger_price_higher">Harga pencetus perlu lebih tinggi daripada harga pasaran</string>

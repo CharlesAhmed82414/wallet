@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">การเชื่อมต่อนี้มาจากแหล่งที่ไม่น่าเชื่อถือ</string>
   <string name="errors_no_data_available">ไม่มีข้อมูล</string>
   <string name="errors_dust_threshold_short">เครือข่ายถือว่าจำนวนนี้เป็นแค่ฝุ่น เพราะค่าธรรมเนียมนั้นสูงกว่าจำนวนที่แท้จริง</string>
+  <string name="errors_pending_transaction">ธุรกรรมก่อนหน้ายังรอดำเนินการอยู่ โปรดรอให้ได้รับการยืนยัน แล้วลองอีกครั้ง</string>
   <string name="errors_swap_minimum_amount">จำนวนเงินขั้นต่ำในการซื้อขายคือ %1$s กรุณาป้อนจำนวนเงินที่สูงกว่านี้</string>
   <string name="errors_perpetual_trigger_price_lower">ราคา Trigger ควรต่ำกว่าราคาตลาด</string>
   <string name="errors_perpetual_trigger_price_higher">ราคา Trigger ควรสูงกว่าราคาตลาด</string>

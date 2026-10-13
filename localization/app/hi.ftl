@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = संदिग्ध गतिवि�
 errors_connections_malicious_origin = यह कनेक्शन एक अविश्वसनीय स्रोत से आता है।
 errors_no_data_available = कोई डेटा मौजूद नहीं
 errors_dust_threshold_short = नेटवर्क इस राशि को धूल मानता है - शुल्क स्वयं राशि से अधिक है।
+errors_pending_transaction = पिछला लेन-देन अभी भी लंबित है। इसके पुष्टि होने तक प्रतीक्षा करें, फिर पुनः प्रयास करें।
 errors_swap_minimum_amount = न्यूनतम व्यापार राशि है %@। कृपया अधिक राशि दर्ज करें।
 errors_perpetual_trigger_price_lower = ट्रिगर मूल्य बाजार मूल्य से कम होना चाहिए
 errors_perpetual_trigger_price_higher = ट्रिगर मूल्य बाजार मूल्य से अधिक होना चाहिए

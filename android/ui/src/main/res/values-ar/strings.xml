@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">يأتي هذا الاتصال من مصدر غير موثوق.</string>
   <string name="errors_no_data_available">لا توجد بيانات متاحة</string>
   <string name="errors_dust_threshold_short">تعتبر الشبكة هذه الكمية مجرد غبار، حيث أن الرسوم أعلى من الكمية نفسها.</string>
+  <string name="errors_pending_transaction">لا تزال معاملة سابقة قيد الانتظار. انتظر حتى يتم تأكيدها، ثم حاول مرة أخرى.</string>
   <string name="errors_swap_minimum_amount">الحد الأدنى لمبلغ التداول هو %1$s. يرجى إدخال مبلغ أعلى.</string>
   <string name="errors_perpetual_trigger_price_lower">يجب أن يكون سعر التفعيل أقل من سعر السوق</string>
   <string name="errors_perpetual_trigger_price_higher">يجب أن يكون سعر التفعيل أعلى من سعر السوق</string>

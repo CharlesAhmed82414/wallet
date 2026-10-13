@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Kết nối này đến từ một nguồn không đáng tin cậy.</string>
   <string name="errors_no_data_available">Không có dữ liệu có sẵn</string>
   <string name="errors_dust_threshold_short">Mạng lưới coi số tiền này là bụi - mức phí còn cao hơn cả số tiền thực tế.</string>
+  <string name="errors_pending_transaction">Một giao dịch trước đó vẫn đang chờ xử lý. Hãy đợi giao dịch được xác nhận rồi thử lại.</string>
   <string name="errors_swap_minimum_amount">Số tiền giao dịch tối thiểu là %1$s. Vui lòng nhập số tiền lớn hơn.</string>
   <string name="errors_perpetual_trigger_price_lower">Giá kích hoạt phải thấp hơn giá thị trường</string>
   <string name="errors_perpetual_trigger_price_higher">Giá kích hoạt phải cao hơn giá thị trường</string>

@@ -76,6 +76,7 @@ pub enum GemConfirmError {
     Payment {
         status: PaymentStatus,
     },
+    PendingTransaction,
     Cancelled,
 }
 
@@ -101,6 +102,7 @@ impl GemConfirmError {
             | Self::Sign { .. }
             | Self::ApprovalInvalid { .. }
             | Self::Payment { .. }
+            | Self::PendingTransaction
             | Self::Cancelled => false,
         }
     }
@@ -125,6 +127,7 @@ impl GemConfirmError {
             | Self::Sign { .. }
             | Self::ApprovalInvalid { .. }
             | Self::Payment { .. }
+            | Self::PendingTransaction
             | Self::Cancelled => false,
         }
     }
@@ -150,6 +153,7 @@ impl GemConfirmError {
             | Self::Sign { .. }
             | Self::ApprovalInvalid { .. }
             | Self::Payment { .. }
+            | Self::PendingTransaction
             | Self::Cancelled => None,
         }
     }
@@ -197,6 +201,7 @@ pub enum GemConfirmErrorDisplay {
         chain: Chain,
     },
     InsufficientFunds,
+    PendingTransaction,
     Payment {
         status: PaymentStatus,
     },
@@ -298,6 +303,7 @@ impl GemConfirmError {
                 GemSignerError::InvalidInput(_) | GemSignerError::SigningError(_) | GemSignerError::SwapValueBelowMinimum { .. } => GemConfirmErrorDisplay::Message { msg: msg.clone() },
             },
             Self::Payment { status } => GemConfirmErrorDisplay::Payment { status: *status },
+            Self::PendingTransaction => GemConfirmErrorDisplay::PendingTransaction,
             Self::BalanceMissing { .. } | Self::Network { .. } | Self::Load { .. } | Self::Broadcast { .. } | Self::Record { .. } | Self::ApprovalInvalid { .. } => GemConfirmErrorDisplay::Message { msg: self.to_string() },
         }
     }
@@ -317,7 +323,16 @@ impl GemConfirmErrorDisplay {
                 provider_name: provider_name.clone(),
             }),
             Self::DustThreshold { chain } => Some(GemConfirmErrorSheet::DustThreshold { chain: *chain }),
-            Self::Offline | Self::FeeRatesMissing | Self::Cancelled | Self::AccountMissing | Self::Unknown | Self::InsufficientFunds | Self::DestinationAccountActivation { .. } | Self::Payment { .. } | Self::Message { .. } => None,
+            Self::Offline
+            | Self::FeeRatesMissing
+            | Self::Cancelled
+            | Self::AccountMissing
+            | Self::Unknown
+            | Self::InsufficientFunds
+            | Self::PendingTransaction
+            | Self::DestinationAccountActivation { .. }
+            | Self::Payment { .. }
+            | Self::Message { .. } => None,
         }
     }
 }
@@ -341,6 +356,7 @@ impl std::fmt::Display for GemConfirmError {
             Self::SenderMismatch { from, signer } => write!(f, "transaction was built for {from} but would be signed by {signer}"),
             Self::Cancelled => write!(f, "cancelled"),
             Self::Payment { status } => write!(f, "payment is {status:?}"),
+            Self::PendingTransaction => write!(f, "a pending transaction is spending the same funds"),
             Self::Network { msg } | Self::Load { msg } | Self::Broadcast { msg, .. } | Self::Record { msg } | Self::Sign { msg, .. } | Self::ApprovalInvalid { msg } => {
                 write!(f, "{msg}")
             }
@@ -402,6 +418,7 @@ pub(super) fn broadcast_error(hashes: Vec<String>, error: GatewayError) -> GemCo
     match error {
         GatewayError::Offline if hashes.is_empty() => GemConfirmError::Offline,
         GatewayError::NetworkError { msg } if hashes.is_empty() => GemConfirmError::Network { msg },
+        GatewayError::ConflictingTransaction { .. } if hashes.is_empty() => GemConfirmError::PendingTransaction,
         error => GemConfirmError::Broadcast { hashes, msg: error.to_string() },
     }
 }
@@ -495,6 +512,15 @@ mod tests {
         );
         assert_eq!(load_error(GatewayError::PlatformError { msg: "dust".to_string() }), GemConfirmError::Load { msg: "Platform error: dust".to_string() });
         assert_eq!(broadcast_error(vec![], GatewayError::NetworkError { msg: "offline".to_string() }), GemConfirmError::Network { msg: "offline".to_string() });
+        assert_eq!(broadcast_error(vec![], GatewayError::ConflictingTransaction { msg: "conflict".to_string() }), GemConfirmError::PendingTransaction);
+        assert_eq!(
+            broadcast_error(vec!["h1".to_string()], GatewayError::ConflictingTransaction { msg: "conflict".to_string() }),
+            GemConfirmError::Broadcast {
+                hashes: vec!["h1".to_string()],
+                msg: "conflict".to_string(),
+            }
+        );
+        assert_eq!(GemConfirmError::PendingTransaction.display(), GemConfirmErrorDisplay::PendingTransaction);
         assert_eq!(
             broadcast_error(vec!["h1".to_string()], GatewayError::NetworkError { msg: "offline".to_string() }),
             GemConfirmError::Broadcast {

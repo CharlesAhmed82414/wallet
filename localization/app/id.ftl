@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Aktivitas Mencurigakan
 errors_connections_malicious_origin = Koneksi ini berasal dari sumber yang tidak tepercaya.
 errors_no_data_available = Tidak ada data tersedia
 errors_dust_threshold_short = Jaringan menganggap jumlah ini sebagai debu - biayanya lebih tinggi daripada jumlahnya sendiri.
+errors_pending_transaction = Transaksi sebelumnya masih tertunda. Tunggu hingga dikonfirmasi, lalu coba lagi.
 errors_swap_minimum_amount = Jumlah transaksi minimum adalah %@. Silakan masukkan jumlah yang lebih tinggi.
 errors_perpetual_trigger_price_lower = Harga pemicu harus lebih rendah dari harga pasar
 errors_perpetual_trigger_price_higher = Harga pemicu harus lebih tinggi dari harga pasar

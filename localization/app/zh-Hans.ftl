@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = 可疑行为
 errors_connections_malicious_origin = 此连接来自不可信来源。
 errors_no_data_available = 暂无数据
 errors_dust_threshold_short = 转账金额过小，被网络视为“粉尘”金额，手续费甚至高于金额本身。
+errors_pending_transaction = 上一笔交易仍在处理中。请等待其确认后再试。
 errors_swap_minimum_amount = 最低交易金额为 %@。请输入更高的金额。
 errors_perpetual_trigger_price_lower = 触发价格应低于市场价格
 errors_perpetual_trigger_price_higher = 触发价格应高于市场价格

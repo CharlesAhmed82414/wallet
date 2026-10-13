@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Diese Verbindung stammt aus einer nicht vertrauenswürdigen Quelle.</string>
   <string name="errors_no_data_available">Keine Daten verfügbar</string>
   <string name="errors_dust_threshold_short">Das Netzwerk betrachtet diesen Betrag als Staub – die Gebühr ist höher als der Betrag selbst.</string>
+  <string name="errors_pending_transaction">Eine vorherige Transaktion ist noch ausstehend. Warte, bis sie bestätigt ist, und versuche es dann erneut.</string>
   <string name="errors_swap_minimum_amount">Der Mindesthandelsbetrag beträgt %1$s. Bitte geben Sie einen höheren Betrag ein.</string>
   <string name="errors_perpetual_trigger_price_lower">Der Triggerpreis muss unter dem Marktpreis liegen</string>
   <string name="errors_perpetual_trigger_price_higher">Der Triggerpreis muss über dem Marktpreis liegen</string>

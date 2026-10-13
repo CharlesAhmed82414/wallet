@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Podezřelá aktivita
 errors_connections_malicious_origin = Toto spojení pochází z nedůvěryhodného zdroje.
 errors_no_data_available = Nejsou k dispozici žádná data
 errors_dust_threshold_short = Síť toto množství považuje za prach – poplatek je vyšší než samotné množství.
+errors_pending_transaction = Předchozí transakce stále čeká na zpracování. Počkejte na její potvrzení a zkuste to znovu.
 errors_swap_minimum_amount = Minimální částka obchodu je %@. Zadejte prosím vyšší částku.
 errors_perpetual_trigger_price_lower = Spouštěcí cena musí být nižší než tržní cena
 errors_perpetual_trigger_price_higher = Spouštěcí cena musí být vyšší než tržní cena

@@ -401,6 +401,7 @@ pub fn error_info(display: &GemConfirmErrorDisplay, prices: &[AssetPrice], curre
         | GemConfirmErrorDisplay::AccountMissing
         | GemConfirmErrorDisplay::Unknown
         | GemConfirmErrorDisplay::InsufficientFunds
+        | GemConfirmErrorDisplay::PendingTransaction
         | GemConfirmErrorDisplay::DestinationAccountActivation { .. }
         | GemConfirmErrorDisplay::Payment { .. }
         | GemConfirmErrorDisplay::Message { .. } => None,

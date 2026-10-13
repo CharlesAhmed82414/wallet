@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Aktiviti Meragukan
 errors_connections_malicious_origin = Sambungan ini datang dari sumber yang tidak dipercayai.
 errors_no_data_available = Tiada data tersedia
 errors_dust_threshold_short = Rangkaian menganggap jumlah habuk ini - bayarannya lebih tinggi daripada jumlah itu sendiri.
+errors_pending_transaction = Transaksi sebelumnya masih belum selesai. Tunggu sehingga ia disahkan, kemudian cuba lagi.
 errors_swap_minimum_amount = Jumlah dagangan minimum ialah %@. Sila masukkan jumlah yang lebih tinggi.
 errors_perpetual_trigger_price_lower = Harga pencetus perlu lebih rendah daripada harga pasaran
 errors_perpetual_trigger_price_higher = Harga pencetus perlu lebih tinggi daripada harga pasaran

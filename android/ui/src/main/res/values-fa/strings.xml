@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">این اتصال از یک منبع غیرقابل اعتماد می‌آید.</string>
   <string name="errors_no_data_available">داده‌ای موجود نیست</string>
   <string name="errors_dust_threshold_short">شبکه این مبلغ را داست (dust) در نظر می‌گیرد - کارمزد آن از خود مبلغ بیشتر است.</string>
+  <string name="errors_pending_transaction">یک تراکنش قبلی هنوز در انتظار است. صبر کنید تا تأیید شود، سپس دوباره تلاش کنید.</string>
   <string name="errors_swap_minimum_amount">حداقل مبلغ معامله %1$s است. لطفاً مبلغ بیشتری وارد کنید.</string>
   <string name="errors_perpetual_trigger_price_lower">قیمت فعالسازی باید کمتر از قیمت بازار باشد</string>
   <string name="errors_perpetual_trigger_price_higher">قیمت فعالسازی باید بیشتر از قیمت بازار باشد</string>

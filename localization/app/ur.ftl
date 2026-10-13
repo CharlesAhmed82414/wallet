@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = مشکوک سرگرمی
 errors_connections_malicious_origin = یہ کنکشن ایک ناقابل اعتماد ذریعہ سے آتا ہے۔
 errors_no_data_available = کوئی ڈیٹا دستیاب نہیں ہے۔
 errors_dust_threshold_short = نیٹ ورک اس رقم کو دھول سمجھتا ہے — فیس خود رقم سے زیادہ ہے۔
+errors_pending_transaction = پچھلی ٹرانزیکشن ابھی زیرِ التوا ہے۔ اس کی تصدیق ہونے تک انتظار کریں، پھر دوبارہ کوشش کریں۔
 errors_swap_minimum_amount = کم از کم تجارتی رقم %@ ہے۔ براہ کرم زیادہ رقم درج کریں۔
 errors_perpetual_trigger_price_lower = ٹرگر قیمت مارکیٹ قیمت سے کم ہونی چاہیے
 errors_perpetual_trigger_price_higher = ٹرگر قیمت مارکیٹ قیمت سے زیادہ ہونی چاہیے

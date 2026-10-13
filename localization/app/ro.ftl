@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Activitate suspectă
 errors_connections_malicious_origin = Această conexiune provine dintr-o sursă nesigură.
 errors_no_data_available = Nu sunt disponibile date
 errors_dust_threshold_short = Rețeaua consideră această cantitate drept praf - taxa este mai mare decât suma în sine.
+errors_pending_transaction = O tranzacție anterioară este încă în așteptare. Așteaptă confirmarea ei, apoi încearcă din nou.
 errors_swap_minimum_amount = Suma minimă a tranzacției este %@. Vă rugăm să introduceți o sumă mai mare.
 errors_perpetual_trigger_price_lower = Prețul de declanșare trebuie să fie mai mic decât prețul pieței
 errors_perpetual_trigger_price_higher = Prețul de declanșare trebuie să fie mai mare decât prețul pieței

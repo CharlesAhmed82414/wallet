@@ -33617,6 +33617,197 @@
         }
       }
     },
+    "errors.pending_transaction": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تزال معاملة سابقة قيد الانتظار. انتظر حتى يتم تأكيدها، ثم حاول مرة أخرى."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগের একটি লেনদেন এখনও অপেক্ষমাণ। এটি নিশ্চিত হওয়া পর্যন্ত অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Předchozí transakce stále čeká na zpracování. Počkejte na její potvrzení a zkuste to znovu."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tidligere transaktion afventer stadig. Vent, til den er bekræftet, og prøv derefter igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine vorherige Transaktion ist noch ausstehend. Warte, bis sie bestätigt ist, und versuche es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A previous transaction is still pending. Wait for it to confirm, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una transacción anterior sigue pendiente. Espera a que se confirme y vuelve a intentarlo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک تراکنش قبلی هنوز در انتظار است. صبر کنید تا تأیید شود، سپس دوباره تلاش کنید."
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "May naunang transaksyon na nakabinbin pa. Hintaying makumpirma ito, pagkatapos ay subukang muli."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une transaction précédente est toujours en attente. Attendez sa confirmation, puis réessayez."
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wata ma'amala ta baya tana nan a jiran tabbatarwa. Jira har sai an tabbatar da ita, sannan ka sake gwadawa."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עסקה קודמת עדיין ממתינה. המתינו לאישורה ונסו שוב."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पिछला लेन-देन अभी भी लंबित है। इसके पुष्टि होने तक प्रतीक्षा करें, फिर पुनः प्रयास करें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transaksi sebelumnya masih tertunda. Tunggu hingga dikonfirmasi, lalu coba lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una transazione precedente è ancora in sospeso. Attendi la conferma, poi riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前の取引がまだ保留中です。承認されるまでお待ちになってから、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전 거래가 아직 대기 중입니다. 확인될 때까지 기다린 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transaksi sebelumnya masih belum selesai. Tunggu sehingga ia disahkan, kemudian cuba lagi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een eerdere transactie is nog in behandeling. Wacht tot deze is bevestigd en probeer het daarna opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poprzednia transakcja wciąż oczekuje. Poczekaj na jej potwierdzenie, a następnie spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma transação anterior ainda está pendente. Aguarde a confirmação e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tranzacție anterioară este încă în așteptare. Așteaptă confirmarea ei, apoi încearcă din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предыдущая транзакция ещё в обработке. Дождитесь её подтверждения и повторите попытку."
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muamala wa awali bado unasubiri. Subiri uthibitishwe, kisha ujaribu tena."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ธุรกรรมก่อนหน้ายังรอดำเนินการอยู่ โปรดรอให้ได้รับการยืนยัน แล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki bir işlem hâlâ beklemede. Onaylanmasını bekleyip tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попередня транзакція ще очікує. Дочекайтеся її підтвердження та спробуйте ще раз."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پچھلی ٹرانزیکشن ابھی زیرِ التوا ہے۔ اس کی تصدیق ہونے تک انتظار کریں، پھر دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một giao dịch trước đó vẫn đang chờ xử lý. Hãy đợi giao dịch được xác nhận rồi thử lại."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一笔交易仍在处理中。请等待其确认后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一筆交易仍在處理中。請等待其確認後再試。"
+          }
+        }
+      }
+    },
     "errors.permissions_not_granted": {
       "extractionState": "manual",
       "localizations": {

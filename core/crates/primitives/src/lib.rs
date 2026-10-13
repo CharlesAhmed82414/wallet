@@ -337,6 +337,8 @@ pub use self::swap::{ApprovalData, Permit2ApprovalData, SlippageMode, SwapData, 
 pub use self::transfer_data_extra::TransferDataExtra;
 pub mod transaction_data_output;
 pub use self::transaction_data_output::{TransferDataOutputAction, TransferDataOutputType};
+pub mod broadcast_error;
+pub use self::broadcast_error::BroadcastError;
 pub mod broadcast_options;
 pub use self::broadcast_options::BroadcastOptions;
 pub mod secure_preferences;

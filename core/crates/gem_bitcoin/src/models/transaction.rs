@@ -8,6 +8,8 @@ pub struct BitcoinTransactionBroadcastResult {
     pub result: Option<String>,
 }
 
+const CONFLICT_REJECT_REASONS: [&str; 3] = ["rejecting replacement", "txn-mempool-conflict", "bad-txns-spends-conflicting-tx"];
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum BitcoinTransactionBroadcastError {
@@ -21,6 +23,10 @@ impl BitcoinTransactionBroadcastError {
             Self::Plain(s) => s,
             Self::Detailed { message } => message,
         }
+    }
+
+    pub fn is_conflict(&self) -> bool {
+        CONFLICT_REJECT_REASONS.iter().any(|reason| self.message().contains(reason))
     }
 }
 

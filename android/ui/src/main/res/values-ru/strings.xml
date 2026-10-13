@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Это соединение получено из ненадежного источника.</string>
   <string name="errors_no_data_available">Данные отсутствуют.</string>
   <string name="errors_dust_threshold_short">Эту сумму сеть считает пылью - комиссия выше самой суммы.</string>
+  <string name="errors_pending_transaction">Предыдущая транзакция ещё в обработке. Дождитесь её подтверждения и повторите попытку.</string>
   <string name="errors_swap_minimum_amount">Минимальная сумма сделки — %1$s. Введите, пожалуйста, сумму побольше.</string>
   <string name="errors_perpetual_trigger_price_lower">Цена триггера должна быть ниже рыночной цены</string>
   <string name="errors_perpetual_trigger_price_higher">Цена триггера должна быть выше рыночной цены</string>

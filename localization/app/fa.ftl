@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = فعالیت مشکوک
 errors_connections_malicious_origin = این اتصال از یک منبع غیرقابل اعتماد می‌آید.
 errors_no_data_available = داده‌ای موجود نیست
 errors_dust_threshold_short = شبکه این مبلغ را داست (dust) در نظر می‌گیرد - کارمزد آن از خود مبلغ بیشتر است.
+errors_pending_transaction = یک تراکنش قبلی هنوز در انتظار است. صبر کنید تا تأیید شود، سپس دوباره تلاش کنید.
 errors_swap_minimum_amount = حداقل مبلغ معامله %@ است. لطفاً مبلغ بیشتری وارد کنید.
 errors_perpetual_trigger_price_lower = قیمت فعالسازی باید کمتر از قیمت بازار باشد
 errors_perpetual_trigger_price_higher = قیمت فعالسازی باید بیشتر از قیمت بازار باشد

@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Verdächtige Aktivitäten
 errors_connections_malicious_origin = Diese Verbindung stammt aus einer nicht vertrauenswürdigen Quelle.
 errors_no_data_available = Keine Daten verfügbar
 errors_dust_threshold_short = Das Netzwerk betrachtet diesen Betrag als Staub – die Gebühr ist höher als der Betrag selbst.
+errors_pending_transaction = Eine vorherige Transaktion ist noch ausstehend. Warte, bis sie bestätigt ist, und versuche es dann erneut.
 errors_swap_minimum_amount = Der Mindesthandelsbetrag beträgt %@. Bitte geben Sie einen höheren Betrag ein.
 errors_perpetual_trigger_price_lower = Der Triggerpreis muss unter dem Marktpreis liegen
 errors_perpetual_trigger_price_higher = Der Triggerpreis muss über dem Marktpreis liegen

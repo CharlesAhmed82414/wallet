@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Підозріла активніст�
 errors_connections_malicious_origin = Цей зв'язок походить з ненадійного джерела.
 errors_no_data_available = Дані недоступні
 errors_dust_threshold_short = Мережа вважає цю кількість пилом - плата вища за саму суму.
+errors_pending_transaction = Попередня транзакція ще очікує. Дочекайтеся її підтвердження та спробуйте ще раз.
 errors_swap_minimum_amount = Мінімально дозволена сума угоди становить %@. Будь ласка, введіть більшу суму.
 errors_perpetual_trigger_price_lower = Ціна спрацювання має бути нижчою за ринкову ціну
 errors_perpetual_trigger_price_higher = Ціна спрацювання має бути вищою за ринкову ціну

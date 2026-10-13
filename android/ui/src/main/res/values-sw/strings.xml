@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Muunganisho huu unatoka kwa chanzo kisichoaminika.</string>
   <string name="errors_no_data_available">Hakuna data inayopatikana</string>
   <string name="errors_dust_threshold_short">Mtandao unazingatia kiasi hiki cha vumbi - ada ni kubwa kuliko kiasi yenyewe.</string>
+  <string name="errors_pending_transaction">Muamala wa awali bado unasubiri. Subiri uthibitishwe, kisha ujaribu tena.</string>
   <string name="errors_swap_minimum_amount">Kiwango cha chini cha biashara ni %1$s. Tafadhali weka kiasi cha juu zaidi.</string>
   <string name="errors_perpetual_trigger_price_lower">Bei ya kichochezi inapaswa kuwa chini ya bei ya soko</string>
   <string name="errors_perpetual_trigger_price_higher">Bei ya kichochezi inapaswa kuwa juu ya bei ya soko</string>

@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Подозрительная акти�
 errors_connections_malicious_origin = Это соединение получено из ненадежного источника.
 errors_no_data_available = Данные отсутствуют.
 errors_dust_threshold_short = Эту сумму сеть считает пылью - комиссия выше самой суммы.
+errors_pending_transaction = Предыдущая транзакция ещё в обработке. Дождитесь её подтверждения и повторите попытку.
 errors_swap_minimum_amount = Минимальная сумма сделки — %@. Введите, пожалуйста, сумму побольше.
 errors_perpetual_trigger_price_lower = Цена триггера должна быть ниже рыночной цены
 errors_perpetual_trigger_price_higher = Цена триггера должна быть выше рыночной цены

@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">この接続は信頼できないソースからのものです。</string>
   <string name="errors_no_data_available">データなし</string>
   <string name="errors_dust_threshold_short">ネットワークはこの金額をダストとみなします。つまり、手数料は金額自体よりも高くなります。</string>
+  <string name="errors_pending_transaction">前の取引がまだ保留中です。承認されるまでお待ちになってから、もう一度お試しください。</string>
   <string name="errors_swap_minimum_amount">最低取引金額は %1$s です。これより大きい金額を入力してください。</string>
   <string name="errors_perpetual_trigger_price_lower">トリガー価格は市場価格より低くする必要があります</string>
   <string name="errors_perpetual_trigger_price_higher">トリガー価格は市場価格より高くする必要があります</string>

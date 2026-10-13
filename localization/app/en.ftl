@@ -480,6 +480,8 @@ errors_connections_malicious_origin = This connection comes from an untrusted so
 errors_no_data_available = No data available
 # Used in error cards and validation UI for the dust threshold short label.
 errors_dust_threshold_short = The network considers this amount dust - the fee is higher than the amount itself.
+# Used in the confirm screen error row when an earlier transaction from the same wallet is still pending and holds the funds this send needs.
+errors_pending_transaction = A previous transaction is still pending. Wait for it to confirm, then try again.
 # Used in error cards and validation UI for the swap minimum amount label. Contains 1 string placeholder.
 errors_swap_minimum_amount = Minimum trade amount is %@. Please enter a higher amount.
 # Perpetual order validation when a take-profit or stop-loss trigger must be below market price.

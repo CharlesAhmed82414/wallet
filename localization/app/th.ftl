@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = กิจกรรมที่น่�
 errors_connections_malicious_origin = การเชื่อมต่อนี้มาจากแหล่งที่ไม่น่าเชื่อถือ
 errors_no_data_available = ไม่มีข้อมูล
 errors_dust_threshold_short = เครือข่ายถือว่าจำนวนนี้เป็นแค่ฝุ่น เพราะค่าธรรมเนียมนั้นสูงกว่าจำนวนที่แท้จริง
+errors_pending_transaction = ธุรกรรมก่อนหน้ายังรอดำเนินการอยู่ โปรดรอให้ได้รับการยืนยัน แล้วลองอีกครั้ง
 errors_swap_minimum_amount = จำนวนเงินขั้นต่ำในการซื้อขายคือ %@ กรุณาป้อนจำนวนเงินที่สูงกว่านี้
 errors_perpetual_trigger_price_lower = ราคา Trigger ควรต่ำกว่าราคาตลาด
 errors_perpetual_trigger_price_higher = ราคา Trigger ควรสูงกว่าราคาตลาด

@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Şüpheli Etkinlik
 errors_connections_malicious_origin = Bu bağlantı güvenilir olmayan bir kaynaktan geliyor.
 errors_no_data_available = Veri mevcut değil
 errors_dust_threshold_short = Ağ bu miktarı toz olarak değerlendiriyor; ücret miktarın kendisinden daha yüksek.
+errors_pending_transaction = Önceki bir işlem hâlâ beklemede. Onaylanmasını bekleyip tekrar deneyin.
 errors_swap_minimum_amount = Minimum işlem tutarı %@. Lütfen daha yüksek bir tutar girin.
 errors_perpetual_trigger_price_lower = Tetikleme fiyatı piyasa fiyatından düşük olmalıdır
 errors_perpetual_trigger_price_higher = Tetikleme fiyatı piyasa fiyatından yüksek olmalıdır

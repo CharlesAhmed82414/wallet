@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = 의심스러운 활동
 errors_connections_malicious_origin = 이 연결은 신뢰할 수 없는 출처에서 나왔습니다.
 errors_no_data_available = 사용 가능한 데이터가 없습니다
 errors_dust_threshold_short = 네트워크는 이 금액을 먼지로 간주합니다. 수수료가 금액 자체보다 높기 때문입니다.
+errors_pending_transaction = 이전 거래가 아직 대기 중입니다. 확인될 때까지 기다린 후 다시 시도하세요.
 errors_swap_minimum_amount = 최소 거래 금액은 %@. 더 높은 금액을 입력해 주세요.
 errors_perpetual_trigger_price_lower = 트리거 가격은 시장 가격보다 낮아야 합니다
 errors_perpetual_trigger_price_higher = 트리거 가격은 시장 가격보다 높아야 합니다

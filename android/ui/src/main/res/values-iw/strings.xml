@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">קשר זה מגיע ממקור לא אמין.</string>
   <string name="errors_no_data_available">אין נתונים זמינים</string>
   <string name="errors_dust_threshold_short">הרשת מחשיבה את הכמות הזו כאבק - העמלה גבוהה יותר מהכמות עצמה.</string>
+  <string name="errors_pending_transaction">עסקה קודמת עדיין ממתינה. המתינו לאישורה ונסו שוב.</string>
   <string name="errors_swap_minimum_amount">סכום המסחר המינימלי הוא %1$s. אנא הזן סכום גבוה יותר.</string>
   <string name="errors_perpetual_trigger_price_lower">מחיר ההפעלה צריך להיות נמוך ממחיר השוק</string>
   <string name="errors_perpetual_trigger_price_higher">מחיר ההפעלה צריך להיות גבוה ממחיר השוק</string>

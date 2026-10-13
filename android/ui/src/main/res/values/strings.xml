@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">This connection comes from an untrusted source.</string>
   <string name="errors_no_data_available">No data available</string>
   <string name="errors_dust_threshold_short">The network considers this amount dust - the fee is higher than the amount itself.</string>
+  <string name="errors_pending_transaction">A previous transaction is still pending. Wait for it to confirm, then try again.</string>
   <string name="errors_swap_minimum_amount">Minimum trade amount is %1$s. Please enter a higher amount.</string>
   <string name="errors_perpetual_trigger_price_lower">Trigger price should be lower than market price</string>
   <string name="errors_perpetual_trigger_price_higher">Trigger price should be higher than market price</string>

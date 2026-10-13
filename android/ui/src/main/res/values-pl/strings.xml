@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">To połączenie pochodzi z niezaufanego źródła.</string>
   <string name="errors_no_data_available">Brak dostępnych danych</string>
   <string name="errors_dust_threshold_short">Sieć traktuje tę kwotę jako kurz - opłata jest wyższa od samej kwoty.</string>
+  <string name="errors_pending_transaction">Poprzednia transakcja wciąż oczekuje. Poczekaj na jej potwierdzenie, a następnie spróbuj ponownie.</string>
   <string name="errors_swap_minimum_amount">Minimalna kwota transakcji wynosi %1$s. Proszę wprowadzić wyższą kwotę.</string>
   <string name="errors_perpetual_trigger_price_lower">Cena aktywacji powinna być niższa niż cena rynkowa</string>
   <string name="errors_perpetual_trigger_price_higher">Cena aktywacji powinna być wyższa niż cena rynkowa</string>

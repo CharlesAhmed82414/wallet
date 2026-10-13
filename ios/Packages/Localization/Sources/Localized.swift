@@ -457,6 +457,8 @@ public enum Localized {
     public static func paymentStatus(_ p1: Any) -> String {
       return Localized.tr("Localizable", "errors.payment_status", String(describing: p1), fallback: "Payment: %@")
     }
+    /// A previous transaction is still pending. Wait for it to confirm, then try again.
+    public static let pendingTransaction = Localized.tr("Localizable", "errors.pending_transaction", fallback: "A previous transaction is still pending. Wait for it to confirm, then try again.")
     /// Permissions Not Granted
     public static let permissionsNotGranted = Localized.tr("Localizable", "errors.permissions_not_granted", fallback: "Permissions Not Granted")
     /// Transfer Error

@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = 不審な活動
 errors_connections_malicious_origin = この接続は信頼できないソースからのものです。
 errors_no_data_available = データなし
 errors_dust_threshold_short = ネットワークはこの金額をダストとみなします。つまり、手数料は金額自体よりも高くなります。
+errors_pending_transaction = 前の取引がまだ保留中です。承認されるまでお待ちになってから、もう一度お試しください。
 errors_swap_minimum_amount = 最低取引金額は %@ です。これより大きい金額を入力してください。
 errors_perpetual_trigger_price_lower = トリガー価格は市場価格より低くする必要があります
 errors_perpetual_trigger_price_higher = トリガー価格は市場価格より高くする必要があります

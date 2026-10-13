@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Deze verbinding komt van een onbetrouwbare bron.</string>
   <string name="errors_no_data_available">Geen gegevens beschikbaar</string>
   <string name="errors_dust_threshold_short">Het netwerk beschouwt deze hoeveelheid als stof; de vergoeding is hoger dan de hoeveelheid zelf.</string>
+  <string name="errors_pending_transaction">Een eerdere transactie is nog in behandeling. Wacht tot deze is bevestigd en probeer het daarna opnieuw.</string>
   <string name="errors_swap_minimum_amount">Het minimale handelsbedrag is %1$s. Voer een hoger bedrag in.</string>
   <string name="errors_perpetual_trigger_price_lower">De triggerprijs moet lager zijn dan de marktprijs</string>
   <string name="errors_perpetual_trigger_price_higher">De triggerprijs moet hoger zijn dan de marktprijs</string>

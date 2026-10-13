@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">এই সংযোগটি একটি অবিশ্বস্ত উৎস থেকে আসে।</string>
   <string name="errors_no_data_available">কোন তথ্য নেই</string>
   <string name="errors_dust_threshold_short">নেটওয়ার্ক এই পরিমাণ ধুলো বিবেচনা করে - ফি পরিমাণের চেয়ে বেশি।</string>
+  <string name="errors_pending_transaction">আগের একটি লেনদেন এখনও অপেক্ষমাণ। এটি নিশ্চিত হওয়া পর্যন্ত অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।</string>
   <string name="errors_swap_minimum_amount">সর্বনিম্ন ট্রেডের পরিমাণ হল %1$s. অনুগ্রহ করে আরও বেশি পরিমাণ লিখুন।</string>
   <string name="errors_perpetual_trigger_price_lower">ট্রিগার মূল্য বাজার মূল্যের চেয়ে কম হওয়া উচিত</string>
   <string name="errors_perpetual_trigger_price_higher">ট্রিগার মূল্য বাজার মূল্যের চেয়ে বেশি হওয়া উচিত</string>

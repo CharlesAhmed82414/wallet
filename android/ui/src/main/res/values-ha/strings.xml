@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Wannan haɗin ya fito daga tushen da ba a amince da shi ba.</string>
   <string name="errors_no_data_available">Babu bayanai samuwa</string>
   <string name="errors_dust_threshold_short">Cibiyar sadarwa tana la\'akari da wannan adadin ƙura - kuɗin ya fi girma fiye da adadin kanta.</string>
+  <string name="errors_pending_transaction">Wata ma\'amala ta baya tana nan a jiran tabbatarwa. Jira har sai an tabbatar da ita, sannan ka sake gwadawa.</string>
   <string name="errors_swap_minimum_amount">Mafi ƙarancin adadin ciniki shine %1$s. Da fatan a shigar da adadin da ya fi girma.</string>
   <string name="errors_perpetual_trigger_price_lower">Farashin kunnawa ya kamata ya zama ƙasa da farashin kasuwa</string>
   <string name="errors_perpetual_trigger_price_higher">Farashin kunnawa ya kamata ya zama sama da farashin kasuwa</string>

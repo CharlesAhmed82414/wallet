@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Attività sospetta
 errors_connections_malicious_origin = Questa connessione proviene da una fonte non attendibile.
 errors_no_data_available = Nessun dato disponibile
 errors_dust_threshold_short = La rete considera questa cifra come polvere: la commissione è più alta dell'importo stesso.
+errors_pending_transaction = Una transazione precedente è ancora in sospeso. Attendi la conferma, poi riprova.
 errors_swap_minimum_amount = L'importo minimo di scambio è %@. Inserisci un importo maggiore.
 errors_perpetual_trigger_price_lower = Il prezzo di attivazione deve essere inferiore al prezzo di mercato
 errors_perpetual_trigger_price_higher = Il prezzo di attivazione deve essere superiore al prezzo di mercato

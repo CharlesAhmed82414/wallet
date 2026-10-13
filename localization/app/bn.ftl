@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = সন্দেহজনক কার�
 errors_connections_malicious_origin = এই সংযোগটি একটি অবিশ্বস্ত উৎস থেকে আসে।
 errors_no_data_available = কোন তথ্য নেই
 errors_dust_threshold_short = নেটওয়ার্ক এই পরিমাণ ধুলো বিবেচনা করে - ফি পরিমাণের চেয়ে বেশি।
+errors_pending_transaction = আগের একটি লেনদেন এখনও অপেক্ষমাণ। এটি নিশ্চিত হওয়া পর্যন্ত অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।
 errors_swap_minimum_amount = সর্বনিম্ন ট্রেডের পরিমাণ হল %@. অনুগ্রহ করে আরও বেশি পরিমাণ লিখুন।
 errors_perpetual_trigger_price_lower = ট্রিগার মূল্য বাজার মূল্যের চেয়ে কম হওয়া উচিত
 errors_perpetual_trigger_price_higher = ট্রিগার মূল্য বাজার মূল্যের চেয়ে বেশি হওয়া উচিত

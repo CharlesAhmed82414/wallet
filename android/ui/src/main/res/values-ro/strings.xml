@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Această conexiune provine dintr-o sursă nesigură.</string>
   <string name="errors_no_data_available">Nu sunt disponibile date</string>
   <string name="errors_dust_threshold_short">Rețeaua consideră această cantitate drept praf - taxa este mai mare decât suma în sine.</string>
+  <string name="errors_pending_transaction">O tranzacție anterioară este încă în așteptare. Așteaptă confirmarea ei, apoi încearcă din nou.</string>
   <string name="errors_swap_minimum_amount">Suma minimă a tranzacției este %1$s. Vă rugăm să introduceți o sumă mai mare.</string>
   <string name="errors_perpetual_trigger_price_lower">Prețul de declanșare trebuie să fie mai mic decât prețul pieței</string>
   <string name="errors_perpetual_trigger_price_higher">Prețul de declanșare trebuie să fie mai mare decât prețul pieței</string>

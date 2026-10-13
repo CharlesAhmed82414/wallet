@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = نشاط مشبوه
 errors_connections_malicious_origin = يأتي هذا الاتصال من مصدر غير موثوق.
 errors_no_data_available = لا توجد بيانات متاحة
 errors_dust_threshold_short = تعتبر الشبكة هذه الكمية مجرد غبار، حيث أن الرسوم أعلى من الكمية نفسها.
+errors_pending_transaction = لا تزال معاملة سابقة قيد الانتظار. انتظر حتى يتم تأكيدها، ثم حاول مرة أخرى.
 errors_swap_minimum_amount = الحد الأدنى لمبلغ التداول هو %@. يرجى إدخال مبلغ أعلى.
 errors_perpetual_trigger_price_lower = يجب أن يكون سعر التفعيل أقل من سعر السوق
 errors_perpetual_trigger_price_higher = يجب أن يكون سعر التفعيل أعلى من سعر السوق

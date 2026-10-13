@@ -221,6 +221,7 @@
   <string name="errors_connections_malicious_origin">Toto spojení pochází z nedůvěryhodného zdroje.</string>
   <string name="errors_no_data_available">Nejsou k dispozici žádná data</string>
   <string name="errors_dust_threshold_short">Síť toto množství považuje za prach – poplatek je vyšší než samotné množství.</string>
+  <string name="errors_pending_transaction">Předchozí transakce stále čeká na zpracování. Počkejte na její potvrzení a zkuste to znovu.</string>
   <string name="errors_swap_minimum_amount">Minimální částka obchodu je %1$s. Zadejte prosím vyšší částku.</string>
   <string name="errors_perpetual_trigger_price_lower">Spouštěcí cena musí být nižší než tržní cena</string>
   <string name="errors_perpetual_trigger_price_higher">Spouštěcí cena musí být vyšší než tržní cena</string>

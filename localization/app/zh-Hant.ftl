@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = 可疑行為
 errors_connections_malicious_origin = 此連線來自不可信來源。
 errors_no_data_available = 無可用資料
 errors_dust_threshold_short = 此網路將這筆金額視為粉塵金額，手續費高於金額本身。
+errors_pending_transaction = 上一筆交易仍在處理中。請等待其確認後再試。
 errors_swap_minimum_amount = 最低交易金額為 %@。請輸入更高的金額。
 errors_perpetual_trigger_price_lower = 觸發價格應低於市場價格
 errors_perpetual_trigger_price_higher = 觸發價格應高於市場價格

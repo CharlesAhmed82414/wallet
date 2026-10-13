@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Hoạt động đáng ngờ
 errors_connections_malicious_origin = Kết nối này đến từ một nguồn không đáng tin cậy.
 errors_no_data_available = Không có dữ liệu có sẵn
 errors_dust_threshold_short = Mạng lưới coi số tiền này là bụi - mức phí còn cao hơn cả số tiền thực tế.
+errors_pending_transaction = Một giao dịch trước đó vẫn đang chờ xử lý. Hãy đợi giao dịch được xác nhận rồi thử lại.
 errors_swap_minimum_amount = Số tiền giao dịch tối thiểu là %@. Vui lòng nhập số tiền lớn hơn.
 errors_perpetual_trigger_price_lower = Giá kích hoạt phải thấp hơn giá thị trường
 errors_perpetual_trigger_price_higher = Giá kích hoạt phải cao hơn giá thị trường

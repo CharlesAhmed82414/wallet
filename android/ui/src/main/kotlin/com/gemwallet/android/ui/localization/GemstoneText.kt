@@ -1286,6 +1286,8 @@ fun GemConfirmErrorDisplay.text(context: Context): String = when (this) {
 
     is GemConfirmErrorDisplay.InsufficientFunds -> context.getString(R.string.info_insufficient_balance_title)
 
+    is GemConfirmErrorDisplay.PendingTransaction -> context.getString(R.string.errors_pending_transaction)
+
     is GemConfirmErrorDisplay.Payment -> status.errorText(context)
 
     is GemConfirmErrorDisplay.Message -> msg

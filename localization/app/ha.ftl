@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Ayyukan tuhuma
 errors_connections_malicious_origin = Wannan haɗin ya fito daga tushen da ba a amince da shi ba.
 errors_no_data_available = Babu bayanai samuwa
 errors_dust_threshold_short = Cibiyar sadarwa tana la'akari da wannan adadin ƙura - kuɗin ya fi girma fiye da adadin kanta.
+errors_pending_transaction = Wata ma'amala ta baya tana nan a jiran tabbatarwa. Jira har sai an tabbatar da ita, sannan ka sake gwadawa.
 errors_swap_minimum_amount = Mafi ƙarancin adadin ciniki shine %@. Da fatan a shigar da adadin da ya fi girma.
 errors_perpetual_trigger_price_lower = Farashin kunnawa ya kamata ya zama ƙasa da farashin kasuwa
 errors_perpetual_trigger_price_higher = Farashin kunnawa ya kamata ya zama sama da farashin kasuwa

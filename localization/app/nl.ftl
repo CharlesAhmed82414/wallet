@@ -251,6 +251,7 @@ errors_scan_transaction_malicious_title = Verdachte activiteit
 errors_connections_malicious_origin = Deze verbinding komt van een onbetrouwbare bron.
 errors_no_data_available = Geen gegevens beschikbaar
 errors_dust_threshold_short = Het netwerk beschouwt deze hoeveelheid als stof; de vergoeding is hoger dan de hoeveelheid zelf.
+errors_pending_transaction = Een eerdere transactie is nog in behandeling. Wacht tot deze is bevestigd en probeer het daarna opnieuw.
 errors_swap_minimum_amount = Het minimale handelsbedrag is %@. Voer een hoger bedrag in.
 errors_perpetual_trigger_price_lower = De triggerprijs moet lager zijn dan de marktprijs
 errors_perpetual_trigger_price_higher = De triggerprijs moet hoger zijn dan de marktprijs

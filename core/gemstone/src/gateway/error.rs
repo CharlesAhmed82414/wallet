@@ -1,6 +1,7 @@
 use crate::alien::AlienError;
 use crate::transaction_state::TransactionStatusError;
 use gem_jsonrpc::types::{ERROR_CLIENT_ERROR, JsonRpcError};
+use primitives::BroadcastError;
 use std::{error::Error, fmt::Display};
 
 #[derive(Debug, Clone, PartialEq, uniffi::Error)]
@@ -9,6 +10,7 @@ pub enum GatewayError {
     NetworkError { msg: String },
     PlatformError { msg: String },
     NetworkIdMismatch { chain: String, network_id: String },
+    ConflictingTransaction { msg: String },
 }
 
 impl Display for GatewayError {
@@ -18,6 +20,7 @@ impl Display for GatewayError {
             Self::NetworkError { msg } => write!(f, "Network error: {}", msg),
             Self::PlatformError { msg } => write!(f, "Platform error: {}", msg),
             Self::NetworkIdMismatch { chain, network_id } => write!(f, "Node reports network {} for {}", network_id, chain),
+            Self::ConflictingTransaction { msg } => write!(f, "{}", msg),
         }
     }
 }
@@ -43,6 +46,9 @@ impl From<TransactionStatusError> for GatewayError {
 pub(crate) fn map_network_error(error: Box<dyn Error + Send + Sync>) -> GatewayError {
     if is_offline(error.as_ref()) {
         return GatewayError::Offline;
+    }
+    if let Some(BroadcastError::ConflictingTransaction { message }) = error.downcast_ref::<BroadcastError>() {
+        return GatewayError::ConflictingTransaction { msg: message.clone() };
     }
     if let Some(jsonrpc_error) = error.downcast_ref::<JsonRpcError>()
         && jsonrpc_error.code == ERROR_CLIENT_ERROR
@@ -122,6 +128,18 @@ mod tests {
             GatewayError::Offline
         );
         assert!(matches!(map_network_error(Box::new(AlienError::ResponseError { msg: "timeout".into() })), GatewayError::NetworkError { .. }));
+    }
+
+    #[test]
+    fn test_map_network_error_keeps_a_conflicting_transaction() {
+        assert_eq!(
+            map_network_error(Box::new(BroadcastError::ConflictingTransaction {
+                message: "-26: txn-mempool-conflict".to_string()
+            })),
+            GatewayError::ConflictingTransaction {
+                msg: "-26: txn-mempool-conflict".to_string()
+            }
+        );
     }
 
     #[test]
