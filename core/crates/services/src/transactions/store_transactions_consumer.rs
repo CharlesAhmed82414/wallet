@@ -38,10 +38,10 @@ impl MessageConsumer<TransactionsPayload, usize> for StoreTransactionsConsumer {
 
     async fn consume(&self, payload: TransactionsPayload) -> Result<usize, Box<dyn Error + Send + Sync>> {
         let config = StoreTransactionsConsumerConfig::read(&self.config).await?;
-        let cross_chain_and_referral_transactions = payload.transactions.clone();
+        let referral_transactions = payload.transactions.iter().filter(|transaction| referral_processing_queue(transaction).is_some()).cloned().collect();
         let notification_type = payload.notification_type.clone();
         let count = self.store_subscribed_transactions(&config, payload).await?;
-        self.store_cross_chain_and_referral_transactions(&config, cross_chain_and_referral_transactions, &notification_type).await?;
+        self.store_referral_transactions(&config, referral_transactions, &notification_type).await?;
         Ok(count)
     }
 }
@@ -90,15 +90,12 @@ impl StoreTransactionsConsumer {
         Ok(transaction_count)
     }
 
-    async fn store_cross_chain_and_referral_transactions(&self, config: &StoreTransactionsConsumerConfig, transactions: Vec<Transaction>, notification_type: &TransactionNotificationType) -> Result<(), Box<dyn Error + Send + Sync>> {
+    async fn store_referral_transactions(&self, config: &StoreTransactionsConsumerConfig, transactions: Vec<Transaction>, notification_type: &TransactionNotificationType) -> Result<(), Box<dyn Error + Send + Sync>> {
         if transactions.is_empty() {
             return Ok(());
         }
         let (deposit_addresses, send_addresses) = tokio::try_join!(self.vault_client.get_deposit_address_map(), self.vault_client.get_send_address_map())?;
-        let transactions = Self::transactions_for_storage(transactions, &deposit_addresses, &send_addresses, notification_type)
-            .into_iter()
-            .filter(|transaction| cross_chain::is_cross_chain_swap(transaction, &deposit_addresses) || referral_processing_queue(transaction).is_some())
-            .collect::<Vec<_>>();
+        let transactions = Self::transactions_for_storage(transactions, &deposit_addresses, &send_addresses, notification_type);
         if transactions.is_empty() {
             return Ok(());
         }
