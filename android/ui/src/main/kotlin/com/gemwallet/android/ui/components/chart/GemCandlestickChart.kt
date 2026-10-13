@@ -17,8 +17,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.gemwallet.android.model.text
 import com.gemwallet.android.ui.components.list_item.ListItemTextStyle
 import com.gemwallet.android.ui.components.list_item.color
@@ -86,6 +89,11 @@ private object CandlestickMetrics {
     val referenceBadgeVerticalPadding = space4
     val badgeCornerRadius = space4
     val referenceLabelGap = space8
+    val referenceLabelRowSpacing = space2
+    val chevronWidth = space8
+    val chevronHeight = space4
+    val chevronGap = space4
+    val chevronLineWidth = 1.5.dp
 
     const val SELECTION_LINE_ALPHA = 0.50f
     const val BODY_CORNER_RATIO = 0.15f
@@ -285,8 +293,8 @@ private fun DrawScope.drawTimeAxis(positions: List<Float>, labels: List<String>,
 }
 
 private fun DrawScope.drawCurrentPriceLine(price: Double, plot: CandlestickPlot, color: Color, dash: PathEffect) {
+    if (!plot.shows(price)) return
     val y = plot.y(price)
-    if (y !in plot.frame.top..plot.priceBottom) return
     drawLine(
         color = color,
         start = Offset(plot.frame.left, y),
@@ -328,11 +336,14 @@ private fun DrawScope.drawReferenceLines(
     badgeCornerRadiusPx: Float,
     textMeasurer: TextMeasurer,
 ) {
-    val visible = referenceLines.zip(labels).mapNotNull { (line, label) ->
+    val prices = referenceLines.map { it.price.value }
+    val texts = labels.map { textMeasurer.measure(it, labelStyle) }
+    val chevronWidthPx = CandlestickMetrics.chevronWidth.toPx()
+    val widths = prices.indices.map { texts[it].size.width + 2f * badgeHorizontalPaddingPx + (if (plot.shows(prices[it])) 0f else chevronWidthPx + badgeHorizontalPaddingPx) }
+    val height = (texts.maxOfOrNull { it.size.height } ?: 0) + 2f * badgeVerticalPaddingPx
+    val badges = plot.lineBadges(prices, widths, height, CandlestickMetrics.referenceLabelRowSpacing.toPx(), labelGapPx)
+    referenceLines.filter { plot.shows(it.price.value) }.forEach { line ->
         val y = plot.y(line.price.value)
-        if (y !in plot.frame.top..plot.priceBottom) null else Triple(line, label, y)
-    }
-    visible.forEach { (line, _, y) ->
         drawLine(
             color = referenceColorByRole(line.kind).copy(alpha = alpha60),
             start = Offset(plot.frame.left, y),
@@ -341,22 +352,29 @@ private fun DrawScope.drawReferenceLines(
             pathEffect = lineDashEffect,
         )
     }
-    var previousBadgeEndX = plot.frame.left
-    visible.forEach { (line, label, y) ->
-        val anchorX = if (line.overlapLevel == 0u) plot.frame.left else previousBadgeEndX + labelGapPx
-        drawBadgeLabel(
-            textMeasurer = textMeasurer,
-            text = label,
-            textStyle = labelStyle,
-            backgroundColor = referenceColorByRole(line.kind),
-            anchorX = anchorX,
-            anchorY = y,
-            horizontalPaddingPx = badgeHorizontalPaddingPx,
-            verticalPaddingPx = badgeVerticalPaddingPx,
-            cornerRadiusPx = badgeCornerRadiusPx,
-        )
-        previousBadgeEndX = anchorX + textMeasurer.measure(label, labelStyle).size.width + 2f * badgeHorizontalPaddingPx
+    referenceLines.forEachIndexed { index, line ->
+        val badge = badges[index]
+        drawRoundRect(color = referenceColorByRole(line.kind), topLeft = badge.topLeft, size = badge.size, cornerRadius = CornerRadius(badgeCornerRadiusPx, badgeCornerRadiusPx))
+        drawText(textLayoutResult = texts[index], topLeft = Offset(badge.left + badgeHorizontalPaddingPx, badge.center.y - texts[index].size.height / 2f))
+        if (!plot.shows(line.price.value)) {
+            drawChevrons(Offset(badge.right - badgeHorizontalPaddingPx - chevronWidthPx / 2f, badge.center.y), pointingUp = plot.y(line.price.value) < plot.frame.top)
+        }
     }
+}
+
+private fun DrawScope.drawChevrons(center: Offset, pointingUp: Boolean) {
+    val width = CandlestickMetrics.chevronWidth.toPx()
+    val height = CandlestickMetrics.chevronHeight.toPx()
+    val gap = CandlestickMetrics.chevronGap.toPx()
+    val direction = if (pointingUp) -1f else 1f
+    val path = Path()
+    listOf(-gap / 2f, gap / 2f).forEach { offset ->
+        val tipY = center.y + offset + direction * height / 2f
+        path.moveTo(center.x - width / 2f, tipY - direction * height)
+        path.lineTo(center.x, tipY)
+        path.lineTo(center.x + width / 2f, tipY - direction * height)
+    }
+    drawPath(path, Color.White, style = Stroke(width = CandlestickMetrics.chevronLineWidth.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
 }
 
 private fun DrawScope.drawCurrentPriceBadge(
@@ -374,15 +392,14 @@ private fun DrawScope.drawCurrentPriceBadge(
     flatColor: Color,
     textMeasurer: TextMeasurer,
 ) {
-    val y = plot.y(price)
-    if (y !in plot.frame.top..plot.priceBottom) return
+    if (!plot.shows(price)) return
     drawBadgeLabel(
         textMeasurer = textMeasurer,
         text = priceLabel,
         textStyle = labelStyle,
         backgroundColor = candleColor(tone, upColor, downColor, flatColor),
         anchorX = plot.frame.right + labelPaddingPx - badgeHorizontalPaddingPx,
-        anchorY = y,
+        anchorY = plot.y(price),
         horizontalPaddingPx = badgeHorizontalPaddingPx,
         verticalPaddingPx = badgeVerticalPaddingPx,
         cornerRadiusPx = badgeCornerRadiusPx,

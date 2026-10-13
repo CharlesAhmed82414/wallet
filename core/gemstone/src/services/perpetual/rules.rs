@@ -47,8 +47,6 @@ const HOURS_PER_YEAR: f64 = 24.0 * 365.0;
 
 const CHART_RANGE_PADDING_FRACTION: f64 = 0.05;
 const CHART_RANGE_FLOOR_FRACTION: f64 = 0.95;
-const CHART_LINE_VISIBILITY_BUFFER_FRACTION: f64 = 0.5;
-const CHART_LABEL_OVERLAP_FRACTION: f64 = 0.06;
 const CHART_CURRENT_PRICE_CLEARANCE_FRACTION: f64 = 0.08;
 const CHART_MINIMUM_SPAN_FRACTION: f64 = 0.001;
 const CHART_MINIMUM_SPAN: f64 = 1e-9;
@@ -265,36 +263,24 @@ pub fn autoclose_row(asset: &Asset, data: &PerpetualModifyConfirmData) -> Option
 pub fn chart_layout(candles: &[ChartCandleStick], current: &ChartCandleStick, position: Option<&PerpetualPosition>, price_decimals: u32) -> GemPerpetualChartLayout {
     let candle_low = candles.iter().map(|candle| candle.low).reduce(f64::min).unwrap_or(0.0);
     let candle_high = candles.iter().map(|candle| candle.high).reduce(f64::max).unwrap_or(1.0);
-    let buffer = (candle_high - candle_low) * CHART_LINE_VISIBILITY_BUFFER_FRACTION;
-    let mut lines: Vec<(GemPerpetualChartLineKind, f64)> = position
-        .map(chart_lines)
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|(_, price)| *price >= candle_low - buffer && *price <= candle_high + buffer)
-        .collect();
-    lines.sort_by(|a, b| a.1.total_cmp(&b.1));
-    let lowest = lines.first().map_or(candle_low, |(_, price)| price.min(candle_low));
-    let highest = lines.last().map_or(candle_high, |(_, price)| price.max(candle_high));
-    let span = (highest - lowest).max(highest.abs() * CHART_MINIMUM_SPAN_FRACTION + CHART_MINIMUM_SPAN);
+    let span = (candle_high - candle_low).max(candle_high.abs() * CHART_MINIMUM_SPAN_FRACTION + CHART_MINIMUM_SPAN);
     let padding = span * CHART_RANGE_PADDING_FRACTION;
-    let price_low = if lowest > 0.0 { (lowest - padding).max(lowest * CHART_RANGE_FLOOR_FRACTION) } else { lowest - padding };
-    let price_high = highest + padding;
-    let overlap_threshold = (price_high - price_low) * CHART_LABEL_OVERLAP_FRACTION;
-    let mut previous: Option<(f64, u32)> = None;
+    let price_low = if candle_low > 0.0 {
+        (candle_low - padding).max(candle_low * CHART_RANGE_FLOOR_FRACTION)
+    } else {
+        candle_low - padding
+    };
+    let price_high = candle_high + padding;
+    let mut lines = position.map(chart_lines).unwrap_or_default();
+    lines.sort_by(|a, b| a.1.total_cmp(&b.1));
     let lines = lines
         .into_iter()
         .map(|(kind, price)| {
-            let overlap_level = match previous {
-                Some((last, level)) if price - last < overlap_threshold => level + 1,
-                _ => 0,
-            };
-            previous = Some((price, overlap_level));
             let price = GemFormattedNumber::plain(price, price_decimals);
             GemPerpetualChartLine {
                 kind,
                 label: GemLocalizedText::ChartLine { kind, price: price.clone() },
                 price,
-                overlap_level,
             }
         })
         .collect();
@@ -1274,7 +1260,7 @@ mod tests {
     }
 
     #[test]
-    fn test_chart_layout_keeps_the_lines_near_the_candles_sorted_and_inside_the_range() {
+    fn test_chart_layout_keeps_every_line_and_leaves_the_range_to_the_candles() {
         let mut open = PerpetualPosition::mock();
         open.entry_price = 14.0;
         open.stop_loss = Some(PerpetualTriggerOrder::mock(8.0));
@@ -1285,22 +1271,16 @@ mod tests {
         let layout = chart_layout(&candles, &candles[0], Some(&open), 2);
         let lines: Vec<(GemPerpetualChartLineKind, f64)> = layout.lines.iter().map(|line| (line.kind, line.price.value)).collect();
 
-        assert_eq!(lines, vec![(GemPerpetualChartLineKind::StopLoss, 8.0), (GemPerpetualChartLineKind::Entry, 14.0)]);
-        assert!(layout.price_low <= 8.0 && layout.price_high >= 14.0);
-    }
-
-    #[test]
-    fn test_chart_layout_levels_the_labels_that_would_overlap() {
-        let mut open = PerpetualPosition::mock();
-        open.entry_price = 121.0;
-        open.take_profit = Some(PerpetualTriggerOrder::mock(180.0));
-        open.liquidation_price = Some(120.0);
-
-        let candles = [ChartCandleStick::mock_range(100.0, 200.0)];
-        let layout = chart_layout(&candles, &candles[0], Some(&open), 2);
-        let levels: Vec<(GemPerpetualChartLineKind, u32)> = layout.lines.iter().map(|line| (line.kind, line.overlap_level)).collect();
-
-        assert_eq!(levels, vec![(GemPerpetualChartLineKind::Liquidation, 0), (GemPerpetualChartLineKind::Entry, 1), (GemPerpetualChartLineKind::TakeProfit, 0)]);
+        assert_eq!(
+            lines,
+            vec![
+                (GemPerpetualChartLineKind::Liquidation, 1.0),
+                (GemPerpetualChartLineKind::StopLoss, 8.0),
+                (GemPerpetualChartLineKind::Entry, 14.0),
+                (GemPerpetualChartLineKind::TakeProfit, 100.0),
+            ]
+        );
+        assert!(layout.price_low > 8.0 && layout.price_high < 14.0, "the scale follows the candles, not the lines");
     }
 
     #[test]

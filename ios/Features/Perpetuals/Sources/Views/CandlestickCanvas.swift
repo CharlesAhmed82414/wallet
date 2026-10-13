@@ -10,6 +10,11 @@ import SwiftUI
 struct CandlestickCanvas: View {
     private enum Metrics {
         static let labelGap: CGFloat = .small
+        static let labelRowSpacing: CGFloat = .space2
+        static let chevronWidth: CGFloat = .space8
+        static let chevronHeight: CGFloat = .space4
+        static let chevronGap: CGFloat = .space4
+        static let chevronLineWidth: CGFloat = 1.5
         static let lineStyle = StrokeStyle(lineWidth: .space1, dash: [.space4, .space4])
         static let currentPriceStyle = StrokeStyle(lineWidth: .space1, dash: [.space2, .space2])
         static let selectionStyle = StrokeStyle(lineWidth: .space1, dash: [.space4])
@@ -101,18 +106,35 @@ extension CandlestickCanvas {
     }
 
     private func drawLines(in context: inout GraphicsContext) {
-        var previousBadgeMaxX = plot.frame.minX
-        for line in plot.chart.layout.lines {
+        let lines = plot.chart.layout.lines
+        let prices = lines.map(\.price.value)
+        let labels = lines.map { context.resolve(Text($0.label.text).font(.app.caption).foregroundStyle(Colors.whiteSolid)) }
+        let sizes = labels.map { $0.measure(in: plot.frame.size) }
+        let widths = prices.indices.map { sizes[$0].width + .tiny * 2 + (plot.shows(prices[$0]) ? .zero : Metrics.chevronWidth + .tiny) }
+        let height = (sizes.map(\.height).max() ?? .zero) + .tiny * 2
+        let badges = plot.lineBadges(for: prices, widths: widths, height: height, rowSpacing: Metrics.labelRowSpacing, gap: Metrics.labelGap)
+        for line in lines where plot.shows(line.price.value) {
             let y = plot.y(for: line.price.value)
             context.stroke(self.line(from: CGPoint(x: plot.frame.minX, y: y), to: CGPoint(x: plot.frame.maxX, y: y)), with: .color(line.kind.color.opacity(.semiStrong)), style: Metrics.lineStyle)
-            let label = context.resolve(Text(line.label.text).font(.app.caption).foregroundStyle(Colors.whiteSolid))
-            let size = label.measure(in: plot.frame.size)
-            let x = line.overlapLevel == 0 ? plot.frame.minX : previousBadgeMaxX + Metrics.labelGap
-            let badge = CGRect(x: x, y: y - size.height / 2 - .tiny, width: size.width + .tiny * 2, height: size.height + .tiny * 2)
-            context.fill(Path(roundedRect: badge, cornerRadius: .tiny), with: .color(line.kind.color))
-            context.draw(label, at: CGPoint(x: badge.midX, y: badge.midY), anchor: .center)
-            previousBadgeMaxX = badge.maxX
         }
+        for (index, line) in lines.enumerated() {
+            context.fill(Path(roundedRect: badges[index], cornerRadius: .tiny), with: .color(line.kind.color))
+            context.draw(labels[index], at: CGPoint(x: badges[index].minX + .tiny, y: badges[index].midY), anchor: .leading)
+            if !plot.shows(line.price.value) {
+                drawChevrons(at: CGPoint(x: badges[index].maxX - .tiny - Metrics.chevronWidth / 2, y: badges[index].midY), pointingUp: line.price.value > plot.priceRange.upperBound, in: &context)
+            }
+        }
+    }
+
+    private func drawChevrons(at center: CGPoint, pointingUp: Bool, in context: inout GraphicsContext) {
+        let direction: CGFloat = pointingUp ? -1 : 1
+        let path = [-Metrics.chevronGap / 2, Metrics.chevronGap / 2].reduce(into: Path()) { path, offset in
+            let tipY = center.y + offset + direction * Metrics.chevronHeight / 2
+            path.move(to: CGPoint(x: center.x - Metrics.chevronWidth / 2, y: tipY - direction * Metrics.chevronHeight))
+            path.addLine(to: CGPoint(x: center.x, y: tipY))
+            path.addLine(to: CGPoint(x: center.x + Metrics.chevronWidth / 2, y: tipY - direction * Metrics.chevronHeight))
+        }
+        context.stroke(path, with: .color(Colors.whiteSolid), style: StrokeStyle(lineWidth: Metrics.chevronLineWidth, lineCap: .round, lineJoin: .round))
     }
 
     private func drawSelection(in context: inout GraphicsContext) {

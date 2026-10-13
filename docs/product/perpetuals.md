@@ -40,6 +40,7 @@ flowchart LR
 | The market has fewer than 14 candles | the chart draws them at the width of 14, newest on the right | wider bodies stop reading as a trend |
 | The chart shows its time labels | at most four, on round times of the user's own clock (quarter hours, six hours, whole days, calendar months); a pan slides them with their candles and only a pinch changes the step | a label that jumps or re-spaces while the user drags cannot be read |
 | The market has a position | the position shows, with Modify and Close in place of Long and Short | |
+| The chart shows a position | its Entry, Take Profit, Stop Loss and Liquidation lines show their tag and price on the left; the price scale follows the visible candles only; a price outside it shows only its tag, with arrows towards it, at the chart's top or bottom edge; tags of close lines sit side by side so none covers another | stretching the scale to a far take profit or liquidation would squeeze the candles, yet the user must always see where the position closes; a line drawn at the edge would read as a price it is not |
 | Long or Short opens | the leverage starts at the default from Settings | |
 | The user changes the leverage | an untouched default take profit or stop loss is refreshed; an edited price is kept | |
 | The user reopens Auto Close before confirming | the prices already set, with their expected PnL | |

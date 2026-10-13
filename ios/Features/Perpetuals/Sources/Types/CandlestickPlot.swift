@@ -40,7 +40,29 @@ struct CandlestickPlot {
     }
 
     var showsCurrentPrice: Bool {
-        priceRange.contains(chart.layout.currentPrice.value)
+        shows(chart.layout.currentPrice.value)
+    }
+
+    func shows(_ price: Double) -> Bool {
+        priceRange.contains(price)
+    }
+
+    func lineBadges(for prices: [Double], widths: [CGFloat], height: CGFloat, rowSpacing: CGFloat, gap: CGFloat) -> [CGRect] {
+        let centers = badgeCenters(for: prices, height: height, rowSpacing: rowSpacing)
+        var badges = [CGRect](repeating: .zero, count: prices.count)
+        var previous: CGRect?
+        for index in prices.indices.sorted(by: { centers[$0] < centers[$1] }) {
+            var badge = CGRect(x: frame.minX, y: centers[index] - height / 2, width: widths[index], height: height)
+            if let previous, previous.maxY > badge.minY {
+                badge.origin = CGPoint(x: previous.maxX + gap, y: max(badge.minY, previous.minY))
+                if badge.maxX > frame.maxX {
+                    badge.origin = CGPoint(x: frame.minX, y: previous.maxY + rowSpacing)
+                }
+            }
+            badges[index] = badge
+            previous = badge
+        }
+        return badges
     }
 
     func x(for date: Date) -> CGFloat {
@@ -67,5 +89,20 @@ struct CandlestickPlot {
         let band = volumeBand
         let height = max(1, band.height * CGFloat(min(candle.volume / volumeRange.upperBound, 1)))
         return CGRect(x: x(for: candle.date) - bodyWidth / 2, y: band.maxY - height, width: bodyWidth, height: height)
+    }
+
+    private func badgeCenters(for prices: [Double], height: CGFloat, rowSpacing: CGFloat) -> [CGFloat] {
+        let top = frame.minY + height / 2
+        let bottom = y(for: priceRange.lowerBound) - height / 2
+        let above = prices.indices.filter { prices[$0] > priceRange.upperBound }.sorted { prices[$0] > prices[$1] }
+        let below = prices.indices.filter { prices[$0] < priceRange.lowerBound }.sorted { prices[$0] < prices[$1] }
+        var centers = prices.map { min(max(y(for: $0), top), bottom) }
+        for (slot, index) in above.enumerated() {
+            centers[index] = top + CGFloat(slot) * (height + rowSpacing)
+        }
+        for (slot, index) in below.enumerated() {
+            centers[index] = bottom - CGFloat(slot) * (height + rowSpacing)
+        }
+        return centers
     }
 }

@@ -233,7 +233,6 @@ pub struct GemPerpetualChartLine {
     pub kind: GemPerpetualChartLineKind,
     pub price: GemFormattedNumber,
     pub label: GemLocalizedText,
-    pub overlap_level: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, uniffi::Record)]
