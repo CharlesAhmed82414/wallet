@@ -112,6 +112,16 @@ mod tests {
                 SwapperProvider::Bridgers,
             ))
         );
+        assert_eq!(
+            records[3].swap_metadata(),
+            Some(TransactionSwapMetadata::new(
+                AssetId::from_token(Chain::XLayer, "0x779Ded0c9e1022225f8E0630b35a9b54bE713736"),
+                BigUint::from(20_000_000u64),
+                SMARTCHAIN_USDT_ASSET_ID.clone(),
+                BigUint::from_str("19930000000000000000").unwrap(),
+                SwapperProvider::Bridgers,
+            ))
+        );
         assert_eq!(serde_json::from_str::<RecordStatus>(r#""refund_complete""#).unwrap(), RecordStatus::RefundComplete);
         assert_eq!(serde_json::from_str::<RecordStatus>(r#""wait_receive_send""#).unwrap(), RecordStatus::Pending);
     }
