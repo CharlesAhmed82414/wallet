@@ -19,6 +19,7 @@ import com.gemwallet.android.ui.components.screen.ModalBottomSheet
 import com.gemwallet.android.ui.components.screen.SheetExpansion
 import com.gemwallet.android.ui.components.screen.rememberSnackbarState
 import com.gemwallet.android.ui.models.actions.AmountTransactionAction
+import com.gemwallet.android.ui.models.actions.AssetIdAction
 import com.gemwallet.android.ui.models.actions.ConfirmTransactionAction
 import com.gemwallet.android.ui.models.actions.FinishConfirmAction
 import com.wallet.core.primitives.TransactionId
@@ -29,6 +30,7 @@ fun PerpetualScreen(
     confirmAction: ConfirmTransactionAction,
     onClose: () -> Unit,
     onTransaction: (TransactionId) -> Unit,
+    onOpenAsset: AssetIdAction,
     confirmContent: AutocloseConfirmContent,
     viewModel: PerpetualViewModel = hiltViewModel(),
 ) {
@@ -77,6 +79,7 @@ fun PerpetualScreen(
                 is PerpetualAction.ZoomChart -> viewModel.onZoom(action.magnification, action.anchor)
                 is PerpetualAction.PanChart -> viewModel.onPan(action.fraction)
                 is PerpetualAction.OpenTransaction -> onTransaction(action.transactionId)
+                is PerpetualAction.OpenAsset -> onOpenAsset(action.assetId)
             }
         },
     )

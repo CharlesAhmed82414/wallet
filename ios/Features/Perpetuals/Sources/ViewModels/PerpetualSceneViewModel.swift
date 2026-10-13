@@ -37,7 +37,7 @@ public final class PerpetualSceneViewModel {
     }
 
     var perpetualData: PerpetualData {
-        perpetualQuery.value
+        perpetualQuery.value.data
     }
 
     var transactionSections: [ListSection<GemTransactionRow>] {
@@ -78,7 +78,12 @@ public final class PerpetualSceneViewModel {
     }
 
     var details: GemPerpetualDetails {
-        service.details(perpetual: perpetual.toGem(), asset: asset.toGem(), positions: positions.map { $0.position.toGem() })
+        service.details(
+            perpetual: perpetual.toGem(),
+            asset: asset.toGem(),
+            positions: positions.map { $0.position.toGem() },
+            associatedAssets: perpetualQuery.value.associatedAssets.map { $0.toGem() },
+        )
     }
 
     var modifyTitle: String {

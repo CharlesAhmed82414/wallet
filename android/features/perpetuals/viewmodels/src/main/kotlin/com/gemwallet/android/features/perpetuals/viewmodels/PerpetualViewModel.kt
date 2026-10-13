@@ -120,8 +120,8 @@ class PerpetualViewModel @Inject constructor(
         .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val details: StateFlow<GemPerpetualDetails?> = combine(perpetual, position) { perpetual, position ->
-        perpetual?.let { service.details(it.perpetual.toGem(), it.asset.toGem(), listOfNotNull(position?.toGem())) }
+    val details: StateFlow<GemPerpetualDetails?> = combine(perpetual, position, perpetualQuery.associatedAssets(assetId)) { perpetual, position, associatedAssets ->
+        perpetual?.let { service.details(it.perpetual.toGem(), it.asset.toGem(), listOfNotNull(position?.toGem()), associatedAssets.map { asset -> asset.toGem() }) }
     }
         .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)

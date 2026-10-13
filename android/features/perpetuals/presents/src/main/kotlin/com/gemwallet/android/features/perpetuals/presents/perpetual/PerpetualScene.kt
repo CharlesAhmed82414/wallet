@@ -7,13 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.features.perpetuals.presents.components.PerpetualActions
 import com.gemwallet.android.features.perpetuals.presents.components.PerpetualChartSection
 import com.gemwallet.android.features.perpetuals.presents.components.PerpetualModifyBottomSheet
 import com.gemwallet.android.features.perpetuals.presents.components.positionProperties
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.clickable
+import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.GemListRowView
 import com.gemwallet.android.ui.components.list_item.SubheaderItem
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.list_item.property.itemsPositioned
 import com.gemwallet.android.ui.components.list_item.rememberDateSections
 import com.gemwallet.android.ui.components.list_item.transaction.transactionsList
@@ -106,6 +110,14 @@ internal fun PerpetualScene(
                         }
                     }
                 }
+                itemsPositioned(details?.associatedAssets.orEmpty()) { position, associatedAsset ->
+                    AssetListItem(
+                        row = associatedAsset.row,
+                        listPosition = position,
+                        modifier = Modifier.clickable { onAction(PerpetualAction.OpenAsset(associatedAsset.asset.toPrimitives().id)) },
+                        accessory = { DataBadgeChevron() },
+                    )
+                }
                 if (transactions.isNotEmpty()) {
                     transactionsList(transactionSections, onTransactionClick)
                 }
@@ -157,6 +169,7 @@ private fun PerpetualScenePreview() {
                 ),
                 position = null,
                 positionRow = null,
+                associatedAssets = emptyList(),
             ),
             transactions = emptyList(),
             chart = StateViewType.Loading,

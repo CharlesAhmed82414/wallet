@@ -3,7 +3,9 @@ use crate::formatted_number::{GemFormattedNumber, GemValueTone};
 use crate::models::custom_types::GemBigInt;
 use crate::models::list::{GemListRow, GemListSection};
 use crate::models::state::GemListPhase;
-use crate::services::assets::model::{GemAssetItemRow, GemAssetItemTrailing, GemPriceRow, GemRowText, GemValueHeader};
+use crate::services::assets::icon::asset_icon;
+use crate::services::assets::model::{GemAssetItemRow, GemAssetItemTrailing, GemAssetRowStyle, GemAssetSubtitleStyle, GemAssetTitleStyle, GemAssetTrailingStyle, GemPriceRow, GemRowText, GemValueHeader};
+use crate::services::assets::rules::asset_row_text;
 use crate::services::chart::candlestick_header;
 use crate::services::chart::model::{GemChartDateStyle, GemChartHeader, GemChartSelection};
 use crate::services::chart::rules as chart_rules;
@@ -93,6 +95,36 @@ pub struct GemPerpetualPositionRow {
     pub id: String,
     pub asset_id: AssetId,
     pub row: GemAssetItemRow,
+}
+
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct GemPerpetualAssociatedAssetRow {
+    pub asset: Asset,
+    pub row: GemAssetItemRow,
+}
+
+impl From<Asset> for GemPerpetualAssociatedAssetRow {
+    fn from(asset: Asset) -> Self {
+        let style = GemAssetRowStyle {
+            title: GemAssetTitleStyle::Asset,
+            shows_symbol: true,
+            subtitle: GemAssetSubtitleStyle::Network,
+            trailing: GemAssetTrailingStyle::None,
+        };
+        let text = asset_row_text(&asset, style);
+        Self {
+            row: GemAssetItemRow {
+                icon: asset_icon(&asset.id),
+                title: text.title,
+                title_extra: text.symbol,
+                subtitle: text.network.map(|network| GemRowText::neutral(GemLocalizedText::Text { text: network })),
+                subtitle_extra: None,
+                trailing: GemAssetItemTrailing::None,
+                masks_balance: false,
+            },
+            asset,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -335,6 +367,7 @@ pub enum GemPerpetualRefreshStep {
     Markets,
     DepositBalances,
     Transactions,
+    Asset,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
@@ -370,6 +403,7 @@ pub struct GemPerpetualDetails {
     pub modify_buttons: Vec<GemPerpetualButtonRow>,
     pub position: Option<PerpetualPosition>,
     pub position_row: Option<GemPerpetualPositionRow>,
+    pub associated_assets: Vec<GemPerpetualAssociatedAssetRow>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]

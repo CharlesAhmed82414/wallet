@@ -92,6 +92,7 @@ class PerpetualViewModelTest {
         }
         val perpetual: PerpetualQuery = mockk {
             every { this@mockk(any<AssetId>()) } returns perpetuals
+            every { associatedAssets(any()) } returns flowOf(emptyList())
         }
         val transactions: GetTransactions = mockk {
             every { getTransactions(any(), any()) } returns emptyFlow()

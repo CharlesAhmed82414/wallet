@@ -53,6 +53,16 @@ public struct PerpetualScene: View {
                 }
             }
 
+            if !details.associatedAssets.isEmpty {
+                Section {
+                    ForEach(details.associatedAssets, id: \.asset.id) { associatedAsset in
+                        NavigationLink(value: Scenes.Asset(asset: associatedAsset.asset.toPrimitives())) {
+                            ListAssetItemView(row: associatedAsset.row)
+                        }
+                    }
+                }
+            }
+
             if !model.transactionSections.isEmpty {
                 TransactionsList(sections: model.transactionSections)
                     .listRowInsets(.assetListRowInsets)
