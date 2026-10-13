@@ -39,8 +39,9 @@ impl MessageConsumer<TransactionsPayload, usize> for StoreTransactionsConsumer {
     async fn consume(&self, payload: TransactionsPayload) -> Result<usize, Box<dyn Error + Send + Sync>> {
         let config = StoreTransactionsConsumerConfig::read(&self.config).await?;
         let cross_chain_and_referral_transactions = payload.transactions.clone();
+        let notification_type = payload.notification_type.clone();
         let count = self.store_subscribed_transactions(&config, payload).await?;
-        self.store_cross_chain_and_referral_transactions(&config, cross_chain_and_referral_transactions).await?;
+        self.store_cross_chain_and_referral_transactions(&config, cross_chain_and_referral_transactions, &notification_type).await?;
         Ok(count)
     }
 }
@@ -55,7 +56,7 @@ impl StoreTransactionsConsumer {
         }
 
         let (deposit_addresses, send_addresses) = tokio::try_join!(self.vault_client.get_deposit_address_map(), self.vault_client.get_send_address_map())?;
-        let transactions = Self::subscribed_transactions_for_storage(config, payload.transactions, &subscriptions, &deposit_addresses, &send_addresses);
+        let transactions = Self::subscribed_transactions_for_storage(config, payload.transactions, &subscriptions, &deposit_addresses, &send_addresses, &payload.notification_type);
         if transactions.is_empty() {
             info_with_fields!("transaction storage skipped", chain = payload.chain.as_ref(), stage = "transaction_filters", subscriptions = subscriptions.len());
             return Ok(0);
@@ -89,12 +90,12 @@ impl StoreTransactionsConsumer {
         Ok(transaction_count)
     }
 
-    async fn store_cross_chain_and_referral_transactions(&self, config: &StoreTransactionsConsumerConfig, transactions: Vec<Transaction>) -> Result<(), Box<dyn Error + Send + Sync>> {
+    async fn store_cross_chain_and_referral_transactions(&self, config: &StoreTransactionsConsumerConfig, transactions: Vec<Transaction>, notification_type: &TransactionNotificationType) -> Result<(), Box<dyn Error + Send + Sync>> {
         if transactions.is_empty() {
             return Ok(());
         }
         let (deposit_addresses, send_addresses) = tokio::try_join!(self.vault_client.get_deposit_address_map(), self.vault_client.get_send_address_map())?;
-        let transactions = Self::transactions_for_storage(transactions, &deposit_addresses, &send_addresses)
+        let transactions = Self::transactions_for_storage(transactions, &deposit_addresses, &send_addresses, notification_type)
             .into_iter()
             .filter(|transaction| cross_chain::is_cross_chain_swap(transaction, &deposit_addresses) || referral_processing_queue(transaction).is_some())
             .collect::<Vec<_>>();
@@ -125,9 +126,10 @@ impl StoreTransactionsConsumer {
         subscriptions: &[DeviceSubscription],
         deposit_addresses: &DepositAddressMap,
         send_addresses: &SendAddressMap,
+        notification_type: &TransactionNotificationType,
     ) -> Vec<Transaction> {
         let subscription_addresses: HashSet<_> = subscriptions.iter().map(|subscription| &subscription.address).collect();
-        Self::transactions_for_storage(transactions, deposit_addresses, send_addresses)
+        Self::transactions_for_storage(transactions, deposit_addresses, send_addresses, notification_type)
             .into_iter()
             .filter(|transaction| config.is_transaction_within_asset_transfer_limit(transaction))
             .filter(|transaction| transaction.addresses().iter().any(|address| subscription_addresses.contains(address)))
@@ -273,7 +275,7 @@ impl StoreTransactionsConsumer {
             .collect()
     }
 
-    fn transactions_for_storage(transactions: Vec<Transaction>, deposit_addresses: &DepositAddressMap, send_addresses: &SendAddressMap) -> Vec<Transaction> {
+    fn transactions_for_storage(transactions: Vec<Transaction>, deposit_addresses: &DepositAddressMap, send_addresses: &SendAddressMap, notification_type: &TransactionNotificationType) -> Vec<Transaction> {
         transactions
             .into_iter()
             .filter_map(|mut transaction| {
@@ -281,7 +283,7 @@ impl StoreTransactionsConsumer {
                     return None;
                 }
 
-                if Self::should_mark_in_transit(&transaction, deposit_addresses) {
+                if matches!(notification_type, TransactionNotificationType::NewTransaction) && Self::should_mark_in_transit(&transaction, deposit_addresses) {
                     transaction.state = TransactionState::InTransit;
                 }
 
@@ -372,7 +374,7 @@ mod tests {
         };
         let transaction = map_transaction(&source, response.result.block_time).unwrap();
         let deposit_addresses = DepositAddressMap::from([(SOLANA_MAYAN_CPI_PROXY_PROGRAM_ID.to_string(), SwapProvider::Mayan)]);
-        let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![transaction], &deposit_addresses, &SendAddressMap::new());
+        let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![transaction], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction);
 
         assert_eq!(transactions.len(), 1);
         let transaction = &transactions[0];
@@ -393,7 +395,7 @@ mod tests {
         };
         let transaction = map_transaction(&source, response.result.block_time).unwrap();
         let deposit_addresses = DepositAddressMap::from([(SOLANA_RELAY_DEPOSITORY_PROGRAM_ID.to_string(), SwapProvider::Relay)]);
-        let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![transaction], &deposit_addresses, &SendAddressMap::new());
+        let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![transaction], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction);
 
         assert_eq!(transactions.len(), 1);
         let transaction = &transactions[0];
@@ -488,6 +490,22 @@ mod tests {
     }
 
     #[test]
+    fn test_transactions_for_storage_state_change_without_swap_metadata() {
+        let deposit_addresses = DepositAddressMap::from([("vault".to_string(), SwapProvider::Bridgers)]);
+        let transaction = Transaction {
+            to: "vault".to_string(),
+            transaction_type: TransactionType::Swap,
+            metadata: None,
+            ..Transaction::mock()
+        };
+
+        assert_eq!(
+            StoreTransactionsConsumer::transactions_for_storage(vec![transaction.clone()], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::StateChange),
+            vec![transaction]
+        );
+    }
+
+    #[test]
     fn test_transactions_for_storage() {
         let thorchain_vault = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146".to_string();
         let near_vault = "TMoD2uJiUAvB2RhLGm1BmzCVVzi5VLFDVt".to_string();
@@ -505,7 +523,7 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![cross_chain], &deposit_addresses, &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![cross_chain], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::InTransit
         );
 
@@ -515,12 +533,12 @@ mod tests {
         };
         let deposit_addresses_bc = DepositAddressMap::from([("bc1qvault".to_string(), SwapProvider::Thorchain)]);
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![vault_no_memo], &deposit_addresses_bc, &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![vault_no_memo], &deposit_addresses_bc, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::Confirmed
         );
 
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![Transaction::mock()], &DepositAddressMap::new(), &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![Transaction::mock()], &DepositAddressMap::new(), &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::Confirmed
         );
 
@@ -530,7 +548,7 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![swap_type], &DepositAddressMap::new(), &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![swap_type], &DepositAddressMap::new(), &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::Confirmed
         );
 
@@ -540,7 +558,7 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![cross_chain_swap_type], &deposit_addresses, &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![cross_chain_swap_type], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::InTransit
         );
 
@@ -560,7 +578,7 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![confirmed_cross_chain_swap_update], &deposit_addresses, &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![confirmed_cross_chain_swap_update], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::Confirmed
         );
 
@@ -570,7 +588,7 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![token_approval], &DepositAddressMap::new(), &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![token_approval], &DepositAddressMap::new(), &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::Confirmed
         );
 
@@ -580,13 +598,13 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![pending], &DepositAddressMap::new(), &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![pending], &DepositAddressMap::new(), &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::Pending
         );
 
         let near_intents = Transaction { to: near_vault, ..Transaction::mock() };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![near_intents], &deposit_addresses, &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![near_intents], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::InTransit
         );
 
@@ -596,7 +614,7 @@ mod tests {
             ..Transaction::mock()
         };
         assert_eq!(
-            StoreTransactionsConsumer::transactions_for_storage(vec![relay], &deposit_addresses, &SendAddressMap::new())[0].state,
+            StoreTransactionsConsumer::transactions_for_storage(vec![relay], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction)[0].state,
             TransactionState::InTransit
         );
 
@@ -606,7 +624,7 @@ mod tests {
         };
         let regular = Transaction::mock();
 
-        let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![outbound, regular.clone()], &DepositAddressMap::new(), &send_addresses);
+        let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![outbound, regular.clone()], &DepositAddressMap::new(), &send_addresses, &TransactionNotificationType::NewTransaction);
 
         assert_eq!(transactions, vec![regular]);
     }
