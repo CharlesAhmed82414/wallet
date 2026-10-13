@@ -85,7 +85,11 @@ The repo root exposes monorepo commands plus module access to each platform:
 ```bash
 just install
 just build
+just test
+just lint
+just test-integration
 just generate
+just check-docs
 just localize
 just bump patch
 just bump minor
