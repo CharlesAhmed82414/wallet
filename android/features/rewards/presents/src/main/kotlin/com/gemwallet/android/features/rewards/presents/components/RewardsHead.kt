@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.buttons.MainActionButton
 import com.gemwallet.android.ui.components.list_item.listItem
@@ -40,7 +39,7 @@ internal fun LazyListScope.rewardsHead(description: String, intro: List<GemRewar
             verticalArrangement = Arrangement.spacedBy(paddingDefault),
         ) {
             Spacer16()
-            Text("\uD83C\uDF81", fontSize = 64.sp)
+            Text("\uD83C\uDF81", style = MaterialTheme.typography.displayLarge)
             Text(
                 text = parseMarkdownToAnnotatedString(
                     markdown = stringResource(R.string.rewards_invite_friends_title),
@@ -68,7 +67,7 @@ internal fun LazyListScope.rewardsHead(description: String, intro: List<GemRewar
                     ) {
                         Text(
                             text = item.emoji(),
-                            fontSize = 26.sp,
+                            style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
                             text = stringResource(item.titleRes()),
@@ -88,7 +87,7 @@ internal fun LazyListScope.rewardsHead(description: String, intro: List<GemRewar
                 GemRewardsInviteAction.SHARE -> MainActionButton(
                     onClick = onShare,
                 ) {
-                    Icon(AppIcons.Share, contentDescription = "share")
+                    Icon(AppIcons.Share, contentDescription = null)
                     Spacer8()
                     Text(stringResource(R.string.rewards_invite_friends_title))
                 }

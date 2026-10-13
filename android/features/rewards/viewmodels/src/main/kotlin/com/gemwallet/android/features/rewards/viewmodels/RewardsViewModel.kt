@@ -7,19 +7,26 @@ import androidx.lifecycle.viewModelScope
 import com.gemwallet.android.application.IoDispatcher
 import com.gemwallet.android.application.session.cases.GetSession
 import com.gemwallet.android.data.services.store.queries.WalletsQuery
+import com.gemwallet.android.ext.errorText
 import com.gemwallet.android.ext.runCatchingCancellable
 import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.features.rewards.viewmodels.models.RewardsSectionUIModel
+import com.gemwallet.android.features.rewards.viewmodels.models.RewardsSheetType
 import com.gemwallet.android.features.rewards.viewmodels.models.sectionModels
+import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.localization.string
+import com.gemwallet.android.ui.localization.text
+import com.gemwallet.android.ui.models.ToastEmitter
+import com.gemwallet.android.ui.models.ToastEmitterImpl
+import com.gemwallet.android.ui.models.ToastMessage
 import com.gemwallet.android.ui.models.navigation.RouteArgument
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -50,9 +57,16 @@ class RewardsViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     @param:ApplicationContext private val context: Context,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : ViewModel() {
+) : ViewModel(),
+    ToastEmitter by ToastEmitterImpl() {
 
     val infoSheet = MutableStateFlow<GemInfoTopic?>(null)
+
+    private val errorState = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = errorState.asStateFlow()
+
+    private val loadingState = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = loadingState.asStateFlow()
 
     fun inviteFriends(onInvite: () -> Unit) {
         if (!service.isAvailable()) {
@@ -78,6 +92,12 @@ class RewardsViewModel @Inject constructor(
 
     val incomingCode: StateFlow<GemIncomingCode?> = viewState.map { it.incomingCode }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val sheetState = MutableStateFlow<RewardsSheetType?>(null)
+
+    val sheet: StateFlow<RewardsSheetType?> = combine(sheetState, incomingCode) { sheet, code ->
+        sheet ?: (code as? GemIncomingCode.Confirm)?.let { RewardsSheetType.ActivateCode(it.code) }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val rewardsState = viewState.map { it.rewards }
         .stateIn(viewModelScope, SharingStarted.Eagerly, viewState.value.rewards)
@@ -106,10 +126,10 @@ class RewardsViewModel @Inject constructor(
     val sections: StateFlow<List<RewardsSectionUIModel>> = rewardsState.map { it.sectionModels(context) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val redemptions: StateFlow<List<GemRewardsRedemption>> = rewardsState.map { state -> state.redemptions }
+    val redemptions: StateFlow<List<GemRewardsRedemption>> = rewardsState.map { it.redemptions }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val referralLink = rewardsState.map { it.referralLink }
+    val referralLink: StateFlow<String?> = rewardsState.map { it.referralLink }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
@@ -136,39 +156,82 @@ class RewardsViewModel @Inject constructor(
         session.update { it.onResult(result) }
     }
 
-    fun createReferral(username: String, callback: (Throwable?) -> Unit) {
+    fun showSheet(sheet: RewardsSheetType) {
+        sheetState.value = sheet
+    }
+
+    fun dismissSheet() {
+        sheetState.value = null
+        onCodeHandled()
+    }
+
+    fun createReferral(username: String) {
+        if (loadingState.value) return
         val walletId = session.value.wallet?.id ?: return
+        loadingState.value = true
         viewModelScope.launch(ioDispatcher) {
-            runCatchingCancellable { service.createReferral(walletId, username) }
-                .onSuccess { rewards -> session.update { it.onRewards(walletId, rewards) } }
-                .report(callback)
+            try {
+                runCatchingCancellable { service.createReferral(walletId, username) }
+                    .onSuccess { rewards ->
+                        session.update { it.onRewards(walletId, rewards) }
+                        dismissSheet()
+                    }
+                    .onFailure(::showError)
+            } finally {
+                loadingState.value = false
+            }
         }
     }
 
-    fun useCode(code: String, callback: (Throwable?) -> Unit) {
+    fun useCode(code: String) {
+        if (loadingState.value) return
         val walletId = session.value.wallet?.id ?: return
+        loadingState.value = true
         viewModelScope.launch(ioDispatcher) {
-            runCatchingCancellable { service.useReferralCode(walletId, code) }
-                .onSuccess { rewards -> session.update { it.onRewards(walletId, rewards) } }
-                .report(callback)
+            try {
+                runCatchingCancellable { service.useReferralCode(walletId, code) }
+                    .onSuccess { rewards ->
+                        session.update { it.onRewards(walletId, rewards) }
+                        dismissSheet()
+                        showDoneToast()
+                    }
+                    .onFailure(::showError)
+            } finally {
+                loadingState.value = false
+            }
         }
     }
 
-    fun redeem(redemption: GemRewardsRedemption, callback: (Throwable?) -> Unit) {
+    fun onSelectRedemption(redemption: GemRewardsRedemption, onRedeem: () -> Unit) {
+        if (!redemption.canRedeem) {
+            errorState.value = context.getString(R.string.rewards_insufficient_points)
+            return
+        }
+        onRedeem()
+    }
+
+    fun redeem(redemptionId: String) {
         val walletId = session.value.wallet?.id ?: return
         viewModelScope.launch(ioDispatcher) {
-            runCatchingCancellable { service.redeem(walletId, redemption.id) }
-                .onSuccess { sync() }
-                .report(callback)
+            runCatchingCancellable { service.redeem(walletId, redemptionId) }
+                .onSuccess {
+                    showDoneToast()
+                    sync()
+                }
+                .onFailure(::showError)
         }
     }
 
-    private suspend fun <T> Result<T>.report(callback: (Throwable?) -> Unit) = withContext(Dispatchers.Main) {
-        callback(exceptionOrNull())
-    }
+    fun clearError() = errorState.update { null }
 
     fun onCodeHandled() {
         session.update { it.onCodeHandled() }
         savedStateHandle[RouteArgument.Code.key] = null
     }
+
+    private fun showError(error: Throwable) {
+        errorState.value = error.errorText().text(context)
+    }
+
+    private fun showDoneToast() = emitToast(ToastMessage(context.getString(R.string.common_done), R.drawable.ic_check_circle))
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.gemwallet.android.application.session.cases.GetSession
 import com.gemwallet.android.data.services.store.queries.WalletsQuery
+import com.gemwallet.android.features.rewards.viewmodels.models.RewardsSheetType
 import com.gemwallet.android.model.Session
 import com.gemwallet.android.testkit.MainDispatcherRule
 import com.gemwallet.android.testkit.mockAccount
@@ -27,10 +28,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -79,7 +82,7 @@ class RewardsViewModelTest {
             runCurrent()
             assertNull(viewModel.pendingReferral.value)
 
-            viewModel.useCode("friend") {}
+            viewModel.useCode("friend")
             runCurrent()
 
             assertEquals("friend", viewModel.pendingReferral.value?.code)
@@ -165,6 +168,25 @@ class RewardsViewModelTest {
 
             assertEquals("a refresh does not drop a code the user has not answered", GemIncomingCode.Confirm("friend"), viewModel.incomingCode.value)
             assertEquals("friend", savedStateHandle.get<String>(RouteArgument.Code.key))
+            assertEquals(RewardsSheetType.ActivateCode("friend"), viewModel.sheet.value)
+        } finally {
+            viewModel.viewModelScope.cancel()
+        }
+    }
+
+    @Test
+    fun `closing the code sheet drops a link code`() = runTest(testDispatcher) {
+        wallets.value = listOf(wallet, secondWallet)
+        val savedStateHandle = SavedStateHandle(mapOf(RouteArgument.Code.key to "friend"))
+        val viewModel = createViewModel(savedStateHandle)
+
+        try {
+            runCurrent()
+            viewModel.dismissSheet()
+            runCurrent()
+
+            assertNull(viewModel.sheet.value)
+            assertNull(savedStateHandle.get<String>(RouteArgument.Code.key))
         } finally {
             viewModel.viewModelScope.cancel()
         }
@@ -243,6 +265,76 @@ class RewardsViewModelTest {
             assertNull(subject.infoSheet.value)
         } finally {
             subject.viewModelScope.cancel()
+        }
+    }
+
+    @Test
+    fun `a used code closes the sheet and shows done`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        try {
+            runCurrent()
+            viewModel.showSheet(RewardsSheetType.ActivateCode(""))
+            viewModel.useCode("friend")
+            runCurrent()
+
+            assertNull(viewModel.sheet.value)
+            assertEquals(R.drawable.ic_check_circle, viewModel.toastEvents.first().image)
+            assertNull(viewModel.error.value)
+        } finally {
+            viewModel.viewModelScope.cancel()
+        }
+    }
+
+    @Test
+    fun `a second submit while a code is being used is ignored`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        try {
+            runCurrent()
+            viewModel.useCode("friend")
+            viewModel.useCode("friend")
+            runCurrent()
+
+            coVerify(exactly = 1) { service.useReferralCode(wallet.id.id, "friend") }
+        } finally {
+            viewModel.viewModelScope.cancel()
+        }
+    }
+
+    @Test
+    fun `a failed code keeps the sheet open and shows the error`() = runTest(testDispatcher) {
+        coEvery { service.useReferralCode(any(), any()) } throws GemServiceException.Api("code already used")
+        val viewModel = createViewModel()
+
+        try {
+            runCurrent()
+            viewModel.showSheet(RewardsSheetType.ActivateCode(""))
+            viewModel.useCode("friend")
+            runCurrent()
+
+            assertEquals(RewardsSheetType.ActivateCode(""), viewModel.sheet.value)
+            assertEquals("code already used", viewModel.error.value)
+            assertFalse(viewModel.isLoading.value)
+        } finally {
+            viewModel.viewModelScope.cancel()
+        }
+    }
+
+    @Test
+    fun `a failed redemption shows the error`() = runTest(testDispatcher) {
+        coEvery { service.redeem(any(), any()) } throws GemServiceException.Api("out of stock")
+        val viewModel = createViewModel()
+
+        try {
+            runCurrent()
+            viewModel.redeem("option-7")
+            runCurrent()
+
+            assertEquals("out of stock", viewModel.error.value)
+            coVerify { service.redeem(wallet.id.id, "option-7") }
+        } finally {
+            viewModel.viewModelScope.cancel()
         }
     }
 
