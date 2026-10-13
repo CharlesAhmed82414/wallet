@@ -32,6 +32,8 @@ flowchart LR
 | The simulation finds a risk | the risk shows before the user confirms | |
 | The simulation predicts balance changes | every digit of each amount, never rounded | what the user approves is exactly what moves |
 | The network rejects the sent transaction | the network's own reason | it is often the only explanation there is |
+| A Bitcoin-family send is still pending and the user sends again | the new send never spends the coins the pending one spent, until that one confirms, fails or leaves Activity; kept only while the app runs | the node may not have indexed the pending send yet, and reusing its coins would be rejected as an underpaid replacement |
+| Those held coins are needed: Max, or an amount the remaining coins cannot cover | "A previous transaction is still pending" and Confirm stays disabled | Max would otherwise sign less than the amount shown |
 | The network rejects a Bitcoin-family send because it spends coins a pending send already spent | "A previous transaction is still pending" | the node's reply talks about replacement fee rates the user never chose |
 | A Dash payment is sent | Pending until the transaction is mined | the network may lock it with InstantSend, but the provider does not report that lock yet |
 

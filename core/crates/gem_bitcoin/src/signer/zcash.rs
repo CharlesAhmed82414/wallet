@@ -1,7 +1,7 @@
 use bitcoin::{
     PublicKey, ScriptBuf, Sequence, TxIn as TransactionInput, TxOut as TransactionOutput, Witness,
     blockdata::script::Builder,
-    consensus::encode::serialize,
+    consensus::encode::{deserialize_partial, serialize},
     secp256k1::{Message, Secp256k1, SecretKey, Signing},
 };
 use gem_hash::blake2::blake2b_256_personal;
@@ -19,6 +19,7 @@ const VERSION_GROUP_ID_V5: u32 = 0x26a7_270a;
 const LOCK_TIME: u32 = 0;
 const EXPIRY_HEIGHT_DISABLED: u32 = 0;
 const SIGHASH_ALL: u8 = 0x01;
+const TRANSACTION_HEADER_SIZE: usize = 20;
 
 #[derive(Debug, Clone)]
 struct ZcashTransparentTransaction {
@@ -107,6 +108,12 @@ impl ZcashTransparentTransaction {
         bytes.extend_from_slice(&encode_varint(0));
         bytes
     }
+}
+
+pub(crate) fn decode_transparent_inputs(bytes: &[u8]) -> Result<Vec<TransactionInput>, SignerError> {
+    let inputs = bytes.get(TRANSACTION_HEADER_SIZE..).ok_or_else(|| SignerError::invalid_input("Zcash transaction is too short"))?;
+    let (inputs, _) = deserialize_partial::<Vec<TransactionInput>>(inputs).map_err(SignerError::from_display)?;
+    Ok(inputs)
 }
 
 pub(crate) fn sign_transparent<C: Signing>(plan: &SpendPlan, branch_id: u32, secret_key: &SecretKey, public_key: &PublicKey, secp: &Secp256k1<C>) -> Result<String, SignerError> {

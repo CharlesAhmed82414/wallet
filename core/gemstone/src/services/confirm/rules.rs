@@ -1,4 +1,5 @@
 use super::model::{GemConfirmRowContent, GemConfirmSection, GemConfirmSimulation};
+use super::pending_spends::PendingSpend;
 use super::swap::ConfirmSwapQuote;
 use crate::address_formatter::{GemAddressFormatStyle, format_address, name_text};
 use crate::application;
@@ -15,7 +16,7 @@ use crate::services::localization::{GemLocalizedText, GemPerpetualConfirmedActio
 use crate::services::name::rules::names_the_user_owns;
 use crate::services::transfer::model::{GemConfirmDestination, GemConfirmRow, GemTransferData};
 use crate::services::wallet::model::wallet_row;
-use primitives::{AddressName, AssetType, BlockExplorerLink, FeeRate, PaymentVerification, PerpetualType};
+use primitives::{AddressName, AssetType, BitcoinChain, BlockExplorerLink, FeeRate, PaymentVerification, PerpetualType, TransactionId};
 use primitives::{
     Asset, AssetId, Chain, ChainType, EVMChain, FeePriority, FeeUnitType, GasPriceType, ScanTransaction, SimulationResult, SimulationWarningType, Transaction, TransactionType, TransferDataOutputAction, TransferDataOutputType, Wallet,
 };
@@ -41,6 +42,7 @@ use crate::services::transactions::GemAmountSign;
 use crate::services::transfer::GemPendingTransactionInput;
 use crate::services::transfer::rules::TransferInput;
 use crate::transfer_amount::GemTransferAmountError;
+use gem_bitcoin::signer::spent_outpoints;
 use num_bigint::{BigInt, Sign};
 use primitives::AssetPrice;
 use primitives::{TransactionInputType, TransferAmountInput};
@@ -474,6 +476,27 @@ impl SendInput {
             .map(|result| result.map(IntoIterator::into_iter))
             .collect::<Result<Vec<_>, _>>()
             .map(|transactions| transactions.into_iter().flatten().collect())
+    }
+
+    pub(super) fn pending_spends(&self, hashes: &[String], transactions: &[GemSignedTransaction], recorded: &[Transaction]) -> Vec<PendingSpend> {
+        let chain = self.confirm.input.transfer.input_type.get_asset().chain();
+        let Some(bitcoin_chain) = BitcoinChain::from_chain(chain) else {
+            return Vec::new();
+        };
+        hashes
+            .iter()
+            .zip(transactions)
+            .filter_map(|(hash, transaction)| {
+                let transaction_id = TransactionId::new(chain, hash.clone());
+                Some(PendingSpend {
+                    wallet_id: self.wallet.id.clone(),
+                    recorded: recorded.iter().any(|transaction| transaction.id == transaction_id),
+                    transaction_id,
+                    address: self.confirm.input.from.address.clone(),
+                    outpoints: spent_outpoints(bitcoin_chain, &transaction.data).ok()?,
+                })
+            })
+            .collect()
     }
 }
 

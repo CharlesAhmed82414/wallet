@@ -12,7 +12,20 @@ pub struct UTXO {
     pub address: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Outpoint {
+    pub transaction_id: String,
+    pub vout: i32,
+}
+
 impl UTXO {
+    pub fn outpoint(&self) -> Outpoint {
+        Outpoint {
+            transaction_id: self.transaction_id.clone(),
+            vout: self.vout,
+        }
+    }
+
     pub fn value_u64(&self) -> Result<u64, Box<dyn std::error::Error + Send + Sync>> {
         self.value.to_u64().ok_or_else(|| format!("UTXO amount is too large: {}", self.value).into())
     }

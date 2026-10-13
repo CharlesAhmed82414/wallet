@@ -10,10 +10,12 @@ mod zcash;
 #[cfg(feature = "rpc")]
 use std::collections::HashMap;
 
+use bitcoin::{Transaction, TxIn, consensus::encode::deserialize};
 #[cfg(feature = "rpc")]
 use num_bigint::BigInt;
 #[cfg(feature = "rpc")]
-use primitives::{AssetId, BitcoinChain, SignerError, SignerInput, TransactionFee, TransactionInputType, TransactionLoadInput};
+use primitives::{AssetId, SignerInput, TransactionFee, TransactionInputType, TransactionLoadInput};
+use primitives::{BitcoinChain, Outpoint, SignerError};
 
 pub use chain_signer::BitcoinChainSigner;
 #[cfg(test)]
@@ -38,11 +40,29 @@ pub(crate) fn estimate_transaction_fee(chain: BitcoinChain, input: &TransactionL
     })
 }
 
+pub fn spent_outpoints(chain: BitcoinChain, data: &str) -> Result<Vec<Outpoint>, SignerError> {
+    let bytes = hex::decode(data).map_err(SignerError::from_display)?;
+    let inputs: Vec<TxIn> = match chain {
+        BitcoinChain::Bitcoin | BitcoinChain::BitcoinCash | BitcoinChain::Litecoin | BitcoinChain::Doge | BitcoinChain::Dash => deserialize::<Transaction>(&bytes).map_err(SignerError::from_display)?.input,
+        BitcoinChain::Zcash => zcash::decode_transparent_inputs(&bytes)?,
+    };
+    inputs
+        .iter()
+        .map(|input| {
+            let vout = i32::try_from(input.previous_output.vout).map_err(SignerError::from_display)?;
+            Ok(Outpoint {
+                transaction_id: input.previous_output.txid.to_string(),
+                vout,
+            })
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use bitcoin::{blockdata::transaction::Version, consensus::encode::deserialize};
     use primitives::testkit::zcash_mock::{TEST_ZCASH_TEX_ADDRESS, TEST_ZCASH_TRANSPARENT_ADDRESS};
-    use primitives::{BitcoinChain, ChainSigner, TransactionInputType};
+    use primitives::{BitcoinChain, ChainSigner, SignerError, TransactionInputType, UTXO};
 
     use super::BitcoinChainSigner;
     use crate::testkit::signer_mock::{TEST_PRIVATE_KEY, mock_contract_swap_input, mock_funded_transfer_input, mock_p2wpkh_transfer_input, mock_transfer_input, mock_transfer_swap_input};
@@ -56,6 +76,27 @@ mod tests {
         assert_eq!(bytes[0], 0x6a);
         assert_eq!(bytes[1] as usize, payload.len());
         assert_eq!(&bytes[2..], payload);
+    }
+
+    #[test]
+    fn test_spent_outpoints() {
+        let inputs = [
+            mock_transfer_input(BitcoinChain::Bitcoin),
+            mock_p2wpkh_transfer_input(),
+            mock_transfer_input(BitcoinChain::BitcoinCash),
+            mock_transfer_input(BitcoinChain::Litecoin),
+            mock_funded_transfer_input(BitcoinChain::Doge),
+            mock_transfer_input(BitcoinChain::Dash),
+            mock_transfer_input(BitcoinChain::Zcash),
+        ];
+        for input in inputs {
+            let chain = BitcoinChain::from_chain(input.input_type.get_asset().chain()).unwrap();
+            let raw = BitcoinChainSigner::new(chain).sign_transfer(&input, &TEST_PRIVATE_KEY).unwrap();
+            let expected = input.metadata.get_utxos().unwrap().iter().map(UTXO::outpoint).collect::<Vec<_>>();
+
+            assert_eq!(super::spent_outpoints(chain, &raw).unwrap(), expected);
+        }
+        assert_eq!(super::spent_outpoints(BitcoinChain::Zcash, "0500").unwrap_err(), SignerError::invalid_input("Zcash transaction is too short"));
     }
 
     #[test]

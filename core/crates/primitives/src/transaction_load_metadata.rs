@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 
-use crate::{UTXO, contract_call_data::ContractCallData, solana_nft::SolanaNftStandard, solana_token_program::SolanaTokenProgramId, stake_type::TronStakeData};
+use crate::{Outpoint, UTXO, contract_call_data::ContractCallData, solana_nft::SolanaNftStandard, solana_token_program::SolanaTokenProgramId, stake_type::TronStakeData};
 
 pub struct AgentPrivateKey(String);
 
@@ -186,6 +186,20 @@ impl TransactionLoadMetadata {
         }
     }
 
+    pub fn holds_any_outpoint(&self, outpoints: &[Outpoint]) -> bool {
+        self.get_utxos().is_ok_and(|utxos| utxos.iter().any(|utxo| outpoints.contains(&utxo.outpoint())))
+    }
+
+    pub fn excluding_outpoints(self, spent: &[Outpoint]) -> Self {
+        let unspent = |utxos: Vec<UTXO>| utxos.into_iter().filter(|utxo| !spent.contains(&utxo.outpoint())).collect();
+        match self {
+            TransactionLoadMetadata::Bitcoin { utxos } => TransactionLoadMetadata::Bitcoin { utxos: unspent(utxos) },
+            TransactionLoadMetadata::Zcash { utxos, branch_id } => TransactionLoadMetadata::Zcash { utxos: unspent(utxos), branch_id },
+            TransactionLoadMetadata::Cardano { utxos, block_number } => TransactionLoadMetadata::Cardano { utxos: unspent(utxos), block_number },
+            metadata => metadata,
+        }
+    }
+
     pub fn get_is_destination_address_exist(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         match self {
             TransactionLoadMetadata::Stellar { is_destination_address_exist, .. } | TransactionLoadMetadata::Xrp { is_destination_address_exist, .. } => Ok(*is_destination_address_exist),
@@ -289,5 +303,37 @@ mod tests {
             TransactionLoadMetadata::None.get_solana_token_program_id().unwrap_err().to_string(),
             "Solana token program not available for this metadata type"
         );
+    }
+
+    #[test]
+    fn test_excluding_outpoints() {
+        let spent = vec![UTXO::mock_with_outpoint("aa", 0).outpoint()];
+        let utxos = vec![UTXO::mock_with_outpoint("aa", 0), UTXO::mock_with_outpoint("aa", 1), UTXO::mock_with_outpoint("bb", 0)];
+        let outpoints = |metadata: TransactionLoadMetadata| metadata.get_utxos().unwrap().iter().map(UTXO::outpoint).collect::<Vec<_>>();
+        let unspent = vec![UTXO::mock_with_outpoint("aa", 1).outpoint(), UTXO::mock_with_outpoint("bb", 0).outpoint()];
+
+        assert_eq!(outpoints(TransactionLoadMetadata::Bitcoin { utxos: utxos.clone() }.excluding_outpoints(&spent)), unspent);
+        assert_eq!(
+            outpoints(
+                TransactionLoadMetadata::Zcash {
+                    utxos: utxos.clone(),
+                    branch_id: "4dec4df0".to_string()
+                }
+                .excluding_outpoints(&spent)
+            ),
+            unspent
+        );
+        assert_eq!(outpoints(TransactionLoadMetadata::Bitcoin { utxos: utxos.clone() }.excluding_outpoints(&[])).len(), 3);
+    }
+
+    #[test]
+    fn test_holds_any_outpoint() {
+        let metadata = TransactionLoadMetadata::Bitcoin {
+            utxos: vec![UTXO::mock_with_outpoint("aa", 0)],
+        };
+
+        assert!(metadata.holds_any_outpoint(&[UTXO::mock_with_outpoint("aa", 0).outpoint()]));
+        assert!(!metadata.holds_any_outpoint(&[UTXO::mock_with_outpoint("aa", 1).outpoint()]));
+        assert!(!TransactionLoadMetadata::None.holds_any_outpoint(&[UTXO::mock_with_outpoint("aa", 0).outpoint()]));
     }
 }

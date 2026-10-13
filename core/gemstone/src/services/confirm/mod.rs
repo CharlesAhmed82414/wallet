@@ -4,6 +4,7 @@ mod confirmation;
 pub(crate) mod error;
 pub(crate) mod header;
 mod model;
+mod pending_spends;
 pub(crate) mod rules;
 pub(crate) mod screen;
 mod swap;
@@ -29,6 +30,7 @@ use crate::services::GemScanService;
 use crate::services::assets::GemAssetsService;
 use crate::services::balance::GemBalanceService;
 use crate::services::clock::sleep;
+use crate::services::confirm::pending_spends::PendingSpends;
 use crate::services::confirm::rules::ConfirmInput;
 use crate::services::price::GemPriceService;
 use crate::services::scan::rules as scan_rules;
@@ -40,7 +42,7 @@ use crate::signer::GemSignerError;
 use num_bigint::BigInt;
 use primitives::TransactionInputType;
 use primitives::currency::Currency;
-use primitives::{Asset, AssetId, BlockExplorerLink, Chain, SimulationPayloadFieldDisplay, SimulationResult, Transaction, TransactionFee, WalletId};
+use primitives::{Asset, AssetId, BlockExplorerLink, Chain, Outpoint, SimulationPayloadFieldDisplay, SimulationResult, Transaction, TransactionFee, WalletId};
 
 #[derive(uniffi::Object)]
 pub struct GemConfirmService {
@@ -53,6 +55,7 @@ pub struct GemConfirmService {
     assets: Arc<GemAssetsService>,
     transaction_status: Arc<dyn GemTransactionStatusService>,
     simulation_formatter: GemSimulationFormatter,
+    pending_spends: PendingSpends,
 }
 
 #[uniffi::export]
@@ -78,6 +81,7 @@ impl GemConfirmService {
             assets,
             transaction_status,
             simulation_formatter: GemSimulationFormatter::new(),
+            pending_spends: PendingSpends::default(),
         }
     }
 }
@@ -106,42 +110,42 @@ impl GemConfirmService {
             let payload = scan_rules::transaction_payload(preload_input.clone())?;
             self.scanner.scan(payload).await
         };
-        let (metadata, fee_rates, scan, simulation) = futures::join!(
+        let (metadata, fee_rates, scan, simulation, spent_outpoints) = futures::join!(
             self.gateway.get_transaction_preload(chain, preload_input.clone()),
             self.gateway.get_fee_rates(chain, transfer.input_type.clone()),
             scan_future,
             self.simulate(chain, input),
+            self.pending_outpoints(chain, &input.from.address),
         );
         let metadata = metadata.map_err(error::load_error)?;
+        let holds_pending_funds = metadata.holds_any_outpoint(&spent_outpoints);
         let fee_rates = fee_rates.map_err(error::load_error)?;
         let fee_rates = rules::confirmation_fee_rates(&asset.id, transfer.use_max_amount, fee_rates);
         let simulation = simulation?;
 
         rules::validate_scan(scan.as_ref(), transfer.recipient.memo.as_deref(), &symbol)?;
+        if holds_pending_funds && transfer.use_max_amount {
+            return Err(GemConfirmError::PendingTransaction);
+        }
 
         let selected = options.fee_selection.select_fee_rate(&fee_rates)?;
         let load = if rules::is_signature_only(&transfer.input_type) {
             GemTransactionData {
                 fee: TransactionFee::new_from_fee(BigInt::ZERO, AssetId::from_chain(chain)).into(),
-                metadata,
+                metadata: metadata.excluding_outpoints(&spent_outpoints),
             }
         } else {
-            self.gateway
-                .get_transaction_load(
-                    chain,
-                    GemTransactionLoadInput {
-                        input_type: transfer.input_type.clone(),
-                        sender_address: input.from.address.clone(),
-                        destination_address: destination,
-                        value: transfer.value.to_biguint().ok_or_else(|| GemConfirmError::Load { msg: "negative transfer value".to_string() })?,
-                        gas_price: selected.gas_price_type.clone(),
-                        memo: transfer.recipient.memo.clone(),
-                        is_max_value: transfer.use_max_amount,
-                        metadata,
-                    },
-                )
-                .await
-                .map_err(error::load_error)?
+            let load_input = GemTransactionLoadInput {
+                input_type: transfer.input_type.clone(),
+                sender_address: input.from.address.clone(),
+                destination_address: destination,
+                value: transfer.value.to_biguint().ok_or_else(|| GemConfirmError::Load { msg: "negative transfer value".to_string() })?,
+                gas_price: selected.gas_price_type.clone(),
+                memo: transfer.recipient.memo.clone(),
+                is_max_value: transfer.use_max_amount,
+                metadata,
+            };
+            Box::pin(self.transaction_load(chain, load_input, &spent_outpoints)).await?
         };
 
         let mut fee = load.fee;
@@ -253,6 +257,7 @@ impl GemConfirmService {
             Ok(stored) => stored,
             Err(_) => self.record(input, hashes, signed).await.unwrap_or_default(),
         };
+        self.pending_spends.insert(input.pending_spends(hashes, signed, &stored));
         self.transaction_status.track(input.wallet.id.clone(), stored);
     }
 
@@ -289,6 +294,31 @@ impl GemConfirmService {
         Ok(pending)
     }
 
+    async fn transaction_load(&self, chain: Chain, preloaded: GemTransactionLoadInput, spent_outpoints: &[Outpoint]) -> Result<GemTransactionData, GemConfirmError> {
+        let holds_pending_funds = preloaded.metadata.holds_any_outpoint(spent_outpoints);
+        let unspent = GemTransactionLoadInput {
+            metadata: preloaded.metadata.clone().excluding_outpoints(spent_outpoints),
+            ..preloaded.clone()
+        };
+        match self.gateway.get_transaction_load(chain, unspent).await {
+            Ok(load) => Ok(load),
+            Err(_) if holds_pending_funds && self.gateway.get_transaction_load(chain, preloaded).await.is_ok() => Err(GemConfirmError::PendingTransaction),
+            Err(load_error) => Err(error::load_error(load_error)),
+        }
+    }
+
+    async fn pending_outpoints(&self, chain: Chain, address: &str) -> Vec<Outpoint> {
+        let spends = self.pending_spends.for_address(chain, address);
+        let states = futures::future::join_all(spends.iter().map(|spend| self.transaction_state.get_state(spend.wallet_id.clone(), spend.transaction_id.clone()))).await;
+        let (pending, settled): (Vec<_>, Vec<_>) = spends.into_iter().zip(states).partition(|(spend, state)| match state {
+            Ok(Some(state)) => !state.is_completed(),
+            Ok(None) => !spend.recorded,
+            Err(_) => true,
+        });
+        self.pending_spends.remove(&settled.into_iter().map(|(spend, _)| spend.transaction_id).collect::<Vec<_>>());
+        pending.into_iter().flat_map(|(spend, _)| spend.outpoints).collect()
+    }
+
     async fn simulate(&self, chain: Chain, input: &GemConfirmInput) -> Result<Option<SimulationResult>, GemConfirmError> {
         let Some(transaction) = input.transfer.input_type.simulation_payload() else {
             return Ok(None);
@@ -315,12 +345,13 @@ mod tests {
 
     use futures::executor::block_on;
     use primitives::{
-        Account, Asset, AssetId, Chain, FeePriority, PerpetualConfirmData, PerpetualDirection, PerpetualType, TransactionInputType, TransactionType, Wallet, asset_constants::HYPERCORE_SPOT_USDC_ASSET_ID,
-        known_assets::HYPERCORE_PERPETUAL_USDC, swap::SwapData,
+        Account, Asset, AssetId, Chain, FeePriority, Outpoint, PerpetualConfirmData, PerpetualDirection, PerpetualType, TransactionId, TransactionInputType, TransactionState, TransactionType, Wallet,
+        asset_constants::HYPERCORE_SPOT_USDC_ASSET_ID, known_assets::HYPERCORE_PERPETUAL_USDC, swap::SwapData,
     };
 
     use num_bigint::BigInt;
 
+    use super::pending_spends::PendingSpend;
     use super::testkit::ConfirmTestkit;
     use super::{GemConfirmError, GemConfirmFeeLoad, GemConfirmFeeSelection, GemConfirmLoadOptions, SendInput};
     use crate::models::transaction::GemSignedTransaction;
@@ -390,6 +421,123 @@ mod tests {
 
             testkit.confirm.store_pending(&input, &["hash".to_string()], &signed).await;
             testkit
+        })
+    }
+
+    fn load_bitcoin_with_pending_spend(value: i64, use_max_amount: bool, pending: bool) -> Result<GemConfirmFeeLoad, GemConfirmError> {
+        block_on(async {
+            let address = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
+            let spent_txid = "0000000000000000000000000000000000000000000000000000000000000001";
+            let wallet = Wallet::mock_with_accounts(vec![Account::mock(Chain::Bitcoin, address)]);
+            let utxos = format!(r#"[{{"txid":"{spent_txid}","vout":0,"value":"50000"}},{{"txid":"0000000000000000000000000000000000000000000000000000000000000002","vout":0,"value":"30000"}}]"#);
+            let provider = Arc::new(TestAlienProvider::with_json_by_path(
+                200,
+                &[
+                    ("/v2/utxo/", utxos.as_str()),
+                    ("/v2/estimatefee/", r#"{"result":"0.00001"}"#),
+                    ("/v3/devices/transactions/scan", r#"{"isMalicious":false,"isScanComplete":true}"#),
+                ],
+            ));
+            let testkit = ConfirmTestkit::with_provider(wallet.clone(), wallet.clone(), provider);
+            if pending {
+                let transaction_id = TransactionId::new(Chain::Bitcoin, "pending".to_string());
+                testkit.confirm.pending_spends.insert(vec![PendingSpend {
+                    wallet_id: wallet.id.clone(),
+                    transaction_id: transaction_id.clone(),
+                    address: address.to_string(),
+                    outpoints: vec![Outpoint {
+                        transaction_id: spent_txid.to_string(),
+                        vout: 0,
+                    }],
+                    recorded: true,
+                }]);
+                testkit.transaction_store.states.lock().unwrap().push((transaction_id, TransactionState::Pending));
+            }
+            let transfer = GemTransferData {
+                recipient: GemRecipient::address(address.into()),
+                value: value.into(),
+                use_max_amount,
+                ..GemTransferData::mock(TransactionInputType::Transfer { asset: Asset::from_chain(Chain::Bitcoin) })
+            };
+            let input = testkit.service.confirm_input(wallet.clone(), transfer).unwrap();
+            let options = GemConfirmLoadOptions {
+                fee_selection: GemConfirmFeeSelection::Priority { priority: FeePriority::Normal },
+                fee_asset_id: None,
+                asset_id: None,
+            };
+            testkit.confirm.load(&wallet.id, &input, &options, primitives::currency::Currency::USD).await
+        })
+    }
+
+    #[test]
+    fn test_funds_held_by_a_pending_send_block_max_and_explain_a_shortfall() {
+        assert_eq!(load_bitcoin_with_pending_spend(80_000, true, true).err(), Some(GemConfirmError::PendingTransaction));
+        assert_eq!(load_bitcoin_with_pending_spend(40_000, false, true).err(), Some(GemConfirmError::PendingTransaction));
+        assert_eq!(load_bitcoin_with_pending_spend(10_000, false, true).err(), None);
+        assert_eq!(
+            load_bitcoin_with_pending_spend(100, false, true).err(),
+            Some(GemConfirmError::Network {
+                msg: "transaction amount is below the dust threshold".to_string()
+            })
+        );
+        assert_eq!(load_bitcoin_with_pending_spend(80_000, true, false).err(), None);
+    }
+
+    const TEST_SIGNED_BITCOIN_TRANSFER: &str = "02000000010100000000000000000000000000000000000000000000000000000000000000000000006b483045022100ef21c70ee59cd7ef09f5d12252ed3c1c4fa971b33740cf2c29b90ab15fc3e5ea02205761ce83d839043d38341344c499cd13cb2ed4e03ebd88c6cf38fc84415b1e290121031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078ffdffffff0210270000000000001976a91479b000887626b294a914501a4cd226b58b23598388ac5e9b0000000000001976a91479b000887626b294a914501a4cd226b58b23598388ac00000000";
+    const TEST_BROADCAST_HASH: &str = "8f9d1c2a4b6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708";
+
+    #[test]
+    fn test_a_pending_bitcoin_send_keeps_its_inputs_out_of_the_next_load_until_it_settles() {
+        block_on(async {
+            let input = SendInput::mock(Chain::Bitcoin, TransactionInputType::Transfer { asset: Asset::from_chain(Chain::Bitcoin) });
+            let provider = Arc::new(TestAlienProvider::with_json_by_path(200, &[("sendtx", &format!(r#"{{"result":"{TEST_BROADCAST_HASH}"}}"#))]));
+            let testkit = ConfirmTestkit::with_provider(input.wallet.clone(), input.wallet.clone(), provider);
+            let signed = vec![GemSignedTransaction {
+                data: TEST_SIGNED_BITCOIN_TRANSFER.to_string(),
+                transaction_type: TransactionType::Transfer,
+            }];
+            let transaction_id = TransactionId::new(Chain::Bitcoin, TEST_BROADCAST_HASH.to_string());
+            let spent = Outpoint {
+                transaction_id: "0000000000000000000000000000000000000000000000000000000000000001".to_string(),
+                vout: 0,
+            };
+
+            testkit.confirm.send(&input, signed).await.unwrap();
+            testkit.transaction_store.states.lock().unwrap().push((transaction_id.clone(), TransactionState::Pending));
+
+            assert_eq!(testkit.confirm.pending_outpoints(Chain::Bitcoin, "sender").await, vec![spent]);
+            assert_eq!(testkit.confirm.pending_outpoints(Chain::Litecoin, "sender").await, vec![]);
+            assert_eq!(testkit.confirm.pending_outpoints(Chain::Bitcoin, "other").await, vec![]);
+
+            *testkit.transaction_store.states.lock().unwrap() = vec![(transaction_id, TransactionState::Confirmed)];
+
+            assert_eq!(testkit.confirm.pending_outpoints(Chain::Bitcoin, "sender").await, vec![]);
+            assert_eq!(testkit.confirm.pending_spends.for_address(Chain::Bitcoin, "sender"), vec![]);
+        })
+    }
+
+    #[test]
+    fn test_a_send_activity_could_not_record_keeps_its_inputs_held() {
+        block_on(async {
+            let input = SendInput::mock(Chain::Bitcoin, TransactionInputType::Transfer { asset: Asset::from_chain(Chain::Bitcoin) });
+            let provider = Arc::new(TestAlienProvider::with_json_by_path(200, &[("sendtx", &format!(r#"{{"result":"{TEST_BROADCAST_HASH}"}}"#))]));
+            let testkit = ConfirmTestkit::with_provider(input.wallet.clone(), input.wallet.clone(), provider);
+            let signed = vec![GemSignedTransaction {
+                data: TEST_SIGNED_BITCOIN_TRANSFER.to_string(),
+                transaction_type: TransactionType::Transfer,
+            }];
+            *testkit.transaction_store.add_failures.lock().unwrap() = 2;
+
+            testkit.confirm.send(&input, signed).await.unwrap();
+
+            assert!(testkit.transaction_store.added.lock().unwrap().is_empty());
+            assert_eq!(
+                testkit.confirm.pending_outpoints(Chain::Bitcoin, "sender").await,
+                vec![Outpoint {
+                    transaction_id: "0000000000000000000000000000000000000000000000000000000000000001".to_string(),
+                    vout: 0,
+                }]
+            );
         })
     }
 
