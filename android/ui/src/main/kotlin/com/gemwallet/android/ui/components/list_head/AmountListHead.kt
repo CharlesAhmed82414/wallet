@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -216,7 +215,6 @@ fun HeaderIcon(icon: GemAssetIcon, iconSize: Dp = headerIconSize) {
     AssetIcon(icon, size = iconSize, badgeBackgroundColor = MaterialTheme.colorScheme.surface)
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun AssetHeadActions(actions: GemHeaderActions, onAction: (GemHeaderButtonAction) -> Unit) {
     var actionFontSize by remember { mutableStateOf(16.sp) }
@@ -306,7 +304,6 @@ private fun AssetWatchOnly() {
     InfoBottomSheet(item = showInfoSheet, onClose = { showInfoSheet = null })
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun AmountHeadAction(title: String, fontSize: TextUnit, imageVector: ImageVector, contentDescription: String, modifier: Modifier = Modifier, enabled: Boolean = true, onNextFontSize: (TextUnit) -> Unit, onClick: () -> Unit) {
     Column(

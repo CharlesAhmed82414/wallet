@@ -21,7 +21,6 @@ dependencies {
     api(project(":ui-models"))
 
     // Compose
-    api(libs.androidx.material3.adaptive.android)
     api(libs.compose.ui)
     api(libs.compose.material3)
     api(libs.kotlinx.collections.immutable)
@@ -36,9 +35,6 @@ dependencies {
     api(libs.coil.compose)
     api(libs.coil.network)
     api(libs.coil.svg)
-
-    // Permissions request
-    api(libs.compose.permissions)
 
     implementation(libs.ktx.core)
     implementation(libs.lifecycle.runtime)
