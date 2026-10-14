@@ -28,7 +28,7 @@ pub use check_schedule::CheckSchedule;
 pub use fetch_address_transactions_consumer::FetchAddressTransactionsConsumer;
 pub use fetch_blocks_consumer::FetchBlocksConsumer;
 pub use fetch_transaction_consumer::FetchTransactionConsumer;
-pub use in_transit_updater::{InTransitConfig, InTransitUpdater};
+pub use in_transit_updater::InTransitUpdater;
 pub use parser_plan::{BlockPlan, BlockPlanKind, plan_next_block, should_reload_catchup, timeout_for_state};
 pub use parser_state::ParserStateService;
 pub use pending_transactions_updater::{PendingTransactionsUpdater, PendingTransactionsUpdaterConfig};

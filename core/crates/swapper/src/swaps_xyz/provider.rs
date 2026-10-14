@@ -19,7 +19,7 @@ use super::{
 };
 use crate::{
     FetchQuoteData, ProviderData, ProviderType, Quote, QuoteRequest, Route, RpcClient, RpcProvider, SwapAmountMode, SwapResult, SwapResultRequest, Swapper, SwapperChainAsset, SwapperError, SwapperProvider, SwapperQuoteData,
-    client_factory::create_sui_client, config::API_BASE_URL, fees::default_referral_fees,
+    client_factory::create_sui_client, config::get_swap_provider_url, fees::default_referral_fees,
 };
 
 pub struct SwapsXyz<C>
@@ -44,10 +44,7 @@ impl SwapsXyz<RpcClient> {
     pub fn new(rpc_provider: Arc<dyn RpcProvider>) -> Option<Self> {
         let sui_client = create_sui_client(rpc_provider.clone()).ok()?;
         Some(Self::with_client(
-            SwapsXyzClient::new(
-                RpcClient::new(super::base_url(), rpc_provider.clone()),
-                RpcClient::new(format!("{API_BASE_URL}/v1/swaps/{}", SwapperProvider::SwapsXyz.as_ref()), rpc_provider),
-            ),
+            SwapsXyzClient::new(RpcClient::new(super::base_url(), rpc_provider.clone()), RpcClient::new(get_swap_provider_url(SwapperProvider::SwapsXyz), rpc_provider)),
             sui_client,
         ))
     }
