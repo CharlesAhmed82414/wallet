@@ -17,7 +17,7 @@ use swapper::SwapperProvider;
 use swapper::cross_chain::{self, DepositAddressMap};
 use swapper::swapper::GemSwapper;
 
-use crate::ConfigCacher;
+use crate::config::repository::Repository as ConfigurationRepository;
 use crate::transactions::{CheckSchedule, SwapVaultAddressClient, TransactionQueue, TransactionQueueGroup, TransactionQueueMetrics, swap_result_metadata, swap_state_updates};
 
 struct InTransitConfig {
@@ -28,7 +28,7 @@ struct InTransitConfig {
 }
 
 impl InTransitConfig {
-    async fn from_config(config: &ConfigCacher) -> Result<Self, DatabaseError> {
+    async fn from_config(config: &dyn ConfigurationRepository) -> Result<Self, DatabaseError> {
         let mut enabled_providers = BTreeSet::new();
         for provider in SwapperProvider::all() {
             if config.get_param_bool(&ConfigParamKey::TransactionInTransitProviderEnable(provider)).await? {
@@ -58,7 +58,7 @@ impl InTransitConfig {
 
 pub struct InTransitUpdater {
     repository: Arc<dyn Repository>,
-    config: Arc<ConfigCacher>,
+    config: Arc<dyn ConfigurationRepository>,
     swapper: Arc<GemSwapper>,
     stream_producer: Arc<dyn StreamProducerQueue>,
     vault_client: SwapVaultAddressClient,
@@ -69,7 +69,7 @@ pub struct InTransitUpdater {
 impl InTransitUpdater {
     pub(crate) fn new(
         repository: Arc<dyn Repository>,
-        config: Arc<ConfigCacher>,
+        config: Arc<dyn ConfigurationRepository>,
         swapper: Arc<GemSwapper>,
         stream_producer: Arc<dyn StreamProducerQueue>,
         vault_client: SwapVaultAddressClient,
@@ -88,7 +88,7 @@ impl InTransitUpdater {
     }
 
     pub async fn update(&self) -> Result<usize, Box<dyn Error + Send + Sync>> {
-        let config = InTransitConfig::from_config(&self.config).await?;
+        let config = InTransitConfig::from_config(self.config.as_ref()).await?;
         let vault_addresses = self.vault_client.get_deposit_address_map().await?;
         let now = Utc::now();
         let (transactions_to_check, counts) = due_in_transit_transactions(self.repository.as_ref(), &self.schedule, &config, now, &vault_addresses).await?;
@@ -228,7 +228,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_provider_checks_are_enabled_by_default() {
-        let config = ConfigCacher::new(Arc::new(MemoryConfigRepository::new()));
+        let config = MemoryConfigRepository::new();
         let in_transit = InTransitConfig::from_config(&config).await.unwrap();
 
         assert_eq!(in_transit.enabled_providers, SwapperProvider::all().into_iter().collect());
@@ -236,13 +236,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_disabled_relay_does_not_block_other_providers_past_scan_limit() {
-        let config = ConfigCacher::new(Arc::new(
-            MemoryConfigRepository::new()
-                .with_value(&ConfigParamKey::TransactionInTransitProviderEnable(SwapProvider::Relay).key(), "false")
-                .with_value(ConfigKey::TransactionInTransitQueryLimit.as_ref(), "2")
-                .with_value(ConfigKey::TransactionTimerInTransitUpdate.as_ref(), "1m")
-                .with_value(ConfigKey::TransactionInTransitMaxCheckInterval.as_ref(), "1m"),
-        ));
+        let config = MemoryConfigRepository::new()
+            .with_value(&ConfigParamKey::TransactionInTransitProviderEnable(SwapProvider::Relay).key(), "false")
+            .with_value(ConfigKey::TransactionInTransitQueryLimit.as_ref(), "2")
+            .with_value(ConfigKey::TransactionTimerInTransitUpdate.as_ref(), "1m")
+            .with_value(ConfigKey::TransactionInTransitMaxCheckInterval.as_ref(), "1m");
         let config = InTransitConfig::from_config(&config).await.unwrap();
         assert_eq!(config.enabled_providers, SwapperProvider::all().into_iter().filter(|provider| *provider != SwapProvider::Relay).collect());
 
