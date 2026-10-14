@@ -11,16 +11,16 @@ pub(super) struct SwapProxyClient {
     client: ReqwestClient,
     deposit_addresses: Arc<dyn SwapVaultAddressCacher>,
     provider: SwapProvider,
-    deposit_address_pointer: &'static str,
+    deposit_id_paths: &'static [&'static str],
 }
 
 impl SwapProxyClient {
-    pub(super) fn new(url: String, deposit_addresses: Arc<dyn SwapVaultAddressCacher>, provider: SwapProvider, deposit_address_pointer: &'static str) -> Self {
+    pub(super) fn new(url: String, deposit_addresses: Arc<dyn SwapVaultAddressCacher>, provider: SwapProvider, deposit_id_paths: &'static [&'static str]) -> Self {
         Self {
             client: ReqwestClient::new(url, gem_client::reqwest_client()),
             deposit_addresses,
             provider,
-            deposit_address_pointer,
+            deposit_id_paths,
         }
     }
 
@@ -34,19 +34,38 @@ impl SwapProxyClient {
 
     async fn send(&self, request: RequestBuilder) -> Result<Response, ClientError> {
         let response = self.client.send(request).await?;
-        self.cache_deposit_address(&response.data).await;
+        self.cache_deposit_ids(&response.data).await;
         Ok(response)
     }
 
-    async fn cache_deposit_address(&self, data: &[u8]) {
+    async fn cache_deposit_ids(&self, data: &[u8]) {
         let Ok(response) = serde_json::from_slice::<serde_json::Value>(data) else {
             return;
         };
-        let Some(address) = response.pointer(self.deposit_address_pointer).and_then(|value| value.as_str()).filter(|address| !address.is_empty()) else {
-            return;
-        };
-        if let Err(error) = self.deposit_addresses.add_vault_addresses(self.provider, SwapVaultAddressKind::Deposit, &[address.to_string()]).await {
+        let deposit_ids = deposit_ids(&response, self.deposit_id_paths);
+        if let Err(error) = self.deposit_addresses.add_vault_addresses(self.provider, SwapVaultAddressKind::Deposit, &deposit_ids).await {
             error_with_fields!("swap deposit address cache failed", &*error, provider = self.provider.as_ref());
         }
+    }
+}
+
+fn deposit_ids(response: &serde_json::Value, paths: &[&str]) -> Vec<String> {
+    paths.iter().filter_map(|path| response.pointer(path)?.as_str()).filter(|value| !value.is_empty()).map(str::to_string).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deposit_ids() {
+        let paths = ["/steps/0/depositAddress", "/protocol/v2/orderId"];
+        let bitcoin: serde_json::Value = serde_json::from_str(r#"{"steps":[{"id":"deposit","depositAddress":"bc1qa0z550eacdsxytnxf9yk7xvvhqzqvlx2tl44z2"}]}"#).unwrap();
+        let evm: serde_json::Value = serde_json::from_str(r#"{"steps":[{"id":"deposit","depositAddress":""}],"protocol":{"v2":{"orderId":"0x5018b8125a7aec15f5a9e8bf07786e79cc1b52b6d97fb1a92930fc5aeea6ddf0"}}}"#).unwrap();
+        let error: serde_json::Value = serde_json::from_str(r#"{"message":"Amount is too low","errorCode":"AMOUNT_TOO_LOW"}"#).unwrap();
+
+        assert_eq!(deposit_ids(&bitcoin, &paths), vec!["bc1qa0z550eacdsxytnxf9yk7xvvhqzqvlx2tl44z2"]);
+        assert_eq!(deposit_ids(&evm, &paths), vec!["0x5018b8125a7aec15f5a9e8bf07786e79cc1b52b6d97fb1a92930fc5aeea6ddf0"]);
+        assert_eq!(deposit_ids(&error, &paths), Vec::<String>::new());
     }
 }

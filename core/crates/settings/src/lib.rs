@@ -487,6 +487,7 @@ pub struct Swap {
     pub nearintents: URL,
     pub okx: Okx,
     pub swapsxyz: URL,
+    pub relay: URL,
 }
 
 #[derive(Debug, Deserialize, Clone)]

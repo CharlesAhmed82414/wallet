@@ -34,6 +34,13 @@ fn deposit_address_provider(transaction: &Transaction, deposit_addresses: &Depos
         .get(&transaction.to)
         .copied()
         .or_else(|| transaction.output_addresses().into_iter().find_map(|address| deposit_addresses.get(&address).copied()))
+        .or_else(|| deposit_addresses.get(&deposit_order_id(transaction)?).copied())
+}
+
+fn deposit_order_id(transaction: &Transaction) -> Option<String> {
+    let arguments = transaction.data.as_deref()?.strip_prefix("0x")?.get(8..)?;
+    let order_id = arguments.get(arguments.len().checked_sub(64)?..)?;
+    Some(format!("0x{order_id}"))
 }
 
 fn is_valid_swap_transaction(provider: &SwapperProvider, transaction: &Transaction) -> bool {
@@ -85,6 +92,29 @@ mod tests {
         let deposit_addresses = DepositAddressMap::from([(vault.clone(), SwapperProvider::NearIntents)]);
         let transaction = Transaction { to: vault, ..Transaction::mock() };
         assert_eq!(swap_provider_with_vault_addresses(&transaction, &deposit_addresses), Some(SwapperProvider::NearIntents));
+    }
+
+    #[test]
+    fn test_deposit_order_id_detected() {
+        let order_id = "0x5018b8125a7aec15f5a9e8bf07786e79cc1b52b6d97fb1a92930fc5aeea6ddf0".to_string();
+        let deposit_addresses = DepositAddressMap::from([(order_id, SwapperProvider::Relay)]);
+        let deposit = Transaction {
+            to: "0x4cD00E387622C35bDDB9b4c962C136462338BC31".to_string(),
+            data: Some("0x49290c1c0000000000000000000000000d9dab1a248f63b0a48965ba8435e4de7497a3dc5018b8125a7aec15f5a9e8bf07786e79cc1b52b6d97fb1a92930fc5aeea6ddf0".to_string()),
+            ..Transaction::mock()
+        };
+        let other_order = Transaction {
+            data: Some("0x49290c1c0000000000000000000000000d9dab1a248f63b0a48965ba8435e4de7497a3dcf03274723d3ac56f800095018a0fb48d357d0af90bead4142cb134e06099bb13".to_string()),
+            ..deposit.clone()
+        };
+        let selector_only = Transaction {
+            data: Some("0x49290c1c".to_string()),
+            ..deposit.clone()
+        };
+
+        assert_eq!(swap_provider_with_vault_addresses(&deposit, &deposit_addresses), Some(SwapperProvider::Relay));
+        assert_eq!(swap_provider_with_vault_addresses(&other_order, &deposit_addresses), None);
+        assert_eq!(swap_provider_with_vault_addresses(&selector_only, &deposit_addresses), None);
     }
 
     #[test]

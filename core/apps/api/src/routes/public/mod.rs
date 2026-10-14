@@ -34,6 +34,7 @@ pub fn router() -> Router<AppState> {
         .route("/swap/assets", get(swap::get_swap_assets))
         .route("/swaps/providers/near_intents/quote", post(swap::post_near_intents_quote))
         .route("/swaps/providers/swaps_xyz/action", post(swap::post_swaps_xyz_action))
+        .route("/swaps/providers/relay/quote", post(swap::post_relay_quote))
         .route("/swaps/providers/okx/v6/quote", post(swap::post_okx_quote_v6))
         .route("/swaps/providers/okx/v6/swap", post(swap::post_okx_swap_v6))
         .route("/swaps/near_intents/quote", post(swap::post_near_intents_quote).layer(deprecated.clone()))

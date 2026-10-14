@@ -172,7 +172,7 @@ where
     async fn get_vault_addresses(&self, _from_timestamp: Option<u64>) -> Result<VaultAddresses, SwapperError> {
         let response = self.client.get_chains().await?;
         Ok(VaultAddresses {
-            deposit: response.deposit_addresses(),
+            deposit: vec![],
             send: response.send_addresses(),
         })
     }
