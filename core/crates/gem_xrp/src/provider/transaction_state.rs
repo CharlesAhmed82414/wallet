@@ -10,7 +10,7 @@ use crate::{provider::transaction_state_mapper::map_transaction_status, rpc::Xrp
 #[async_trait]
 impl<C: Client + Clone> ChainTransactionState for XrpClient<C> {
     async fn get_transaction_status(&self, request: TransactionStateRequest) -> Result<TransactionUpdate, Box<dyn Error + Sync + Send>> {
-        Ok(match self.get_transaction_status(&request.id).await? {
+        Ok(match self.get_transaction(&request.id).await? {
             Some(status) => map_transaction_status(&status),
             None => TransactionUpdate::new_state(TransactionState::Pending),
         })
