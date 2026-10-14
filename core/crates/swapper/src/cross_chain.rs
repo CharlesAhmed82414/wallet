@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use alloy_sol_types::SolCall;
-use gem_evm::across::contracts::V3SpokePoolInterface;
-use primitives::{ChainType, Transaction, decode_hex};
+use gem_evm::across::{contracts::V3SpokePoolInterface, deployment::AcrossDeployment};
+use primitives::{Chain, ChainType, Transaction, decode_hex};
 
 use crate::SwapperProvider;
 use crate::mayan::MAYAN_FORWARDER_SELECTORS;
@@ -51,19 +51,19 @@ fn is_valid_swap_transaction(provider: &SwapperProvider, transaction: &Transacti
     match provider {
         SwapperProvider::Thorchain | SwapperProvider::Mayachain => transaction.memo.as_deref().is_some_and(ThorchainMemo::is_swap),
         SwapperProvider::Chainflip => is_valid_chainflip_swap(transaction),
-        SwapperProvider::Across => !is_across_fill(transaction),
+        SwapperProvider::Across => is_across_deposit(transaction),
         SwapperProvider::Mayan => is_valid_mayan_swap(transaction),
         _ => true,
     }
 }
 
-fn is_across_fill(transaction: &Transaction) -> bool {
-    let fill_selectors = [V3SpokePoolInterface::fillRelayCall::SELECTOR, V3SpokePoolInterface::fillV3RelayCall::SELECTOR];
+fn is_across_deposit(transaction: &Transaction) -> bool {
     transaction
         .data
         .as_deref()
-        .and_then(|data| decode_hex(data.get(..10)?).ok())
-        .is_some_and(|selector| fill_selectors.iter().any(|fill| selector == fill))
+        .and_then(|data| V3SpokePoolInterface::depositV3Call::abi_decode(&decode_hex(data).ok()?).ok())
+        .and_then(|deposit| Chain::from_chain_id(u64::try_from(deposit.destinationChainId).ok()?))
+        .is_some_and(|destination| AcrossDeployment::deployment_by_chain(&destination).is_some())
 }
 
 fn is_valid_mayan_swap(transaction: &Transaction) -> bool {
@@ -101,7 +101,8 @@ pub fn is_from_vault_address(transaction: &Transaction, send_addresses: &SendAdd
 #[cfg(test)]
 mod tests {
     use super::*;
-    use primitives::{AssetId, Chain, TransactionSwapMetadata, TransactionUtxoInput};
+    use alloy_primitives::{Address, Bytes, U256, hex};
+    use primitives::{AssetId, TransactionSwapMetadata, TransactionUtxoInput};
 
     #[test]
     fn test_vault_address_detected() {
@@ -240,22 +241,40 @@ mod tests {
     }
 
     #[test]
-    fn test_across_fill_is_not_a_deposit() {
+    fn test_across_deposits() {
         let spoke_pool = "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5".to_string();
         let deposit_addresses = DepositAddressMap::from([(spoke_pool.clone(), SwapperProvider::Across)]);
-        let fill = Transaction {
-            to: spoke_pool.clone(),
-            data: Some("0xdeff4b2400000000".to_string()),
-            ..Transaction::mock()
+        let deposit_call = |destination_chain_id: u64| V3SpokePoolInterface::depositV3Call {
+            depositor: Address::ZERO,
+            recipient: Address::ZERO,
+            inputToken: Address::ZERO,
+            outputToken: Address::ZERO,
+            inputAmount: U256::from(1),
+            outputAmount: U256::from(1),
+            destinationChainId: U256::from(destination_chain_id),
+            exclusiveRelayer: Address::ZERO,
+            quoteTimestamp: 0,
+            fillDeadline: 0,
+            exclusivityDeadline: 0,
+            message: Bytes::new(),
         };
         let deposit = Transaction {
-            to: spoke_pool,
-            data: Some("0xad5425c600000000".to_string()),
+            to: spoke_pool.clone(),
+            data: Some(hex::encode_prefixed(deposit_call(8453).abi_encode())),
             ..Transaction::mock()
         };
+        let unsupported_destination = Transaction {
+            data: Some(hex::encode_prefixed(deposit_call(4217).abi_encode())),
+            ..deposit.clone()
+        };
+        let fill = Transaction {
+            data: Some("0xdeff4b2400000000".to_string()),
+            ..deposit.clone()
+        };
 
-        assert_eq!(swap_provider_with_vault_addresses(&fill, &deposit_addresses), None);
         assert_eq!(swap_provider_with_vault_addresses(&deposit, &deposit_addresses), Some(SwapperProvider::Across));
+        assert_eq!(swap_provider_with_vault_addresses(&unsupported_destination, &deposit_addresses), None);
+        assert_eq!(swap_provider_with_vault_addresses(&fill, &deposit_addresses), None);
     }
 
     #[test]
