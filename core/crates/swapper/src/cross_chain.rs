@@ -79,15 +79,15 @@ fn is_valid_mayan_swap(transaction: &Transaction) -> bool {
 }
 
 fn is_valid_chainflip_swap(transaction: &Transaction) -> bool {
-    if transaction.asset_id.chain.chain_type() != ChainType::Ethereum {
-        return true;
+    match transaction.asset_id.chain.chain_type() {
+        ChainType::Ethereum => transaction
+            .data
+            .as_deref()
+            .and_then(|data| data.get(..10))
+            .is_some_and(|selector| CHAINFLIP_SWAP_SELECTORS.iter().any(|candidate| selector.eq_ignore_ascii_case(candidate))),
+        ChainType::Tron => transaction.memo.as_deref().is_some_and(|note| !note.is_empty()),
+        _ => true,
     }
-
-    transaction
-        .data
-        .as_deref()
-        .and_then(|data| data.get(..10))
-        .is_some_and(|selector| CHAINFLIP_SWAP_SELECTORS.iter().any(|candidate| selector.eq_ignore_ascii_case(candidate)))
 }
 
 pub fn is_cross_chain_swap(transaction: &Transaction, deposit_addresses: &DepositAddressMap) -> bool {
@@ -296,6 +296,22 @@ mod tests {
         let relay_deposit = Transaction::mock();
         let deposit_ids = DepositAddressMap::from([(relay_deposit.id.to_string(), SwapperProvider::Relay)]);
         assert_eq!(in_transit_swap_provider(&relay_deposit, &deposit_ids), Some(SwapperProvider::Relay));
+    }
+
+    #[test]
+    fn test_chainflip_tron_vault_swap() {
+        let vault = "TEcDijvKSXcfWT7S6rd44H5vNgufm7Y4XC".to_string();
+        let deposit_addresses = DepositAddressMap::from([(vault.clone(), SwapperProvider::Chainflip)]);
+        let vault_swap = Transaction {
+            asset_id: AssetId::from_chain(Chain::Tron),
+            to: vault,
+            memo: Some("0x0300".to_string()),
+            ..Transaction::mock()
+        };
+        let dust = Transaction { memo: None, ..vault_swap.clone() };
+
+        assert_eq!(swap_provider_with_vault_addresses(&vault_swap, &deposit_addresses), Some(SwapperProvider::Chainflip));
+        assert_eq!(swap_provider_with_vault_addresses(&dust, &deposit_addresses), None);
     }
 
     #[test]
