@@ -488,6 +488,7 @@ pub struct Swap {
     pub okx: Okx,
     pub swapsxyz: URL,
     pub relay: URL,
+    pub bridgers: URL,
 }
 
 #[derive(Debug, Deserialize, Clone)]

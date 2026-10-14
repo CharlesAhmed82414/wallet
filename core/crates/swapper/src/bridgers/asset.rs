@@ -159,7 +159,7 @@ pub(super) fn vault_addresses() -> VaultAddresses {
     let routers: Vec<String> = NETWORKS.iter().filter_map(|network| network.router).map(str::to_string).collect::<BTreeSet<_>>().into_iter().collect();
     let payouts = NETWORKS.iter().filter_map(|network| network.payout).map(str::to_string);
     VaultAddresses {
-        deposit: routers.clone(),
+        deposit: vec![],
         send: routers.into_iter().chain(payouts).collect(),
     }
 }

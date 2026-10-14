@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::State;
 use primitives::FiatAssets;
-use services::swap::{NearIntentsProxyClient, RelayProxyClient, SwapClient, SwapsXyzProxyClient};
+use services::swap::{BridgersProxyClient, NearIntentsProxyClient, RelayProxyClient, SwapClient, SwapsXyzProxyClient};
 use swapper::RpcClient;
 use swapper::okx::{OkxProviderProxy, QuoteParams, SwapParams, error_response};
 use swapper::swaps_xyz::ActionRequest;
@@ -21,6 +21,10 @@ pub async fn post_near_intents_quote(State(client): State<Arc<NearIntentsProxyCl
 
 pub async fn post_relay_quote(State(client): State<Arc<RelayProxyClient>>, Json(body): Json<serde_json::Value>) -> Result<JsonProxyResponse, ApiError> {
     Ok(client.quote(body).await?.into())
+}
+
+pub async fn post_bridgers_swap(State(client): State<Arc<BridgersProxyClient>>, Json(body): Json<serde_json::Value>) -> Result<JsonProxyResponse, ApiError> {
+    Ok(client.swap(body).await?.into())
 }
 
 pub async fn post_swaps_xyz_action(State(client): State<Arc<SwapsXyzProxyClient>>, Json(body): Json<ActionRequest>) -> Result<JsonProxyResponse, ApiError> {

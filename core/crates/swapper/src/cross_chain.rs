@@ -5,6 +5,7 @@ use gem_evm::across::contracts::V3SpokePoolInterface;
 use primitives::{ChainType, Transaction, decode_hex};
 
 use crate::SwapperProvider;
+use crate::mayan::MAYAN_FORWARDER_SELECTORS;
 use crate::thorchain::memo::ThorchainMemo;
 
 #[derive(Debug, serde::Serialize)]
@@ -37,6 +38,7 @@ fn deposit_address_provider(transaction: &Transaction, deposit_addresses: &Depos
         .or_else(|| transaction.output_addresses().into_iter().find_map(|address| deposit_addresses.get(&address).copied()))
         .or_else(|| deposit_addresses.get(&deposit_order_id(transaction)?).copied())
         .or_else(|| deposit_addresses.get(transaction.memo.as_deref()?).copied())
+        .or_else(|| deposit_addresses.get(transaction.data.as_deref()?).copied())
 }
 
 fn deposit_order_id(transaction: &Transaction) -> Option<String> {
@@ -50,6 +52,7 @@ fn is_valid_swap_transaction(provider: &SwapperProvider, transaction: &Transacti
         SwapperProvider::Thorchain | SwapperProvider::Mayachain => transaction.memo.as_deref().is_some_and(ThorchainMemo::is_swap),
         SwapperProvider::Chainflip => is_valid_chainflip_swap(transaction),
         SwapperProvider::Across => !is_across_fill(transaction),
+        SwapperProvider::Mayan => is_valid_mayan_swap(transaction),
         _ => true,
     }
 }
@@ -61,6 +64,18 @@ fn is_across_fill(transaction: &Transaction) -> bool {
         .as_deref()
         .and_then(|data| decode_hex(data.get(..10)?).ok())
         .is_some_and(|selector| fill_selectors.iter().any(|fill| selector == fill))
+}
+
+fn is_valid_mayan_swap(transaction: &Transaction) -> bool {
+    if transaction.asset_id.chain.chain_type() != ChainType::Ethereum {
+        return true;
+    }
+
+    transaction
+        .data
+        .as_deref()
+        .and_then(|data| decode_hex(data.get(..10)?).ok())
+        .is_some_and(|selector| MAYAN_FORWARDER_SELECTORS.iter().any(|forwarder| selector == forwarder))
 }
 
 fn is_valid_chainflip_swap(transaction: &Transaction) -> bool {
@@ -139,6 +154,25 @@ mod tests {
     }
 
     #[test]
+    fn test_calldata_deposit_detected() {
+        let calldata = include_str!("bridgers/testdata/swap_base_usdc_bsc_usdt.json");
+        let calldata = serde_json::from_str::<serde_json::Value>(calldata).unwrap()["data"]["txData"]["data"].as_str().unwrap().to_string();
+        let deposit_addresses = DepositAddressMap::from([(calldata.clone(), SwapperProvider::Bridgers)]);
+        let deposit = Transaction {
+            to: "0xa18968cc31232724f1dbd0d1e8d0b323d89f3501".to_string(),
+            data: Some(calldata),
+            ..Transaction::mock()
+        };
+        let other_swap = Transaction {
+            data: Some("0x9ddf93bb".to_string()),
+            ..deposit.clone()
+        };
+
+        assert_eq!(swap_provider_with_vault_addresses(&deposit, &deposit_addresses), Some(SwapperProvider::Bridgers));
+        assert_eq!(swap_provider_with_vault_addresses(&other_swap, &deposit_addresses), None);
+    }
+
+    #[test]
     fn test_no_vault_address() {
         let empty = DepositAddressMap::new();
         assert!(!is_cross_chain_swap(&Transaction::mock(), &empty));
@@ -179,6 +213,30 @@ mod tests {
 
         let missing_data = Transaction { to: vault, ..Transaction::mock() };
         assert_eq!(swap_provider_with_vault_addresses(&missing_data, &deposit_addresses), None);
+    }
+
+    #[test]
+    fn test_mayan_evm_forwarder_deposits() {
+        let forwarder = "0x337685fdaB40D39bd02028545a4FfA7D287cC3E2".to_string();
+        let deposit_addresses = DepositAddressMap::from([(forwarder.clone(), SwapperProvider::Mayan)]);
+        let forward_erc20 = Transaction {
+            to: forwarder.clone(),
+            data: Some(format!("0x{}00000000", hex::encode(MAYAN_FORWARDER_SELECTORS[0]))),
+            ..Transaction::mock()
+        };
+        let mctp_fill = Transaction {
+            data: Some("0xa088352600000000".to_string()),
+            ..forward_erc20.clone()
+        };
+        let solana_deposit = Transaction {
+            asset_id: AssetId::from_chain(Chain::Solana),
+            data: None,
+            ..forward_erc20.clone()
+        };
+
+        assert_eq!(swap_provider_with_vault_addresses(&forward_erc20, &deposit_addresses), Some(SwapperProvider::Mayan));
+        assert_eq!(swap_provider_with_vault_addresses(&mctp_fill, &deposit_addresses), None);
+        assert_eq!(swap_provider_with_vault_addresses(&solana_deposit, &deposit_addresses), Some(SwapperProvider::Mayan));
     }
 
     #[test]
