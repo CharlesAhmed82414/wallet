@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 use std::time::Duration;
 use std::{collections::HashMap, error::Error};
@@ -9,6 +9,7 @@ use gem_tracing::info_with_fields;
 use primitives::{AssetAddress, AssetIdVecExt, AssetPriceMetadata, Chain, DeviceSubscription, NFTAssetId, NFTChain, Transaction, TransactionId, TransactionState, TransactionType};
 use storage::AssetFilter;
 use streamer::{AssetId, NotificationsPayload, QueueName, StreamProducerQueue, TransactionNotificationType, TransactionsPayload, WalletStreamEvent, WalletStreamPayload, consumer::MessageConsumer};
+use swapper::SwapperProvider;
 use swapper::cross_chain::{self, DepositAddressMap, SendAddressMap};
 
 use super::StoreTransactionsConsumerConfig;
@@ -61,6 +62,7 @@ impl StoreTransactionsConsumer {
             info_with_fields!("transaction storage skipped", chain = payload.chain.as_ref(), stage = "transaction_filters", subscriptions = subscriptions.len());
             return Ok(0);
         }
+        self.vault_client.add_deposit_ids(in_transit_deposit_ids(&transactions, &deposit_addresses)).await?;
 
         let assets = self.get_existing_assets_and_fetch_missing(config, &transactions).await?;
         let subscribed_transactions = Self::subscribed_transactions(config, &subscriptions, &transactions, &assets);
@@ -99,6 +101,7 @@ impl StoreTransactionsConsumer {
         if transactions.is_empty() {
             return Ok(());
         }
+        self.vault_client.add_deposit_ids(in_transit_deposit_ids(&transactions, &deposit_addresses)).await?;
         let asset_ids: Vec<AssetId> = transactions.iter().flat_map(Transaction::asset_ids).collect::<HashSet<_>>().into_iter().collect();
         let existing_ids = self.repository.get_assets(asset_ids.clone()).await?.into_iter().map(|asset| asset.id).collect::<HashSet<_>>();
         self.stream_producer.publish_fetch_assets(asset_ids.into_iter().filter(|id| !existing_ids.contains(id)).collect()).await?;
@@ -318,6 +321,17 @@ impl StoreTransactionsConsumer {
     }
 }
 
+fn in_transit_deposit_ids(transactions: &[Transaction], deposit_addresses: &DepositAddressMap) -> BTreeMap<SwapperProvider, Vec<String>> {
+    transactions
+        .iter()
+        .filter(|transaction| transaction.state == TransactionState::InTransit)
+        .filter_map(|transaction| Some((cross_chain::swap_provider_with_vault_addresses(transaction, deposit_addresses)?, transaction.id.to_string())))
+        .fold(BTreeMap::new(), |mut deposit_ids, (provider, id)| {
+            deposit_ids.entry(provider).or_insert_with(Vec::new).push(id);
+            deposit_ids
+        })
+}
+
 fn referral_processing_queue(transaction: &Transaction) -> Option<QueueName> {
     match transaction.transaction_type {
         TransactionType::Swap => transaction.swap_metadata()?.referral_fee.map(|_| QueueName::StoreTransactionsSwaps),
@@ -391,17 +405,25 @@ mod tests {
             transaction: response.result.transaction,
         };
         let transaction = map_transaction(&source, response.result.block_time).unwrap();
-        let deposit_addresses = DepositAddressMap::from([(SOLANA_RELAY_DEPOSITORY_PROGRAM_ID.to_string(), SwapProvider::Relay)]);
+        let mut deposit_addresses = DepositAddressMap::from([("0xc6a8c2d31b9e05f9f719c821dff2de43bc811d4efabd39565a355977c7143370".to_string(), SwapProvider::Relay)]);
         let transactions = StoreTransactionsConsumer::transactions_for_storage(vec![transaction], &deposit_addresses, &SendAddressMap::new(), &TransactionNotificationType::NewTransaction);
 
         assert_eq!(transactions.len(), 1);
         let transaction = &transactions[0];
         assert_eq!(transaction.transaction_type, TransactionType::Swap);
         assert_eq!(transaction.state, TransactionState::InTransit);
+        assert_eq!(transaction.to, SOLANA_RELAY_DEPOSITORY_PROGRAM_ID);
         assert_eq!(transaction.asset_id, SOLANA_USDC_ASSET_ID.clone());
         assert_eq!(transaction.value, BigUint::from(5_000_000u64));
         assert_eq!(transaction.metadata, None);
-        assert_eq!(cross_chain::swap_provider_with_vault_addresses(transaction, &deposit_addresses), Some(SwapProvider::Relay));
+
+        let deposit_ids = in_transit_deposit_ids(&transactions, &deposit_addresses);
+        assert_eq!(deposit_ids, BTreeMap::from([(SwapProvider::Relay, vec![transaction.id.to_string()])]));
+
+        let stored = Transaction { data: None, ..transaction.clone() };
+        assert_eq!(cross_chain::in_transit_swap_provider(&stored, &deposit_addresses), None);
+        deposit_addresses.extend(deposit_ids.into_iter().flat_map(|(provider, ids)| ids.into_iter().map(move |id| (id, provider))));
+        assert_eq!(cross_chain::in_transit_swap_provider(&stored, &deposit_addresses), Some(SwapProvider::Relay));
     }
 
     #[test]

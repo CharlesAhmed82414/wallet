@@ -26,6 +26,7 @@ pub fn in_transit_swap_provider(transaction: &Transaction, deposit_addresses: &D
     transaction
         .swap_metadata()
         .and_then(|metadata| metadata.provider?.parse::<SwapperProvider>().ok())
+        .or_else(|| deposit_addresses.get(&transaction.id.to_string()).copied())
         .or_else(|| deposit_address_provider(transaction, deposit_addresses))
 }
 
@@ -35,6 +36,7 @@ fn deposit_address_provider(transaction: &Transaction, deposit_addresses: &Depos
         .copied()
         .or_else(|| transaction.output_addresses().into_iter().find_map(|address| deposit_addresses.get(&address).copied()))
         .or_else(|| deposit_addresses.get(&deposit_order_id(transaction)?).copied())
+        .or_else(|| deposit_addresses.get(transaction.memo.as_deref()?).copied())
 }
 
 fn deposit_order_id(transaction: &Transaction) -> Option<String> {
@@ -118,6 +120,25 @@ mod tests {
     }
 
     #[test]
+    fn test_memo_order_id_detected() {
+        let order_id = "0xef469816498676be697de680c9ed346fbb40d4108b45851c18581170a5f6e5d9".to_string();
+        let deposit_addresses = DepositAddressMap::from([(order_id.clone(), SwapperProvider::Relay)]);
+        let deposit = Transaction {
+            asset_id: AssetId::from_chain(Chain::Ton),
+            to: "UQCrdGsDTqA2t6xRR4N6V4J705F7w_VQbUdHnofsh-8lVN4p".to_string(),
+            memo: Some(order_id),
+            ..Transaction::mock()
+        };
+        let other_memo = Transaction {
+            memo: Some("gift".to_string()),
+            ..deposit.clone()
+        };
+
+        assert_eq!(swap_provider_with_vault_addresses(&deposit, &deposit_addresses), Some(SwapperProvider::Relay));
+        assert_eq!(swap_provider_with_vault_addresses(&other_memo, &deposit_addresses), None);
+    }
+
+    #[test]
     fn test_no_vault_address() {
         let empty = DepositAddressMap::new();
         assert!(!is_cross_chain_swap(&Transaction::mock(), &empty));
@@ -194,6 +215,10 @@ mod tests {
         assert_eq!(in_transit_swap_provider(&across_deposit, &deposit_addresses), Some(SwapperProvider::Across));
 
         assert_eq!(in_transit_swap_provider(&Transaction::mock(), &deposit_addresses), None);
+
+        let relay_deposit = Transaction::mock();
+        let deposit_ids = DepositAddressMap::from([(relay_deposit.id.to_string(), SwapperProvider::Relay)]);
+        assert_eq!(in_transit_swap_provider(&relay_deposit, &deposit_ids), Some(SwapperProvider::Relay));
     }
 
     #[test]

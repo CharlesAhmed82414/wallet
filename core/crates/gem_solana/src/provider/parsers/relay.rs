@@ -18,6 +18,7 @@ struct DecodedDeposit {
     sender: String,
     asset_id: AssetId,
     value: BigUint,
+    data: String,
 }
 
 #[derive(BorshDeserialize)]
@@ -41,7 +42,7 @@ impl TransactionParser<ParseContext<'_>, Transaction> for RelayParser {
             .filter(|instruction| is_relay_instruction(context, instruction))
             .find_map(|instruction| decode_deposit(context, instruction))?;
 
-        context.make_swap_transaction(deposit.sender, RELAY_DEPOSITORY_PROGRAM_ID, deposit.asset_id, deposit.value)
+        Some(context.make_swap_transaction(deposit.sender, RELAY_DEPOSITORY_PROGRAM_ID, deposit.asset_id, deposit.value)?.with_data(Some(deposit.data)))
     }
 }
 
@@ -68,6 +69,7 @@ fn decode_deposit(context: &ParseContext<'_>, instruction: &Instruction) -> Opti
         sender,
         asset_id,
         value: BigUint::from(arguments.amount),
+        data: format!("0x{}", hex::encode(&data)),
     })
 }
 
@@ -104,6 +106,7 @@ mod tests {
         assert_eq!(transaction.contract, Some(RELAY_DEPOSITORY_PROGRAM_ID.to_string()));
         assert_eq!(transaction.value, BigUint::from(9_493_136u64));
         assert!(transaction.metadata.is_none());
+        assert_eq!(transaction.data.as_deref(), Some("0x0b9c60da27a3b41390da90000000000047f5f46034fc442123ac53e7381dcf30ec2b9adf66a1269ee9ebe7232d3069d3"));
     }
 
     #[test]
@@ -118,5 +121,6 @@ mod tests {
         assert_eq!(transaction.contract, Some(RELAY_DEPOSITORY_PROGRAM_ID.to_string()));
         assert_eq!(transaction.value, BigUint::from(190_000_000u64));
         assert!(transaction.metadata.is_none());
+        assert_eq!(transaction.data.as_deref(), Some("0x0d9e0ddf5fd51c06802b530b00000000a1e4ed561538867bf66097ce6d2d87842bd1549ac3dc0a9e7ed5cfabcf2575a7"));
     }
 }
